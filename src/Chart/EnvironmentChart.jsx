@@ -12,6 +12,15 @@ function ChartComponent3({ chartSize3 }) {
   const [thirdActualData, setThirdActualData] = useState([]);
 
   useEffect(() => {
+
+    
+    // const loadThirdChartData = async () => {
+    //   const exampleThirdTargetData = [120, 150, 120, 200, 300, 100, 150, 200, 250, 250, 200, 210];
+    //   const exampleThirdActualData = [90, 100, 80, 170, 100, 80, 120, 90, 220, 120,90, 80];
+    //   setThirdTargetData(exampleThirdTargetData);
+    //   setThirdActualData(exampleThirdActualData);
+    // };
+    
     const loadFirstChartData = async () => {
       let exampleFirstActualData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 31) + 10);
       let exampleFirstTargetData = exampleFirstActualData.map(actual => actual + Math.floor(Math.random() * (41 - actual)) + 1);
