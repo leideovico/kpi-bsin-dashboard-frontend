@@ -1,0 +1,716 @@
+/* styles.css */
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Calibri, sans-serif; /* Menetapkan font Calibri */
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column; /* Mengatur tata letak menjadi kolom */
+}
+
+.sidebar {
+  width: 50px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, #000000, #8b0000);
+  color: white;
+  padding: 20px;
+  z-index: 1000;
+  transition: width 0.8s ease;
+}
+
+
+.menu-text-hidden,
+.dropdown-icon-hidden {
+  display: none;
+}
+
+.sidebar:hover .menu-text-hidden,
+.sidebar:hover .dropdown-icon-hidden {
+  display: inline-block;
+}
+
+.sidebar .logosidebar {
+  opacity: 0; /* Mulai dengan opacity 0 */
+  transition: opacity 0.3s ease; /* Tambahkan transisi opacity */
+}
+
+.sidebar:hover .logosidebar {
+  opacity: 1; /* Saat di-hover, opacity menjadi 1 */
+}
+
+.sidebar:not(.sidebar-pinned):hover .logosidebar {
+  opacity: 1; /* Mengubah opacity menjadi 1 saat di-hover dan sidebar tidak di-pinned */
+  transition-delay: 0.3s; /* Transition delay 0.5 detik */
+}
+
+.logo-text {
+  color: white;
+  margin: 0; /* Menghapus margin dari H2 */
+  font-size: 15px; /* Atur ukuran font */
+  opacity: 0; /* Mulai dengan opacity 0 */
+  transition: opacity 0.3s ease; /* Transisi opacity dengan durasi 0.5 detik */
+}
+
+.sidebar:not(.sidebar-pinned):hover .menu-text {
+  opacity: 1; /* Mengubah opacity menjadi 1 saat di-hover dan sidebar tidak di-pinned */
+  transition-delay: 0.3s; /* Transition delay 0.5 detik */
+}
+
+.logosidebar {
+  position: absolute; /* Tetapkan posisi absolut */
+  top: 450px; /* Atur jarak dari atas */
+  left: 25px; /* Atur agar posisinya tetap di kiri */
+}
+
+.logo-text {
+  color: white;
+  margin: 0; /* Menghapus margin dari H2 */
+  font-size: 15px; /* Atur ukuran font */
+  opacity: 0; /* Mulai dengan opacity 0 */
+  transition: opacity 0.2s ease; /* Transisi opacity dengan durasi 0.5 detik */
+}
+
+.sidebar:not(.sidebar-pinned):hover .logo-text {
+  opacity: 1; /* Mengubah opacity menjadi 1 saat di-hover dan sidebar tidak di-pinned */
+  transition-delay: 0.2s; /* Transition delay 0.5 detik */
+}
+
+.sidebar.sidebar-pinned .logo-text {
+  opacity: 1; /* Opacity 1 saat di-pinned */
+}
+
+
+.sidebar:hover {
+  width: 250px; /* Menjadi normal saat dihover */
+}
+
+.main-content {
+  margin-left: 100px; /* Sesuaikan dengan lebar sidebar kecil */
+  padding: 20px;
+  transition: margin-left 0.8s ease; /* Efek transisi untuk perubahan margin */
+  flex: 1; /* Menggunakan sisa ruang vertikal yang tersedia */
+}
+
+.sidebar:hover ~ .main-content {
+  margin-left: 300px; /* Sesuaikan dengan lebar sidebar saat di-hover */
+  margin-right: 10px;
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.nav .main-menu {
+  list-style-type: none;
+  padding: 0;
+  color: #fff;
+
+}
+
+.nav .main-menu .menu-item {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 17px;
+  color: #fff;
+
+}
+
+.nav .top-bar-item {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.nav .main-menu .submenu {
+  list-style-type: none;
+  padding: 0;
+  padding-left: 20px;
+  color: #fff;
+
+}
+
+.nav .main-menu .submenu li a {
+  color: #ffffffc2;
+  text-decoration: none;
+  display: block;
+  font-size: 18px;
+}
+
+.nav .main-menu .menu-item a.active {
+  color: #ff0;
+}
+
+.sub-submenu {
+  list-style-type: none;
+  padding-left: 20px;
+}
+
+.sub-submenu li a {
+  color: #888;
+  text-decoration: none;
+  display: block;
+  font-size: 18px;
+}
+
+.dropdown-icon {
+  float: right;
+  padding-left: 20px;
+}
+
+/* styles.css */
+
+/* Mengatur elemen yang memiliki kelas hidden menjadi tidak terlihat */
+.hidden {
+  display: none;
+}
+
+/* CSS */
+.submenu .menu-item:hover,
+.sub-submenu .menu-item:hover {
+  font-weight: bold; /* Mengatur teks menjadi tebal saat dihover */
+}
+
+
+.submenu .menu-item a,
+.sub-submenu .menu-item a {
+  position: relative;
+}
+
+.submenu .menu-item a:after,
+.sub-submenu .menu-item a:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: solid #aaa;
+  border-width: 0 1px 1px 0;
+  padding: 3px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.submenu .menu-item:hover a:after,
+.sub-submenu .menu-item:hover a:after {
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+.sub-submenu .menu-item a:after {
+  top: 40%;
+}
+
+.nav .main-menu .menu-item:hover {
+  background-image: linear-gradient(to right, #8b0000, #ad2b2b);
+}
+
+.nav .main-menu .submenu li a:hover {
+  font-weight: bold; /* Mengatur teks menjadi tebal saat dihover */
+  color: white;
+}
+
+.sub-submenu li a:hover {
+  background-color: #ffff; /* Warna abu-abu lebih terang */
+}
+
+.rotate-icon {
+  transition: transform 0.3s ease;
+}
+
+.rotated {
+  transform: rotate(90deg);
+}
+
+.rotated.dropdown-icon-hidden {
+  display: none;
+}
+
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 1s ease; /* Mengubah durasi transisi menjadi 1 detik */
+}
+
+.submenu.show {
+  max-height: 200px; /* Ubah nilai sesuai dengan tinggi maksimum submenu */
+}
+
+.menu-item.active,
+.submenu.active {
+  background-image: linear-gradient(to right, #8b0000, #ad2b2b);
+}
+
+.menu-item:not(.active),
+.submenu:not(.active) {
+  background-color: transparent; /* Hapus warna abu-abu */
+}
+
+.nav .main-menu .menu-item img {
+  width: 30px;
+  margin-right: 10px;
+}
+
+.menu-item img {
+  vertical-align: middle; /* Mengatur posisi vertikal agar sejajar dengan teks */
+}
+
+.submenu a.active {
+  font-weight: bold;
+  text-decoration: underline;
+  color: #ffffff !important; /* Warna merah tua */
+}
+
+.logo-container {
+  display: flex;
+  align-items: center; /* Mengatur teks dan gambar secara vertikal */
+  margin-bottom: 30px;
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column; /* Menjadikan kontainer logo sebagai kolom */
+  align-items: center; /* Pusatkan item secara horizontal */
+  margin-bottom: 30px;
+}
+
+.logo-container img {
+  width: 45px;
+  margin-bottom: 5px; /* Tambahkan jarak antara gambar dan teks */
+}
+
+ .logosidebar img {
+  width: 230px;
+  
+ }
+
+
+
+.landing-page {
+  padding-top: 0px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
+  margin-top: 0px;
+  text-align: center;
+  width: calc(100% - 50px); /* Mengurangi lebar sidebar dari total lebar */
+  height: calc(100% - 20px); /* Sesuaikan dengan tinggi top bar */
+}
+
+.sidebar-pinned .landing-page {
+  width: 865px;
+  margin-left: 0px;
+  margin-right: 0px;
+  padding-right: 10px;
+}
+
+input{
+  width: calc(100% - 13px);
+  padding: 6px;
+  border: 1px solid #ab0c0c;
+  border-radius: 4px;}
+
+.landing-page h1 {
+  padding-top: 0px;
+  font-size: 48px;
+  margin-bottom: 0px;
+}
+
+.landing-page p {
+  font-size: 20px;
+  line-height: 1.6;
+  padding-bottom: 0px;
+  margin-bottom: 15px;
+}
+
+.cta-button {
+  background-color: #de0d0d;
+  color: #fff;
+  padding-top: 10px;
+  padding: 10px 20px;
+  font-size: 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: auto;
+}
+
+
+.cta-button:hover {
+  background-color: #ff6666;
+}
+
+.top-bar.slide-in {
+  position: fixed;
+  top: 0;
+  width: 100%; /* Lebar default */
+  height: 20px;
+  background: linear-gradient(to right,#000000, #8b0000); /* Gradien dari merah gelap ke hitam */
+  color: #fff;
+  font-size: 15px;
+  padding: 10px 20px;
+  z-index: 1000;
+  left: 0; /* Set nilai awal left */
+  transition: width 0.5s ease, left 0.5s ease; /* Animasi perubahan lebar dan posisi left */
+}
+
+
+
+.top-bar.slide-in.sidebar-hovered {
+  width: calc(122% - 80px); /* Atur lebar top bar saat sidebar di-hovered */
+  left: 200px;
+}
+
+.sidebar-pinned:not(:hover) ~ .top-bar.slide-in {
+  width: calc(
+    122% - 80px
+  ); /* Atur lebar top bar saat hanya di-hovered tanpa di-pinned */
+  left: 200px;
+}
+
+.top-bar-content {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-top: 11px;
+  padding-left: 90px;
+  font-size: 16px;
+  transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
+
+}
+
+.top-bar-content0 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-top: 10px;
+  padding-right: 40px;
+
+  padding-left: 90px;
+  font-size: 16px;
+  transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
+}
+
+.top-bar-content1 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-top: 10px;
+  padding-left: 90px;
+  font-size: 16px;
+  transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
+  padding-right: 40px;
+
+}
+
+.top-bar-content2 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-top: 10px;
+  padding-left: 100px;
+  padding-right: 40px;
+
+  font-size: 16px;
+}
+
+.top-bar-content3 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-left: 100px;
+  padding-top: 10px;
+  padding-right: 40px;
+
+  font-size: 16px;
+}
+
+.top-bar-content4 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-left: 100px;
+  padding-top: 10px;
+  font-size: 16px;
+  padding-right: 40px;
+
+}
+
+.top-bar-content5 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-right: 40px;
+
+  padding-left: 100px;
+  padding-top: 10px;
+  font-size: 16px;
+}
+
+.top-bar-content6 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-left: 100px;
+  padding-right: 40px;
+  padding-top: 10px;
+  font-size: 16px;
+}
+
+.active-mode {
+  background-color: #f0f0f0; /* Ubah warna latar belakang sesuai keinginan Anda */
+  color: #000; /* Ubah warna teks sesuai keinginan Anda */
+}
+
+.top-bar-content7 {
+  display: flex; /* Menggunakan flexbox untuk menampilkan item-item secara inline */
+  justify-content: flex-start; /* Menjaga semua item di bagian akhir top bar (kanan) */
+  align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
+  gap: 40px; /* Memberikan jarak antar item */
+  padding-left: 100px;
+  padding-top: 2px;
+  font-size: 16px;
+}
+
+.top-bar-item.active {
+  background-color: hsl(0, 63%, 56%);
+}
+
+.top-bar-item:hover {
+  background-color: hsl(0, 63%, 56%);
+}
+
+.top-bar-submenu {
+  list-style-type: none; /* Menghilangkan marker */
+  padding: 10px; /* Menghapus padding bawaan */
+  margin-top: 0px; /* Menghapus margin bawaan */
+  background-color: #ab0c0c;
+  color: white;
+  font-weight: normal;
+}
+
+.top-bar-item {
+  cursor: pointer;
+  transition: color 0.3s ease;
+  position: relative; /* Menambahkan posisi relatif */
+  padding: 0px;
+}
+
+.top-bar-submenu:hover {
+  cursor: pointer; /* Mengubah kursor saat dihover */
+  font-weight: normal;
+}
+
+.top-bar-submenu:hover {
+  background-color: #520202; /* Warna latar belakang merah saat dihover */
+}
+
+.top-bar-submenu.active::after {
+  content: ""; /* Menambahkan konten pseudo-elemen */
+  position: absolute; /* Menetapkan posisi absolut */
+  bottom: -4px; /* Jarak dari bawah */
+  left: 50%; /* Posisi horizontal tengah */
+  transform: translateX(-50%); /* Memindahkan posisi horizontal ke kiri */
+  width: 8px; /* Lebar tanda */
+  height: 8px; /* Tinggi tanda */
+  background-color: #520202; /* Warna tanda */
+  border-radius: 50%; /* Membuat tanda bulat */
+}
+
+.top-bar-submenu:hover {
+  color: #fff; /* Warna latar belakang yang diinginkan saat hover */
+  cursor: pointer; /* Mengubah kursor saat dihover */
+}
+
+.top-bar-item:not(:last-child)::after {
+  margin-left: 10px;
+  margin-right: 10px;
+  color: #fff;
+}
+
+/* Animation keyframes for slide-in effect */
+@keyframes slideIn {
+  from {
+    top: -50px; /* Start position */
+  }
+  to {
+    top: 0; /* End position */
+  }
+}
+
+.submenu-text-hidden {
+  display: none;
+}
+
+.top-bar.slide-in {
+  animation: slideIn 0.5s forwards; /* Menjalankan animasi slide-in */
+  padding-bottom: 40px;
+}
+
+.sidebar-pinned {
+  width: 250px; /* Atur lebar sidebar yang di-pin */
+}
+
+.sidebar-pinned ~ .main-content {
+  margin-left: 300px; /* Sesuaikan dengan lebar sidebar saat di-pin */
+  margin-right: 10px;
+}
+
+.pin-button {
+  position: absolute;
+  left: 50%; /* Menempatkan titik awal tombol di tengah secara horizontal */
+  bottom: 0%;
+  transform: translate(-50%, -50%); /* Menggeser tombol kembali ke tengahnya */
+  padding: 10px;
+  background-color: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(to right, #8b0000, #000000);
+  color: #fff;
+  width: calc(100% - 50px); /* Sesuaikan lebar footer dengan lebar konten dikurangi lebar sidebar */
+  position: fixed;
+  bottom: 0;
+  left: 50px; /* Lebar sidebar saat tidak di-hover */
+  position: relative; /* Ubah posisi menjadi relatif */
+  margin-top: auto;
+  transition: left 0.8s ease; /* Tambahkan transisi untuk perubahan lebar */
+  bottom: 0px;
+  height: 100%;
+}
+
+
+.app-footer p {
+  margin-top: 0px;
+}
+
+/* Menyesuaikan main content jika perlu */
+.main-content {
+  margin-bottom: 0px; /* Pastikan ini cukup untuk membuat space bagi footer, sesuaikan nilai ini sesuai kebutuhan */
+}
+
+.footer-logo {
+  width: 200px;
+}
+
+.sidebar:hover ~ .app-footer {
+  left: 150px; /* Lebar sidebar saat di-hover */
+}
+
+.sidebar-pinned .app-footer {
+  display: none; /* Menyembunyikan footer saat sidebar di-pin */
+}
+
+.sidebar-pinned:not(:hover) ~ .app-footer {
+  width: 1200px; /* Set lebar footer saat sidebar di-pin dan tidak di-hover */
+  left: 150px; /* Lebar sidebar saat di-pin */
+}
+
+.submenu2 {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+  position: absolute; /* Menambahkan posisi absolut */
+  top: 100%; /* Mengatur posisi submenu ke bawah */
+  padding-left: 0px;
+  left: 0; /* Mengatur posisi submenu sejajar dengan parent */
+  width: 200px; /* Sesuaikan lebar submenu dengan kebutuhan */
+  z-index: 999; /* Pastikan submenu tampil di atas konten lain */
+  margin-top: 0px;
+}
+
+.submenu2.show {
+  max-height: 500px;
+  padding-left: 0px;
+  left: 0px;
+  margin-top: 0px;
+}
+
+
+.submenu-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ccc; /* Warna netral untuk indikator */
+  border-radius: 50%;
+  margin-left: 5px; /* Sesuaikan margin sesuai kebutuhan */
+}
+
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.modal-content p {
+  margin-bottom: 20px;
+}
+
+.modal-content button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: hsl(0, 0%, 58%);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-content button:hover {
+  background-color: #5b5b5b;
+}
+
+.modal-content button:last-child {
+  margin-bottom: 0;
+}
+
+.modal-content button.close-button {
+  background-color: #dc3545; /* Warna merah */
+}
+
+.modal-content button.close-button {
+  background-color: #dc3545; /* Warna merah */
+  margin-left: 95px;
+  width: 120px;
+}
+
+
+

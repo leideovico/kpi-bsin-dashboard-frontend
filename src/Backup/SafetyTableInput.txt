@@ -1,0 +1,150 @@
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+const SafetyTableInput = () => {
+  // State untuk menyimpan array baris tabel
+  const [rows, setRows] = useState([
+    {
+      result: "Result 1",
+      factors: [{ name: "Factor Name 1", statuses: [{ name: "Status 1" }] }],
+      unit: "Unit 1",
+      target: "Target 1",
+      dataJan: "Data Jan",
+      dataFeb: "Data Feb",
+      dataMaret: "Data Maret",
+      dataApril: "Data April",
+      dataMei: "Data Mei",
+    },
+  ]);
+
+  // Fungsi untuk menangani penghapusan baris
+  const handleDeleteClick = (index) => {
+    const newRows = [...rows];
+    newRows.splice(index, 1);
+    setRows(newRows);
+  };
+
+  // Fungsi untuk menangani penghapusan status
+const handleDeleteStatusClick = (rowIndex, factorIndex, statusIndex) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].statuses.splice(statusIndex, 1);
+    setRows(newRows);
+  };
+
+
+  // Fungsi untuk menangani penghapusan faktor
+  const handleDeleteFactorClick = (rowIndex, factorIndex) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors.splice(factorIndex, 1);
+    setRows(newRows);
+  };
+
+  // Fungsi untuk menangani penambahan faktor baru
+  const handleAddFactorClick = (index) => {
+    const newRows = [...rows];
+    newRows[index].factors.push({ name: `Factor Name ${newRows[index].factors.length + 1}`, statuses: [{ name: "Status 1" }] });
+    setRows(newRows);
+  };
+
+  // Fungsi untuk menangani penambahan status baru
+  const handleAddStatusClick = (rowIndex, factorIndex) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].statuses.push({ name: `Status ${newRows[rowIndex].factors[factorIndex].statuses.length + 1}` });
+    setRows(newRows);
+  };
+
+  // Fungsi untuk menangani penambahan baris baru
+  const handleAddRowClick = () => {
+    const newRow = {
+      result: `Result ${rows.length + 1}`,
+      factors: [{ name: `Factor Name 1`, statuses: [{ name: "Status 1" }] }],
+      unit: `Unit ${rows.length + 1}`,
+      target: `Target ${rows.length + 1}`,
+      dataJan: `Data Jan`,
+      dataFeb: `Data Feb`,
+      dataMaret: `Data Maret`,
+      dataApril: `Data April`,
+      dataMei: `Data Mei`,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Safety Table</caption> {/* Judul tabel */}
+        <thead>
+          <tr>
+            <th rowSpan="2">
+              KPI Result
+              <div className="add">
+              <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+              </div>
+            </th>
+            <th colSpan="2">KPI Factor</th>
+            <th rowSpan="2">Unit</th>
+            <th rowSpan="2">Target</th>
+            <th colSpan="5">Bulan</th>
+          </tr>
+          <tr>
+            <th>KPI Factor Name</th>
+            <th>Status</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Maret</th>
+            <th>April</th>
+            <th>Mei</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <React.Fragment key={rowIndex}>
+              {row.factors.map((factor, factorIndex) => (
+                <React.Fragment key={`${rowIndex}-${factorIndex}`}>
+                  {factor.statuses.map((status, statusIndex) => (
+                    <tr key={`${rowIndex}-${factorIndex}-${statusIndex}`}>
+                      {factorIndex === 0 && statusIndex === 0 && (
+                        <td rowSpan={row.factors.reduce((total, current) => total + current.statuses.length, 0)}>
+                          {row.result}
+                          <div className="add">
+                          <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>- Result</button>
+                          </div>
+                          <div className="add">
+                          <button className="add-factor-button" onClick={() => handleAddFactorClick(rowIndex)}>+ Factor</button>
+                          </div>
+                        </td>
+                      )}
+                      {statusIndex === 0 && (
+                        <td rowSpan={factor.statuses.length}>
+                            {factor.name}
+                            <div className="add">
+                            <button className="add-factor-button" onClick={() => handleDeleteFactorClick(rowIndex, factorIndex)}> - Factor </button>
+                            </div>
+                            <button className="add-factor-button" onClick={() => handleAddStatusClick(rowIndex, factorIndex)}> + Status </button>
+                        </td>
+                        )}
+                        <td>{status.name}
+                        <div className="add">
+                        <button className="add-factor-button" onClick={() => handleDeleteStatusClick(rowIndex, factorIndex, statusIndex)}> - Status </button>
+                        </div>
+                        </td>
+                      <td>{row.unit}</td>
+                      <td>{row.target}</td>
+                      <td>{row.dataJan}</td>
+                      <td>{row.dataFeb}</td>
+                      <td>{row.dataMaret}</td>
+                      <td>{row.dataApril}</td>
+                      <td>{row.dataMei}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default SafetyTableInput;

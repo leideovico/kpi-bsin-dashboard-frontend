@@ -1,0 +1,67 @@
+ {/* <li
+              className={`menu-item ${isPeopleDropdownVisible ? "open" : ""} ${
+                activeMenu === "People" ? "active" : ""
+              }`}
+              onClick={() => {
+                handleHideChart();
+
+                handlehideInputKpiClick();
+                setActiveMenu("People");
+                setActiveSubItem(""); // Reset activeSubItem saat menu utama diklik
+              }}
+            >
+              <img
+                src="Images/People.png"
+                alt="People Icon"
+                className="menu-icon"
+              />
+              <span
+                className={`menu-text ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                People Dashboard
+              </span>
+              
+
+              <ul
+                className={`submenu ${isPeopleDropdownVisible ? "show" : ""} ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                
+              </ul>
+            </li>
+            <li
+              className={`menu-item ${isAbsensiDropdownVisible ? "open" : ""} ${
+                activeMenu === "Absensi" ? "active" : ""
+              }`}
+              onClick={() => {
+                handleHideChart();
+
+                handlehideInputKpiClick();
+                setActiveMenu("Absensi");
+                setActiveSubItem(""); // Reset activeSubItem saat menu utama diklik
+              }}
+            >
+              <img
+                src="Images/Absence.png"
+                alt="Absensi Icon"
+                className="menu-icon"
+              />
+              <span
+                className={`menu-text ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                Absence Dashboard
+              </span>
+              
+
+              <ul
+                className={`submenu ${isAbsensiDropdownVisible ? "show" : ""} ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+             </ul>
+            </li> */}

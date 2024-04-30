@@ -1,0 +1,260 @@
+/* table.css */
+
+.result {
+  display: flex;
+  justify-content: center; /* Memposisikan secara horizontal di tengah */
+  align-items: center; /* Memposisikan secara vertikal di tengah */
+  margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+}
+
+.factor {
+  display: flex;
+  justify-content: center; /* Memposisikan secara horizontal di tengah */
+  align-items: center; /* Memposisikan secara vertikal di tengah */
+  margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+}
+
+.status {
+  display: flex;
+  justify-content: center; /* Memposisikan secara horizontal di tengah */
+  align-items: center; /* Memposisikan secara vertikal di tengah */
+  margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+}
+
+.add-result-button {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+   margin-right: 5px;
+}
+
+.add-factor-button,
+.remove-factor-button {
+  margin-top: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 0, 0, 0.651); /* Transparan merah */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.add-status-button,
+.remove-status-button {
+  padding: 5px 10px;
+  background: rgba(255, 0, 0, 0.522); /* Transparan merah */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+   margin-right: 5px;
+}
+
+.add-factor-button:hover,
+.remove-factor-button:hover {
+  background: rgba(255, 0, 0, 0.77); /* Transparan merah */
+}
+
+.add-status-button:hover,
+.remove-status-button:hover {
+  background: rgba(255, 0, 0, 0.77); /* Transparan merah */
+}
+
+.add-result-button:hover,
+.remove-result-button:hover {
+  background: rgba(255, 0, 0, 0.5); /* Transparan merah */
+}
+
+.add-button {
+  background-color: #ddd; /* Warna Hijau */
+  color: white;
+  padding: 5px 10px;
+  margin-left: 10px; /* Jarak dari teks */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.add-button2 {
+  background-color: hsl(0, 36%, 78%); /* Warna Hijau */
+  color: white;
+  padding: 5px 10px;
+  margin-left: 10px; /* Jarak dari teks */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.add-button:hover {
+  background-color: #5b5b5b;
+}
+
+.add-button2:hover {
+  background-color: hsl(0, 76%, 63%);
+}
+
+.input-table th,
+.input-table td {
+  color:#000000;
+  border: 1px solid #ab0c0c;
+  padding: 8px;
+  text-align: center;
+  word-wrap: break-word; /* Pastikan teks tidak memaksa sel melebar */
+}
+
+.input-table th {
+  background-color: #f2f2f2;
+}
+
+/* Style untuk input di dalam tabel */
+.input-table input[type="text"],
+.input-table input[type="number"] {
+  width: 100%; /* Input menyesuaikan lebar sel */
+  box-sizing: border-box; /* Pastikan padding dan border dihitung dalam lebar */
+}
+
+/* Style untuk header setiap tabel */
+.input-table thead h2 {
+  margin: 0;
+  padding: 10px;
+  background-color: #ab0c0c;
+  color: white;
+  text-align: center;
+  border-top-left-radius: 8px; /* Tambahkan radius sudut pada sisi atas kiri */
+  border-top-right-radius: 8px; /* Tambahkan radius sudut pada sisi atas kanan */
+}
+
+.input-table-container {
+  max-width: 100%; /* Memastikan container tidak melebihi lebar parent-nya */
+  overflow-x: auto; /* Tambahkan scrollbar jika konten melebihi lebar */
+  margin-left: 100px;
+  color: #808080; /* Warna abu-abu */
+}
+
+.input-table-container button.editing {
+  color: #000000; /* Warna hitam pekat */
+}
+
+.input-table {
+  width: 100%;
+  margin-bottom: 40px;
+  margin-top: 60px;
+  margin-left: 10px;
+  border-collapse: collapse;
+  overflow: hidden;
+  box-shadow: 0px 2px 4px hsla(0, 95%, 42%, 0.102);
+}
+ 
+.table-container {
+    margin: 20px;
+  }
+  
+  .safety-table {
+    width: 100%;
+    border-collapse: collapse;
+     overflow: hidden;
+  }
+  
+  .safety-table th,
+  .safety-table td {
+    padding: 10px;
+    text-align: center;
+    border: 2px solid #000000; /* Warna hitam dan ketebalan 2px */
+  }
+
+  .safety-table td{
+    color: black;
+  }
+  
+  .safety-table thead {
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    color: white;
+  }
+  
+  .safety-table thead th {
+    font-weight: bold;
+  }
+  
+  .safety-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  /* table.css */
+
+.add-button {
+    margin-left: 10px; /* Jarak dari teks */
+    cursor: pointer; /* Tampilan kursor sebagai pointer */
+    padding: 5px 10px; /* Padding di dalam tombol */
+    border: none; /* Hapus border */
+    background-color: #630000; /* Warna latar belakang merah */
+    color: white; /* Warna teks putih */
+    border-radius: 5px; /* Sudut melengkung */
+  }
+  
+  
+  .add-button:hover {
+    background-color: #cc0000; /* Warna latar saat hover */
+  }
+  
+  
+  .safety-table tbody tr:hover {
+    background-color: #ddd;
+  }
+  
+  .safety-table caption {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #ff0000;
+  }
+
+  .safety-table caption {
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    color: white; /* Warna teks putih */
+    font-size: 1.5rem; /* Ukuran font */
+    padding: 10px; /* Padding */
+    border-radius: 8px; /* Sudut melengkung */
+    margin-top: 40px;
+  }
+
+  /* table.css */
+
+.safety-table th,
+.safety-table td {
+  border: 2px solid #ccc; /* Warna border abu-abu terang */
+  padding: 8px; /* Padding di dalam sel */
+  text-align: center;
+}
+
+.safety-table {
+  border-collapse: collapse; /* Menghilangkan jarak antar border */
+  width: 100%; /* Lebar tabel penuh */
+}
+
+ 
+.save button {
+    background: linear-gradient(to right, #4CAF50, #008000); /* Gradien dari hijau ke hijau gelap */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    width: 150px;
+
+}
+
+.save button:hover {
+    background: linear-gradient(to right, #45a049, #007a29); /* Gradien hover dari hijau ke hijau gelap */
+}
+
+
+  

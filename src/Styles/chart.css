@@ -1,0 +1,17 @@
+.chart h2 {
+    font-family: 'Calibri', sans-serif; /* Ganti font sesuai preferensi Anda */
+    font-size: 40px; /* Ukuran font yang cukup besar */
+    color: #333; /* Warna teks yang kontras dengan latar belakang */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Efek bayangan teks */
+    margin-bottom: 10px; /* Jarak bawah untuk memisahkan dari grafik */
+  }
+  
+  .chart-divider {
+    border-top: 2px dashed rgba(139, 0, 0, 0.7); /* Garis putus-putus merah gelap */
+    margin-top: 30px; /* Atur jarak antara grafik dan garis pembatas */
+  }
+
+  .chart{
+    margin-top: 10px;
+  }
+  

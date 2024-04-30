@@ -1,0 +1,165 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #000000 0%, #ff0000 70%, #ffffff 100%);
+}
+
+
+.login-logo {
+  text-align: center;
+  margin-right: auto; /* Tambahkan properti ini */
+  margin-left: auto; /* Tambahkan properti ini */
+
+}
+
+.login-logo img {
+  width: 300px;
+}
+
+.login-form input {
+  padding: 0 10px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.3s;
+  width: calc(100% - 13px);
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.loginlogooo{  
+  width: 250px;
+  margin-left: 50px;
+}
+
+.loginlogoo{
+  width: 250px;
+  margin-left: 50px;
+}
+
+.forgot-password-link {
+  text-decoration: none;
+  color: #000000; /* Ubah sesuai kebutuhan */
+  text-decoration: none; /* Menghapus garis bawah default */
+  transition: text-decoration 0.3s ease; /* Animasi saat menghover */
+}
+
+.login-logo-title {
+  color: #ffffff;
+  font-size: 2rem;
+  margin-top: 0px;
+  margin-left: 20px;
+  margin-right: 50px;
+}
+
+.login-form {
+  width: 350px;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  margin-left: 20px;
+ 
+}
+
+.Wrapper {
+  display: flex;
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.5) 0%, rgba(255, 255, 255, 0.312) 100%); /* Gradient dari merah ke putih dengan transparansi */
+  padding: 50px;
+  border-radius: 20px; /* Memberikan sudut melengkung */  
+  border: 2px solid rgba(0, 0, 0, 0.1); /* Memberikan border */
+  box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3); /* Memberikan efek bayangan dengan warna merah terang */
+}
+
+
+
+.login-form .form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.login-form .checkbox-remember {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.login-form .checkbox-remember input[type="checkbox"] {
+  width: 20px; /* Sesuaikan ukuran checkbox */
+  height: 20px; /* Sesuaikan ukuran checkbox */
+  margin-right: 10px; /* Spasi antara checkbox dan label */
+}
+
+.login-form .checkbox-remember label {
+  cursor: pointer; /* Membuat cursor berubah menjadi pointer ketika di atas label */
+}
+
+.login-form h2{  
+  margin-top: 0px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.form-group input:focus {
+  border-color: #ff0000;
+}
+
+.login-form button {
+  width: 100%;
+  background: linear-gradient(to right, #ff0000, #000000);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.login-form button:hover {
+  background: linear-gradient(to right, #cc0000, #000000);
+}
+
+.login-link, .notregister {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.9rem;
+}
+
+.login-link a, .notregister a {
+  color: #ff0000;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.login-link a:hover, .notregister a:hover {
+  color: #cc0000;
+  text-decoration: underline;
+}
+
+.error {
+  color: #ff3860;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+@media (max-width: 600px) {
+  .login-logo, .login-form {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .login-logo img {
+    width: 250px;
+  }
+  
+  .login-form {
+    width: 90%;
+    padding: 20px;
+  }
+}
