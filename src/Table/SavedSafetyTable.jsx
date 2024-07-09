@@ -107,7 +107,7 @@ const handleNewFactor = (resultIndex, year) => {
         const formData = new FormData();
         formData.append('file', selectedFile); // Append the actual file to FormData
 
-        const response = await fetch('http://localhost:8080/kpi/file/kpi', {
+        const response = await fetch('http://172.30.16.249: 8081/kpi/file/kpi', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -172,8 +172,8 @@ const handleNewFactor = (resultIndex, year) => {
       const isNewData = !items.some(item => item.Item_ID === item_id);
       const method = isNewData ? 'POST' : 'PUT';
       const url = isNewData
-        ? `http://localhost:8080/kpi/item`
-        : `http://localhost:8080/kpi/item/entire/${item_id}`;
+        ? `http://172.30.16.249: 8081/kpi/item`
+        : `http://172.30.16.249: 8081/kpi/item/entire/${item_id}`;
   
       const response = await fetch(url, {
         method,
@@ -284,7 +284,7 @@ const handleNewFactor = (resultIndex, year) => {
   useEffect(() => {
     var responseClone;
   
-    fetch('http://localhost:8080/kpi/item')
+    fetch('http://172.30.16.249: 8081/kpi/item')
       .then(function(response) {
         responseClone = response.clone();
         return response.json();
@@ -328,7 +328,7 @@ const handleNewFactor = (resultIndex, year) => {
         // Inform user that data deletion process is starting
         alert('Harap menunggu data sedang dihapus...');
   
-        const response = await fetch(`http://localhost:8080/kpi/yearly/entire/${selectedYear}`, {
+        const response = await fetch(`http://172.30.16.249: 8081/kpi/yearly/entire/${selectedYear}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -426,7 +426,7 @@ const handleDeleteRowClick = async (item_id) => {
   alert('Seluruh data pada tahun ini sedang dalam proses penghapusan, mohon menunggu!')
 
   try {
-    const response = await fetch(`http://localhost:8080/kpi/item/entire/${item_id}`, {
+    const response = await fetch(`http://172.30.16.249: 8081/kpi/item/entire/${item_id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -458,7 +458,7 @@ const handleDeletePerResult = async (result_id) => {
   const authToken = localStorage.getItem('authToken');
 
   try {
-    const response = await fetch(`http://localhost:8080/kpi/result/entire/${result_id}`, {
+    const response = await fetch(`http://172.30.16.249: 8081/kpi/result/entire/${result_id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -498,7 +498,7 @@ const handleDeletePerFactor = async (factor_id) => {
   const authToken = localStorage.getItem('authToken');
 
   try {
-    const response = await fetch(`http://localhost:8080/kpi/factor/entire/${factor_id}`, {
+    const response = await fetch(`http://172.30.16.249: 8081/kpi/factor/entire/${factor_id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
