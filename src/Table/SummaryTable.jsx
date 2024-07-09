@@ -156,7 +156,7 @@ const handlePostProject = () => {
   };
 
   console.log("Posting summary data:", JSON.stringify(summaryData));
-  fetch("http://localhost:8080/kpi/summary", {
+  fetch("http://172.30.16.249: 8081/kpi/summary", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
