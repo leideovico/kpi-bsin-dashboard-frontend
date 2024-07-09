@@ -25,7 +25,7 @@ const EditUploadTableAnalysis = () => {
 
   const fetchMasalahData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/kpi/masalah");
+      const response = await fetch("http://172.30.16.249: 8081/kpi/masalah");
       if (response.ok) {
         const responseData = await response.json();
         const data = responseData.data;
@@ -88,7 +88,7 @@ const EditUploadTableAnalysis = () => {
           const formData = new FormData();
           formData.append('file', selectedFile); // Append the actual file to FormData
   
-          const response = await fetch('http://localhost:8080/kpi/file/analisa', {
+          const response = await fetch('http://172.30.16.249: 8081/kpi/file/analisa', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -137,7 +137,7 @@ const EditUploadTableAnalysis = () => {
 const fetchData = async () => {
   try {
     // Lakukan permintaan fetch data yang diperlukan dari server
-    const response = await fetch("http://localhost:8080/kpi/masalah");
+    const response = await fetch("http://172.30.16.249: 8081/kpi/masalah");
     if (response.ok) {
       const responseData = await response.json();
       const data = responseData.data;
@@ -176,7 +176,7 @@ const handleDeleteAllData = async (year) => {
       const authToken = localStorage.getItem("authToken");
   
       // Endpoint untuk menghapus seluruh data masalah pada tahun tertentu
-      const response = await fetch(`http://localhost:8080/kpi/analisa/entire/${year}`, {
+      const response = await fetch(`http://172.30.16.249: 8081/kpi/analisa/entire/${year}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -208,7 +208,7 @@ const handleDeleteAllData = async (year) => {
     }
     try {
       const authToken = localStorage.getItem("authToken");
-      const response = await fetch(`http://localhost:8080/kpi/masalah/${masalahID}`, {
+      const response = await fetch(`http://172.30.16.249: 8081/kpi/masalah/${masalahID}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${authToken}`
@@ -304,7 +304,7 @@ const handleDeleteAllData = async (year) => {
   
           console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
   
-          promises.push(fetch(`http://localhost:8080/kpi/masalah/${problem.Masalah_ID}`, {
+          promises.push(fetch(`http://172.30.16.249: 8081/kpi/masalah/${problem.Masalah_ID}`, {
             method: "PUT",
             headers: {
               'Content-Type': 'application/json',
@@ -337,7 +337,7 @@ const handleDeleteAllData = async (year) => {
   
           console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
   
-          promises.push(fetch(`http://localhost:8080/kpi/masalah`, {
+          promises.push(fetch(`http://172.30.16.249: 8081/kpi/masalah`, {
             method: "POST",
             headers: {
               'Content-Type': 'application/json',
