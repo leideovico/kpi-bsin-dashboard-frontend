@@ -83,7 +83,7 @@ const handleFileUpload = async () => {
       const formData = new FormData();
       formData.append('file', selectedFile); // Append the actual file to FormData
 
-      const response = await fetch('http://localhost:8080/kpi/file/summary', {
+      const response = await fetch('http://172.30.16.249: 8081/kpi/file/summary', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -200,7 +200,7 @@ const handleIssuedDateChange = (issuedDate) => {
   const fetchData = async () => {
     try {
       const authToken = localStorage.getItem("authToken");
-      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+      const summaryResponse = await fetch("http://172.30.16.249: 8081/kpi/summary", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -382,7 +382,7 @@ const handleIssuedDateChange = (issuedDate) => {
         };
   
         // Execute the PUT request
-        let response = await fetch(`http://localhost:8080/kpi/summary/entire/${summaryId}`, {
+        let response = await fetch(`http://172.30.16.249: 8081/kpi/summary/entire/${summaryId}`, {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -416,7 +416,7 @@ const handleIssuedDateChange = (issuedDate) => {
             Remarks: newRow.remarks
           };
   
-          response = await fetch(`http://localhost:8080/kpi/summary/entire`, {
+          response = await fetch(`http://172.30.16.249: 8081/kpi/summary/entire`, {
             method: "POST",
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -527,7 +527,7 @@ const handleIssuedDateChange = (issuedDate) => {
       const summaryId = editTableData[issuedDate].summary_id;
   
       // Execute the DELETE request
-      const response = await fetch(`http://localhost:8080/kpi/summary/entire/${summaryId}`, {
+      const response = await fetch(`http://172.30.16.249: 8081/kpi/summary/entire/${summaryId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${authToken}`,
