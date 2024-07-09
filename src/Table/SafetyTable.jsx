@@ -234,7 +234,7 @@ const handlePlanChange = (rowIndex, factorIndex, month, value) => {
 
     const authToken = localStorage.getItem("authToken");
 
-    fetch("http://localhost:8080/kpi/item/entire", {
+    fetch("http://172.30.16.249: 8081/kpi/item/entire", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
