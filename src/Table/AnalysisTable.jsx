@@ -78,7 +78,7 @@ const AnalysisTable = () => {
     console.log("Problems to be sent:", problems); // Log problems for debugging
   
     const problemPromises = problems.map(problem => {
-      return fetch("http://localhost:8080/kpi/masalah", {
+      return fetch("http://172.30.16.249: 8081/kpi/masalah", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
