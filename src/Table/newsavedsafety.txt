@@ -1,0 +1,3471 @@
+import React, { useState, useEffect } from 'react';
+import "../Styles/saved-table.css";
+import * as XLSX from 'xlsx';
+
+
+const SavedSafetyTable = () => {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({});
+  const [lastRowId, setLastRowId] = useState(0);
+  const [isEditingRows, setIsEditingRows] = useState([]);
+  const [editingTableIndex, setEditingTableIndex] = useState(null); // State baru untuk menyimpan indeks tabel yang sedang dalam mode pengeditan
+  const [file, setFile] = useState(null); // State untuk menyimpan file yang diupload
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileData, setFileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // State for loading message
+
+
+  // Fungsi untuk menambahkan faktor baru
+const handleNewFactor = (resultIndex, year) => {
+  const newFactor = {
+  Factor_ID: null, // or generate an id if necessary
+  Title: "",
+  Unit: "",
+  Target: "",
+  Planned: {
+  Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+  },
+  Actual: {
+  Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+  }
+  };
+  
+  // Menambahkan faktor baru ke data yang sedang diedit
+  setEditedData(prevData => {
+  const newData = JSON.parse(JSON.stringify(prevData)); // Deep clone to avoid direct state mutation
+  if (newData.Year === year) {
+  newData.Results[resultIndex].Factors.push(newFactor); // Add new factor to the specific result
+  }
+  return newData;
+  });
+  
+  // Update the filteredItems to show the new factor in the UI immediately
+  setFilteredItems(prevFilteredItems => {
+  return prevFilteredItems.map(item => {
+  if (item.Year === year) {
+  const updatedResults = item.Results.map((result, idx) => {
+  if (idx === resultIndex) {
+  return {
+  ...result,
+  Factors: [...result.Factors, newFactor]
+  };
+  }
+  return result;
+  });
+  return {
+  ...item,
+  Results: updatedResults
+  };
+  }
+  return item;
+  });
+  });
+  };
+
+  // This function handles file selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    console.log('File selected:', file); // Log the selected file
+    setSelectedFile(file); // Set the selected file to the state
+
+    // Read the file data for preview purposes (optional)
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const workbook = XLSX.read(event.target.result, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        setFileData(data); // Store parsed data for preview
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
+  // This function handles file upload
+  const handleFileUpload = async () => {
+    if (selectedFile) { // Check if a file is selected
+      try {
+        console.log('Preparing to upload file:', selectedFile); // Log before uploading
+        alert('File sedang diproses, harap menunggu hingga terdapat pop up selanjutnya!');
+
+        const formData = new FormData();
+        formData.append('file', selectedFile); // Append the actual file to FormData
+
+        const response = await fetch('http://localhost:8080/kpi/file/kpi', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            // 'Content-Type' is not needed; 'fetch' sets it automatically when FormData is used.
+          },
+          body: formData // Send the FormData containing the file
+        });
+
+        if (response.ok) {
+          console.log('File uploaded successfully'); // Log success
+          alert('File berhasil diunggah dan data diproses');
+          window.location.reload(); // Refresh the page after successful upload
+          // If you want to redirect to a specific URL, you can use:
+          // window.location.href = 'your-target-url';
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to upload file:', errorText); // Log the error message
+          alert('Anda sudah mengupload data pada tahun tersebut, tolong lakukan update data apabila ingin mengelola data pada tahun tersebut!')
+          // alert(`Gagal mengunggah file: ${errorText}`);
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error); // Log the error
+        alert('Error uploading file: ' + error.message);
+      }
+    } else {
+      alert('Harap pilih file terlebih dahulu');
+    }
+  };
+
+  useEffect(() => {
+    // Initialize isEditingRows state based on the number of items
+    setIsEditingRows(new Array(items.length).fill(false));
+  }, [items]);
+
+  const handleSaveData = async (item_id) => {
+    setIsLoading(true); // Set loading to true
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const formattedData = {
+        Item_ID: item_id,
+        Name: editedData.Name,
+        Results: editedData.Results.map(result => ({
+          Name: result.Name,
+          Result_ID: result.Result_ID,
+          Factors: result.Factors.map(factor => ({
+            Factor_ID: factor.Factor_ID,
+            Title: factor.Title,
+            Unit: factor.Unit,
+            Target: factor.Target,
+            Planned: factor.Planned,
+            Actual: factor.Actual
+          }))
+        })),
+        Year: editedData.Year
+      };
+  
+      const isNewData = !items.some(item => item.Item_ID === item_id);
+      const method = isNewData ? 'POST' : 'PUT';
+      const url = isNewData
+        ? `http://localhost:8080/kpi/item`
+        : `http://localhost:8080/kpi/item/entire/${item_id}`;
+  
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify(formattedData)
+      });
+  
+      if (response.ok) {
+        setIsLoading(false); // Set loading to false
+        alert('Data updated successfully');
+        setIsEditing(false);
+        const updatedItems = isNewData
+          ? [...items, formattedData]
+          : items.map(item => item.Item_ID === item_id ? formattedData : item);
+        setItems(updatedItems);
+      } else {
+        const errorText = await response.text();
+        setIsLoading(false); // Set loading to false
+        console.error('Failed to update data:', errorText);
+        alert(`Tolong tekan back button pada browser untuk proses login kembali!`);
+        // alert(`Failed to update data: ${errorText}`);
+      }
+  
+    } catch (error) {
+      setIsLoading(false); // Set loading to false
+      console.error('Error updating data:', error);
+      alert('Mohon login kembali untuk mengelola data atau update sesuai format, pastikan tidak menginput data pada tahun yang sama!')
+    }
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+  
+    // Membuat baris baru dengan data default
+    const newRow = {
+      Result_ID: newRowId,
+      Name: "",
+      Factors: [
+        {
+          Title: "",
+          Unit: "",
+          Target: "",
+          Planned: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          },
+          Actual: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          }
+        }
+      ],
+      Year: year
+    };
+  
+    // Menambahkan baris baru ke data yang sedang diedit, hanya jika tahunnya cocok
+    setEditedData(prevData => {
+      // Mengecek apakah tahun pada data yang sedang diedit sama dengan tahun yang dipilih
+      if (prevData.Year === year) {
+        return {
+          ...prevData,
+          Results: [...prevData.Results, newRow]
+        };
+      } else {
+        // Jika tahunnya tidak cocok, tidak ada perubahan yang dibuat
+        return prevData;
+      }
+    });
+  
+    // Juga tambahkan baris baru ke filteredItems
+    setFilteredItems(prevFilteredItems => {
+      return prevFilteredItems.map(item => {
+        if (item.Year === year) {
+          return {
+            ...item,
+            Results: [...item.Results, newRow]
+          };
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleChange = (e, resultIndex, factorIndex, type, month) => {
+    const { value } = e.target;
+    const numericValue = parseFloat(value);
+  
+    if (!isNaN(numericValue)) {
+      setEditedData(prevData => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        if (!newData.Results[resultIndex].Factors[factorIndex][type]) {
+          newData.Results[resultIndex].Factors[factorIndex][type] = { Monthly: [{}] };
+        } else if (!newData.Results[resultIndex].Factors[factorIndex][type].Monthly) {
+          newData.Results[resultIndex].Factors[factorIndex][type].Monthly = [{}];
+        }
+        newData.Results[resultIndex].Factors[factorIndex][type].Monthly[0][month] = numericValue;
+        return newData;
+      });
+    }
+  };
+  
+  const handleNameChange = (e) => {
+    setSearchName(e.target.value);
+  };
+
+  useEffect(() => {
+    var responseClone;
+  
+    fetch('http://localhost:8080/kpi/item')
+      .then(function(response) {
+        responseClone = response.clone();
+        return response.json();
+      })
+      .then(function(data) {
+        console.log('Response JSON (item):', data);
+  
+        if (data) {
+          setItems(data.data);
+          if (data.data.length > 0) {
+            setSelectedItem(data.data[0].Name);
+            const years = Array.from(new Set(data.data.map(item => item.Year)));
+            setAvailableYears(years);
+          }
+        } else {
+          console.error('Empty data received');
+        }
+      })
+      .catch(function(error) {
+        console.error('Error fetching item data:', error);
+        responseClone.text().then(function(bodyText) {
+          console.log('Received the following instead of valid JSON:', bodyText);
+        });
+      });
+  }, []);
+  
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.Name === selectedItem &&
+      (isEditing ? item.Year === editedData.Year : selectedYears.length === 0 || selectedYears.includes(item.Year)) &&
+      (item.Results.some(result => result.Name.toLowerCase().includes(searchName.toLowerCase())))
+    );
+    setFilteredItems(filtered);
+  }, [selectedItem, selectedYears, items, searchName, isEditing, editedData.Year]);
+  
+
+  // Fungsi untuk menentukan apakah tahun tertentu terpilih atau tidak
+  const isYearSelected = (year) => {
+    return selectedYears.includes(year);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYears(prevSelectedYears =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter(y => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYears([]);
+    setSearchName('');
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleUpdateData = (itemIndex) => {
+    // Cek apakah ada tabel lain yang sedang dalam mode pengeditan
+    const isAnyTableEditing = isEditingRows.some((editingStatus, index) => editingStatus && index !== itemIndex);
+  
+    // Jika ada tabel lain yang sedang dalam mode pengeditan, munculkan prompt
+    if (isAnyTableEditing) {
+      alert("Anda hanya bisa mengedit 1 tabel!");
+    } else {
+      // Set isEditing status for the clicked row
+      setIsEditingRows(prevIsEditingRows => {
+        const updatedIsEditingRows = [...prevIsEditingRows];
+        updatedIsEditingRows[itemIndex] = true;
+        return updatedIsEditingRows;
+      });
+  
+      // Set edited data for the clicked row
+      const dataToEdit = filteredItems[itemIndex];
+      console.log('Data to be updated:', dataToEdit);
+      if (dataToEdit) {
+        setEditedData({ ...dataToEdit });
+        setEditingTableIndex(itemIndex); // Set indeks tabel yang sedang dalam mode pengeditan
+      } else {
+        console.error('No data available for the selected item');
+      }
+    }
+  };
+  
+
+  
+// Dalam komponen SavedSafetyTable
+const handleDeleteRowClick = async (item_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus seluruh data pada tahun ini?");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+      alert('Seluruh data pada tahun ini sedang dalam proses penghapusan, mohon menunggu!')
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/item/entire/${item_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Row deleted successfully');
+      // Hapus baris dari state filteredItems
+      setFilteredItems(prevFilteredItems => prevFilteredItems.filter(item => item.Item_ID !== item_id));
+      // Hapus baris dari state items
+      setItems(prevItems => prevItems.filter(item => item.Item_ID !== item_id));
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete row:', errorText);
+      alert(`Failed to delete row: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting row:', error);
+  }
+};
+
+const handleDeletePerResult = async (result_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus result ini? Seluruh factor yang terhubung dengan result ini juga akan terhapus!");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/result/entire/${result_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Result deleted successfully');
+      setFilteredItems(prevFilteredItems => {
+        return prevFilteredItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+      setItems(prevItems => {
+        return prevItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete result:', errorText);
+      alert(`Failed to delete result: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting result:', error);
+  }
+};
+
+const handleDeletePerFactor = async (factor_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus seluruh data pada tahun ini?");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/factor/entire/${factor_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Factor deleted successfully');
+      setFilteredItems(prevFilteredItems => {
+        return prevFilteredItems.map(item => ({
+          ...item,
+          Results: item.Results.map(result => ({
+            ...result,
+            Factors: result.Factors?.filter(factor => factor.Factor_ID !== factor_id) || []
+          }))
+        }));
+      });
+      setItems(prevItems => {
+        return prevItems.map(item => ({
+          ...item,
+          Results: item.Results.map(result => ({
+            ...result,
+            Factors: result.Factors?.filter(factor => factor.Factor_ID !== factor_id) || []
+          }))
+        }));
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete factor:', errorText);
+      alert(`Failed to delete factor: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting factor:', error);
+  }
+};
+
+  
+
+  return (
+    <div className="table-container">
+      <div style={{marginBottom:"10px"}}  className="filter-container">
+        <label htmlFor="item-select"></label>
+        <select
+          id="item-select"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+        >
+          <option value="S">Safety</option>
+          <option value="E">Environment</option>
+          <option value="Q">Quality</option>
+          <option value="C">Cost</option>
+          <option value="D">Delivery</option>
+        </select>
+
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Pilih Tahun
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              {availableYears.map((year, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={year}
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <button onClick={handleResetFilters} className="dropdown-button" style={{marginRight:"800px"}}> Hapus Semua Filter </button>
+       
+
+         
+      </div>
+
+           <input s
+            type="text"
+            placeholder="Filter Result..."
+            value={searchName}
+            onChange={handleNameChange}
+            style={{ width: 'calc(100% - 14px)', marginBottom:"10px" }}
+          />
+ 
+       <div className='inputfile' style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+      <input type="file" onChange={handleFileChange} style={{ marginRight: '10px', padding: '5px 10px', borderRadius: '5px'}} />
+      <button onClick={handleFileUpload} style={{ padding: '5px 10px', borderRadius: '5px', backgroundImage: 'linear-gradient(to right, rgb(26, 171, 0), rgb(12, 217, 29))', color: 'white', border: 'none' }}>Upload Data</button>
+ 
+</div>
+      {filteredItems.length > 0 ? (
+        filteredItems.map((item, itemIndex) => (
+          <div key={itemIndex}>
+            {item.Results.length > 0 ? (
+              <table key={`${itemIndex}-${item.Year}`} className="saved-safety-table">
+                <caption>{`Tahun ${item.Year}`}</caption>
+                <thead>
+                  <tr>
+                    <th rowSpan="2">KPI Result</th>
+                    <th colSpan="1">KPI Factor</th>
+                    <th colSpan="2" rowSpan="2">Status</th>
+                    <th rowSpan="3">Unit</th>
+                    <th rowSpan="3">Target</th>
+                    <th colSpan="12">Bulan</th>
+                   </tr>
+                  <tr>
+                    <th>KPI Factor Name</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.Results.map((result, resultIndex) => (
+                result.Factors.length > 0 ? (
+                  result.Factors.map((factor, factorIndex) => (
+                    <React.Fragment key={`${itemIndex}-${resultIndex}-${factorIndex}`}>
+                      {/* Render baris dengan kolom Name, Title, Unit, Target */}
+                      <tr>
+                      <td rowSpan={2}>
+                        <div style={{display:"inline-block"}} className='delete'>
+                        {isEditingRows[itemIndex] ? (
+                    <>
+                      <textarea
+                        value={editedData.Results[resultIndex].Name}
+                        onChange={(e) => {
+                          const updatedData = { ...editedData };
+                          updatedData.Results[resultIndex].Name = e.target.value;
+                          setEditedData(updatedData);
+                        }}
+                        style={{ width: '100px', height: '50px' }}
+                      />
+                      <div>
+                        <button style={{marginBottom:"5px", marginRight:"5px"}} onClick={() => handleDeletePerResult(result.Result_ID)}>Delete Result</button>
+                        <button onClick={() => handleDeletePerFactor(factor.Factor_ID)}>Delete Factor</button>
+                      </div>
+
+                      <div className='savechanges'>
+                        <button
+                          onClick={() => handleNewFactor(resultIndex, item.Year)}
+                          style={{ width: '100%' }}
+                        >
+                          Add New Factor
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>{result.Name}</>
+                  )}
+                      </div>
+                    </td>
+
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Title}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Title = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Title
+                          )}
+                        </td>
+                        <td colSpan={2}>Plan</td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Unit}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Unit = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Unit
+                          )}
+                        </td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Target}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Target = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Target
+                          )}
+                        </td>
+                        {/* Render kolom bulan untuk Planned */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Planned']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Planned', month)}
+                              />
+                            ) : (
+                              (factor['Planned'] && factor['Planned'].Monthly[0][month]) || 0
+                            )}
+                          </td>
+                        ))}
+               
+                      </tr>
+                      {/* Render baris untuk Actual */}
+                      <tr>
+                        <td colSpan={2}>Actual</td>
+                        {/* Render kolom bulan untuk Actual */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Actual']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Actual', month)}
+                              />
+                            ) : (
+                              (factor['Actual'] && factor['Actual'].Monthly[0][month]) || 0
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr key={`${itemIndex}-${resultIndex}-no-factors`}>
+                    <td colSpan="18">Data factors telah dihapus</td>
+                  </tr>
+                )
+              ))}
+
+            </tbody>
+
+            <div className="buttonsum" style={{ display: 'flex' }}>
+   {isEditingRows[itemIndex] ? (
+      <>
+      <div className='delete'>
+        <button
+          onClick={() => handleDeleteRowClick(item.Item_ID)}
+          style={{
+            marginRight: '5px',
+             color: 'white',
+            display: 'inline-block',
+            marginBottom: '5px',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            padding: '10px 20px'
+,
+            marginTop: '10px'
+
+          }}
+        >
+          Delete All Data
+        </button>
+        </div>
+        <div className='savechanges'>
+
+        <button
+          onClick={() => handleAddRowClick(item.Year)}
+          style={{
+              color: 'white',
+            marginTop:"10px",
+            width:"100%",
+            display: 'inline-block',
+            marginRight:'10px',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginBottom: '10px'
+          }}
+        >
+          Add New Result
+        </button>
+        </div>
+        <div className='savechanges'>
+        <button
+        onClick={() => handleSaveData(item.Item_ID)}
+        style={{
+          marginRight: '5px',
+          color: 'white',
+          marginTop:"10px",
+          marginBottom: '5px',
+          padding: '5px 10px',
+          border: 'none',
+          borderRadius: '5px',
+          padding: '10px 20px',
+          marginLeft:"5px"
+,
+    cursor: 'pointer'
+  }}
+>
+  Save Table Data
+</button>
+</div>
+
+        {/* <div className='savechanges'>
+        <button
+          onClick={() => handleNewFactor(itemIndex, item.Year)}
+          style={{
+            marginRight: '5px',
+            color: 'white',
+            marginTop: "10px",
+            width: "100%",
+            display: 'inline-block',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginBottom: '10px'
+          }}
+        >
+          Add New Factor
+        </button>
+      </div> */}
+      </>
+    ) : (
+      <>
+        <button
+  onClick={() => handleUpdateData(itemIndex)}
+  style={{
+    marginRight: '5px',
+    background: 'linear-gradient(to right, #1aab00, #0cd91d)',
+    color: 'white',
+    display: 'inline-block',
+    marginBottom: '10px',
+    padding: '5px 10px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px',
+    padding: '10px 20px'
+  }}
+>
+  Update Data
+</button>
+
+      </>
+    )}
+  </div>
+  {isLoading && <div style={{marginBottom:"15px"}}>Mohon menunggu... Tolong untuk TIDAK melakukan tindakan apapun pada proses penyimpanan data!</div>}
+
+          </table>
+          
+        ) : (
+          <p key={`${itemIndex}-no-results`}>Data results tidak tersedia</p>
+        )}
+      </div>
+    ))
+  ) : (
+    <p>Data items tidak tersedia</p>
+  )}
+</div>
+);
+};
+
+export default SavedSafetyTable;
+======================================
+
+25 Juni 2024
+
+import React, { useState, useEffect } from 'react';
+import "../Styles/saved-table.css";
+import * as XLSX from 'xlsx';
+import { useNavigate } from 'react-router-dom';
+
+
+
+const SavedSafetyTable = () => {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({});
+  const [lastRowId, setLastRowId] = useState(0);
+  const [isEditingRows, setIsEditingRows] = useState([]);
+  const [editingTableIndex, setEditingTableIndex] = useState(null); // State baru untuk menyimpan indeks tabel yang sedang dalam mode pengeditan
+  const [file, setFile] = useState(null); // State untuk menyimpan file yang diupload
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileData, setFileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // State for loading message
+  const navigate = useNavigate();
+
+
+
+  // Fungsi untuk menambahkan faktor baru
+const handleNewFactor = (resultIndex, year) => {
+  const newFactor = {
+  Factor_ID: null, // or generate an id if necessary
+  Title: "",
+  Unit: "",
+  Target: "",
+  Planned: {
+  Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+  },
+  Actual: {
+  Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+  }
+  };
+  
+  // Menambahkan faktor baru ke data yang sedang diedit
+  setEditedData(prevData => {
+  const newData = JSON.parse(JSON.stringify(prevData)); // Deep clone to avoid direct state mutation
+  if (newData.Year === year) {
+  newData.Results[resultIndex].Factors.push(newFactor); // Add new factor to the specific result
+  }
+  return newData;
+  });
+  
+  // Update the filteredItems to show the new factor in the UI immediately
+  setFilteredItems(prevFilteredItems => {
+  return prevFilteredItems.map(item => {
+  if (item.Year === year) {
+  const updatedResults = item.Results.map((result, idx) => {
+  if (idx === resultIndex) {
+  return {
+  ...result,
+  Factors: [...result.Factors, newFactor]
+  };
+  }
+  return result;
+  });
+  return {
+  ...item,
+  Results: updatedResults
+  };
+  }
+  return item;
+  });
+  });
+  };
+
+  // This function handles file selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    console.log('File selected:', file); // Log the selected file
+    setSelectedFile(file); // Set the selected file to the state
+
+    // Read the file data for preview purposes (optional)
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const workbook = XLSX.read(event.target.result, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        setFileData(data); // Store parsed data for preview
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
+  // This function handles file upload
+  const handleFileUpload = async () => {
+    if (selectedFile) { // Check if a file is selected
+      try {
+        console.log('Preparing to upload file:', selectedFile); // Log before uploading
+        alert('File sedang diproses, harap menunggu hingga terdapat pop up selanjutnya!');
+
+        const formData = new FormData();
+        formData.append('file', selectedFile); // Append the actual file to FormData
+
+        const response = await fetch('http://localhost:8080/kpi/file/kpi', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            // 'Content-Type' is not needed; 'fetch' sets it automatically when FormData is used.
+          },
+          body: formData // Send the FormData containing the file
+        });
+
+        if (response.ok) {
+          console.log('File uploaded successfully'); // Log success
+          alert('File berhasil diunggah dan data diproses');
+          window.location.reload(); // Refresh the page after successful upload
+          // If you want to redirect to a specific URL, you can use:
+          // window.location.href = 'your-target-url';
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to upload file:', errorText); // Log the error message
+          alert('Anda sudah mengupload data pada tahun tersebut, tolong lakukan update data apabila ingin mengelola data pada tahun tersebut!')
+          // alert(`Gagal mengunggah file: ${errorText}`);
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error); // Log the error
+        alert('Error uploading file: ' + error.message);
+      }
+    } else {
+      alert('Harap pilih file terlebih dahulu');
+    }
+  };
+
+  useEffect(() => {
+    // Initialize isEditingRows state based on the number of items
+    setIsEditingRows(new Array(items.length).fill(false));
+  }, [items]);
+
+  const handleSaveData = async (item_id) => {
+    setIsLoading(true); // Set loading to true
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const formattedData = {
+        Item_ID: item_id,
+        Name: editedData.Name,
+        Results: editedData.Results.map(result => ({
+          Name: result.Name,
+          Result_ID: result.Result_ID,
+          Factors: result.Factors.map(factor => ({
+            Factor_ID: factor.Factor_ID,
+            Title: factor.Title,
+            Unit: factor.Unit,
+            Target: factor.Target,
+            Planned: factor.Planned,
+            Actual: factor.Actual
+          }))
+        })),
+        Year: editedData.Year
+      };
+  
+      const isNewData = !items.some(item => item.Item_ID === item_id);
+      const method = isNewData ? 'POST' : 'PUT';
+      const url = isNewData
+        ? `http://localhost:8080/kpi/item`
+        : `http://localhost:8080/kpi/item/entire/${item_id}`;
+  
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify(formattedData)
+      });
+  
+      if (response.ok) {
+        setIsLoading(false); // Set loading to false
+        alert('Data updated successfully');
+        setIsEditing(false);
+        const updatedItems = isNewData
+          ? [...items, formattedData]
+          : items.map(item => item.Item_ID === item_id ? formattedData : item);
+        setItems(updatedItems);
+      } else {
+        const errorText = await response.text();
+        setIsLoading(false); // Set loading to false
+        console.error('Failed to update data:', errorText);
+        alert('Please log in again.');
+        navigate('/login'); // Redirect to login page        
+        // alert(`Failed to update data: ${errorText}`);
+      }
+  
+    } catch (error) {
+      setIsLoading(false); // Set loading to false
+      console.error('Error updating data:', error);
+      alert('Mohon login kembali untuk mengelola data atau update sesuai format, pastikan tidak menginput data pada tahun yang sama!')
+    }
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+  
+    // Membuat baris baru dengan data default
+    const newRow = {
+      Result_ID: newRowId,
+      Name: "",
+      Factors: [
+        {
+          Title: "",
+          Unit: "",
+          Target: "",
+          Planned: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          },
+          Actual: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          }
+        }
+      ],
+      Year: year
+    };
+  
+    // Menambahkan baris baru ke data yang sedang diedit, hanya jika tahunnya cocok
+    setEditedData(prevData => {
+      // Mengecek apakah tahun pada data yang sedang diedit sama dengan tahun yang dipilih
+      if (prevData.Year === year) {
+        return {
+          ...prevData,
+          Results: [...prevData.Results, newRow]
+        };
+      } else {
+        // Jika tahunnya tidak cocok, tidak ada perubahan yang dibuat
+        return prevData;
+      }
+    });
+  
+    // Juga tambahkan baris baru ke filteredItems
+    setFilteredItems(prevFilteredItems => {
+      return prevFilteredItems.map(item => {
+        if (item.Year === year) {
+          return {
+            ...item,
+            Results: [...item.Results, newRow]
+          };
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleChange = (e, resultIndex, factorIndex, type, month) => {
+    const { value } = e.target;
+    const numericValue = parseFloat(value);
+  
+    if (!isNaN(numericValue)) {
+      setEditedData(prevData => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        if (!newData.Results[resultIndex].Factors[factorIndex][type]) {
+          newData.Results[resultIndex].Factors[factorIndex][type] = { Monthly: [{}] };
+        } else if (!newData.Results[resultIndex].Factors[factorIndex][type].Monthly) {
+          newData.Results[resultIndex].Factors[factorIndex][type].Monthly = [{}];
+        }
+        newData.Results[resultIndex].Factors[factorIndex][type].Monthly[0][month] = numericValue;
+        return newData;
+      });
+    }
+  };
+  
+  const handleNameChange = (e) => {
+    setSearchName(e.target.value);
+  };
+
+  useEffect(() => {
+    var responseClone;
+  
+    fetch('http://localhost:8080/kpi/item')
+      .then(function(response) {
+        responseClone = response.clone();
+        return response.json();
+      })
+      .then(function(data) {
+        console.log('Response JSON (item):', data);
+  
+        if (data) {
+          setItems(data.data);
+          if (data.data.length > 0) {
+            setSelectedItem(data.data[0].Name);
+            const years = Array.from(new Set(data.data.map(item => item.Year)));
+            setAvailableYears(years);
+          }
+        } else {
+          console.error('Empty data received');
+        }
+      })
+      .catch(function(error) {
+        console.error('Error fetching item data:', error);
+        responseClone.text().then(function(bodyText) {
+          console.log('Received the following instead of valid JSON:', bodyText);
+        });
+      });
+  }, []);
+  
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.Name === selectedItem &&
+      (isEditing ? item.Year === editedData.Year : selectedYears.length === 0 || selectedYears.includes(item.Year)) &&
+      (item.Results.some(result => result.Name.toLowerCase().includes(searchName.toLowerCase())))
+    );
+    setFilteredItems(filtered);
+  }, [selectedItem, selectedYears, items, searchName, isEditing, editedData.Year]);
+  
+
+  // Fungsi untuk menentukan apakah tahun tertentu terpilih atau tidak
+  const isYearSelected = (year) => {
+    return selectedYears.includes(year);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYears(prevSelectedYears =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter(y => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYears([]);
+    setSearchName('');
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleUpdateData = (itemIndex) => {
+    // Cek apakah ada tabel lain yang sedang dalam mode pengeditan
+    const isAnyTableEditing = isEditingRows.some((editingStatus, index) => editingStatus && index !== itemIndex);
+  
+    // Jika ada tabel lain yang sedang dalam mode pengeditan, munculkan prompt
+    if (isAnyTableEditing) {
+      alert("Anda hanya bisa mengedit 1 tabel!");
+    } else {
+      // Set isEditing status for the clicked row
+      setIsEditingRows(prevIsEditingRows => {
+        const updatedIsEditingRows = [...prevIsEditingRows];
+        updatedIsEditingRows[itemIndex] = true;
+        return updatedIsEditingRows;
+      });
+  
+      // Set edited data for the clicked row
+      const dataToEdit = filteredItems[itemIndex];
+      console.log('Data to be updated:', dataToEdit);
+      if (dataToEdit) {
+        setEditedData({ ...dataToEdit });
+        setEditingTableIndex(itemIndex); // Set indeks tabel yang sedang dalam mode pengeditan
+      } else {
+        console.error('No data available for the selected item');
+      }
+    }
+  };
+  
+
+  
+// Dalam komponen SavedSafetyTable
+const handleDeleteRowClick = async (item_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus seluruh data pada tahun ini?");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+  alert('Seluruh data pada tahun ini sedang dalam proses penghapusan, mohon menunggu!')
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/item/entire/${item_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Row deleted successfully');
+      // Hapus baris dari state filteredItems
+      setFilteredItems(prevFilteredItems => prevFilteredItems.filter(item => item.Item_ID !== item_id));
+      // Hapus baris dari state items
+      setItems(prevItems => prevItems.filter(item => item.Item_ID !== item_id));
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete row:', errorText);
+      alert(`Failed to delete row: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting row:', error);
+  }
+};
+
+const handleDeletePerResult = async (result_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus result ini? Seluruh factor yang terhubung dengan result ini juga akan terhapus!");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/result/entire/${result_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Result deleted successfully');
+      setFilteredItems(prevFilteredItems => {
+        return prevFilteredItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+      setItems(prevItems => {
+        return prevItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete result:', errorText);
+      alert(`Failed to delete result: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting result:', error);
+  }
+};
+
+const handleDeletePerFactor = async (factor_id) => {
+  const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus seluruh data pada tahun ini?");
+  if (!userConfirmed) {
+    return; // Exit the function if the user cancels the deletion
+  }
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/factor/entire/${factor_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Factor deleted successfully');
+      setFilteredItems(prevFilteredItems => {
+        return prevFilteredItems.map(item => ({
+          ...item,
+          Results: item.Results.map(result => ({
+            ...result,
+            Factors: result.Factors?.filter(factor => factor.Factor_ID !== factor_id) || []
+          }))
+        }));
+      });
+      setItems(prevItems => {
+        return prevItems.map(item => ({
+          ...item,
+          Results: item.Results.map(result => ({
+            ...result,
+            Factors: result.Factors?.filter(factor => factor.Factor_ID !== factor_id) || []
+          }))
+        }));
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete factor:', errorText);
+      alert(`Failed to delete factor: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting factor:', error);
+  }
+};
+
+  
+
+  return (
+    <div className="table-container">
+      <div style={{marginBottom:"10px"}}  className="filter-container">
+        <label htmlFor="item-select"></label>
+        <select
+          id="item-select"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+        >
+          <option value="S">Safety</option>
+          <option value="E">Environment</option>
+          <option value="Q">Quality</option>
+          <option value="C">Cost</option>
+          <option value="D">Delivery</option>
+        </select>
+
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Pilih Tahun
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              {availableYears.map((year, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={year}
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <button onClick={handleResetFilters} className="dropdown-button" style={{marginRight:"800px"}}> Hapus Semua Filter </button>
+       
+
+         
+      </div>
+
+           <input s
+            type="text"
+            placeholder="Filter Result..."
+            value={searchName}
+            onChange={handleNameChange}
+            style={{ width: 'calc(100% - 14px)', marginBottom:"10px" }}
+          />
+ 
+       <div className='inputfile' style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+      <input type="file" onChange={handleFileChange} style={{ marginRight: '10px', padding: '5px 10px', borderRadius: '5px'}} />
+      <button onClick={handleFileUpload} style={{ padding: '5px 10px', borderRadius: '5px', backgroundImage: 'linear-gradient(to right, rgb(26, 171, 0), rgb(12, 217, 29))', color: 'white', border: 'none' }}>Upload Data</button>
+ 
+</div>
+      {filteredItems.length > 0 ? (
+        filteredItems.map((item, itemIndex) => (
+          <div key={itemIndex}>
+            {item.Results.length > 0 ? (
+              <table key={`${itemIndex}-${item.Year}`} className="saved-safety-table">
+                <caption>{`Tahun ${item.Year}`}</caption>
+                <thead>
+                  <tr>
+                    <th rowSpan="2">KPI Result</th>
+                    <th colSpan="1">KPI Factor</th>
+                    <th colSpan="2" rowSpan="2">Status</th>
+                    <th rowSpan="3">Unit</th>
+                    <th rowSpan="3">Target</th>
+                    <th colSpan="12">Bulan</th>
+                   </tr>
+                  <tr>
+                    <th>KPI Factor Name</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.Results.map((result, resultIndex) => (
+                result.Factors.length > 0 ? (
+                  result.Factors.map((factor, factorIndex) => (
+                    <React.Fragment key={`${itemIndex}-${resultIndex}-${factorIndex}`}>
+                      {/* Render baris dengan kolom Name, Title, Unit, Target */}
+                      <tr>
+                      <td rowSpan={2}>
+                        <div style={{display:"inline-block"}} className='delete'>
+                        {isEditingRows[itemIndex] ? (
+                    <>
+                      <textarea
+                        value={editedData.Results[resultIndex].Name}
+                        onChange={(e) => {
+                          const updatedData = { ...editedData };
+                          updatedData.Results[resultIndex].Name = e.target.value;
+                          setEditedData(updatedData);
+                        }}
+                        style={{ width: '100px', height: '50px' }}
+                      />
+                      <div>
+                        <button style={{marginBottom:"5px", marginRight:"5px"}} onClick={() => handleDeletePerResult(result.Result_ID)}>Delete Result</button>
+                        <button onClick={() => handleDeletePerFactor(factor.Factor_ID)}>Delete Factor</button>
+                      </div>
+
+                      <div className='savechanges'>
+                        <button
+                          onClick={() => handleNewFactor(resultIndex, item.Year)}
+                          style={{ width: '100%' }}
+                        >
+                          Add New Factor
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>{result.Name}</>
+                  )}
+                      </div>
+                    </td>
+
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Title}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Title = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Title
+                          )}
+                        </td>
+                        <td colSpan={2}>Plan</td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Unit}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Unit = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Unit
+                          )}
+                        </td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Target}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Target = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Target
+                          )}
+                        </td>
+                        {/* Render kolom bulan untuk Planned */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Planned']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Planned', month)}
+                              />
+                            ) : (
+                              (factor['Planned'] && factor['Planned'].Monthly[0][month]) || 0
+                            )}
+                          </td>
+                        ))}
+               
+                      </tr>
+                      {/* Render baris untuk Actual */}
+                      <tr>
+                        <td colSpan={2}>Actual</td>
+                        {/* Render kolom bulan untuk Actual */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Actual']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Actual', month)}
+                              />
+                            ) : (
+                              (factor['Actual'] && factor['Actual'].Monthly[0][month]) || 0
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr key={`${itemIndex}-${resultIndex}-no-factors`}>
+                    <td colSpan="18">Data factors telah dihapus</td>
+                  </tr>
+                )
+              ))}
+
+            </tbody>
+
+            <div className="buttonsum" style={{ display: 'flex' }}>
+   {isEditingRows[itemIndex] ? (
+      <>
+      <div className='delete'>
+        <button
+          onClick={() => handleDeleteRowClick(item.Item_ID)}
+          style={{
+            marginRight: '5px',
+             color: 'white',
+            display: 'inline-block',
+            marginBottom: '5px',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            padding: '10px 20px'
+,
+            marginTop: '10px'
+
+          }}
+        >
+          Delete All Data
+        </button>
+        </div>
+        <div className='savechanges'>
+
+        <button
+          onClick={() => handleAddRowClick(item.Year)}
+          style={{
+              color: 'white',
+            marginTop:"10px",
+            width:"100%",
+            display: 'inline-block',
+            marginRight:'10px',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginBottom: '10px'
+          }}
+        >
+          Add New Result
+        </button>
+        </div>
+        <div className='savechanges'>
+        <button
+        onClick={() => handleSaveData(item.Item_ID)}
+        style={{
+          marginRight: '5px',
+          color: 'white',
+          marginTop:"10px",
+          marginBottom: '5px',
+          padding: '5px 10px',
+          border: 'none',
+          borderRadius: '5px',
+          padding: '10px 20px',
+          marginLeft:"5px"
+,
+    cursor: 'pointer'
+  }}
+>
+  Save Table Data
+</button>
+</div>
+
+        {/* <div className='savechanges'>
+        <button
+          onClick={() => handleNewFactor(itemIndex, item.Year)}
+          style={{
+            marginRight: '5px',
+            color: 'white',
+            marginTop: "10px",
+            width: "100%",
+            display: 'inline-block',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginBottom: '10px'
+          }}
+        >
+          Add New Factor
+        </button>
+      </div> */}
+      </>
+    ) : (
+      <>
+        <button
+  onClick={() => handleUpdateData(itemIndex)}
+  style={{
+    marginRight: '5px',
+    background: 'linear-gradient(to right, #1aab00, #0cd91d)',
+    color: 'white',
+    display: 'inline-block',
+    marginBottom: '10px',
+    padding: '5px 10px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px',
+    padding: '10px 20px'
+  }}
+>
+  Update Data
+</button>
+
+      </>
+    )}
+  </div>
+  {isLoading && <div style={{marginBottom:"15px"}}>Mohon menunggu... Tolong untuk TIDAK melakukan tindakan apapun pada saat proses penyimpanan data!</div>}
+
+          </table>
+          
+        ) : (
+          <p key={`${itemIndex}-no-results`}>Data results tidak tersedia</p>
+        )}
+      </div>
+    ))
+  ) : (
+    <p>Data items tidak tersedia</p>
+  )}
+</div>
+);
+};
+
+export default SavedSafetyTable;
+
+
+========================================
+
+import React, { useState, useEffect } from "react";
+import "../Styles/dropdowns.css";
+import * as XLSX from 'xlsx';
+import { useNavigate } from 'react-router-dom';
+
+
+
+const EditUploadTableAnalysis = () => {
+  const [problemsByYear, setProblemsByYear] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [originalValues, setOriginalValues] = useState({});
+  const [newRows, setNewRows] = useState([]); // State untuk menyimpan baris-baris data baru
+  const navigate = useNavigate();
+
+
+  useEffect(() => {
+    fetchMasalahData();
+  }, []);
+
+  const fetchMasalahData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/kpi/masalah");
+      if (response.ok) {
+        const responseData = await response.json();
+        const data = responseData.data;
+        console.log("Received data:", data);
+
+        // Group problems by year
+        const groupedProblems = {};
+        data.forEach(problem => {
+          if (!groupedProblems[problem.Year]) {
+            groupedProblems[problem.Year] = [];
+          }
+          groupedProblems[problem.Year].push(problem);
+        });
+
+        setProblemsByYear(groupedProblems);
+
+        // Extract available years
+        const years = Object.keys(groupedProblems);
+        setAvailableYears(years);
+        setSelectedYears(years); // Initially select all years
+      } else {
+        console.error("Failed to fetch masalah data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching masalah data:", error);
+    }
+  };
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileData, setFileData] = useState(null);
+
+  // This function handles file selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    console.log('File selected:', file); // Log the selected file
+    setSelectedFile(file); // Set the selected file to the state
+
+    // Read the file data for preview purposes (optional)
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const workbook = XLSX.read(event.target.result, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        setFileData(data); // Store parsed data for preview
+      };
+      reader.readAsBinaryString(file);
+    }
+  };
+
+    // This function handles file upload
+    const handleFileUpload = async () => {
+      if (selectedFile) { // Check if a file is selected
+        try {
+          console.log('Preparing to upload file:', selectedFile); // Log before uploading
+  
+          const formData = new FormData();
+          formData.append('file', selectedFile); // Append the actual file to FormData
+  
+          const response = await fetch('http://localhost:8080/kpi/file/analisa', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+              // 'Content-Type' is not needed; 'fetch' sets it automatically when FormData is used.
+            },
+            body: formData // Send the FormData containing the file
+          });
+  
+          if (response.ok) {
+            console.log('File uploaded successfully'); // Log success
+            alert('File berhasil diunggah dan data diproses');
+            window.location.reload(); // Refresh the page after successful upload
+            // If you want to redirect to a specific URL, you can use:
+            // window.location.href = 'your-target-url';
+          } else {
+            const errorText = await response.text();
+            console.error('Failed to upload file:', errorText); // Log the error message
+            alert('Pastikan anda tidak mengupload data tahun yang sama dan pastikan juga format data tabel sesuai ketentuan!')
+            // alert(`Gagal mengunggah file: ${errorText}`);
+          }
+        } catch (error) {
+          console.error('Error uploading file:', error); // Log the error
+          alert('Error uploading file: ' + error.message);
+        }
+      } else {
+        alert('Harap pilih file terlebih dahulu');
+      }
+    };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleYearChange = (year) => {
+    const updatedSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(selectedYear => selectedYear !== year)
+      : [...selectedYears, year];
+    setSelectedYears(updatedSelectedYears);
+  };
+
+  // Definisi fetchData
+const fetchData = async () => {
+  try {
+    // Lakukan permintaan fetch data yang diperlukan dari server
+    const response = await fetch("http://localhost:8080/kpi/masalah");
+    if (response.ok) {
+      const responseData = await response.json();
+      const data = responseData.data;
+      console.log("Received data:", data);
+
+      // Group problems by year
+      const groupedProblems = {};
+      data.forEach(problem => {
+        if (!groupedProblems[problem.Year]) {
+          groupedProblems[problem.Year] = [];
+        }
+        groupedProblems[problem.Year].push(problem);
+      });
+
+      // Setel state dengan data yang baru didapat
+      setProblemsByYear(groupedProblems);
+
+      // Extract available years
+      const years = Object.keys(groupedProblems);
+      setAvailableYears(years);
+      setSelectedYears(years); // Initially select all years
+    } else {
+      console.error("Failed to fetch masalah data:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Error fetching masalah data:", error);
+  }
+};
+
+
+const handleDeleteAllData = async (year) => {
+  if (window.confirm(`Apakah Anda yakin ingin menghapus semua data pada tahun ${year}?`)) {
+    try {
+      const authToken = localStorage.getItem("authToken");
+  
+      // Endpoint untuk menghapus seluruh data masalah pada tahun tertentu
+      const response = await fetch(`http://localhost:8080/kpi/analisa/entire/${year}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+  
+      if (response.ok) {
+        console.log('All data deleted successfully');
+        fetchData(); // Refresh data after deletion
+      } else {
+        throw new Error("Failed to delete all data");
+      }
+    } catch (error) {
+      alert('Please log in again.');
+      navigate('/login'); // Redirect to login page  
+    }
+  }
+};
+
+  
+
+  const handleDeleteRowClick = async (year, index, masalahID) => {
+    const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus row ini?");
+    if (!userConfirmed) {
+      return; // Exit the function if the user cancels the deletion
+    }
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await fetch(`http://localhost:8080/kpi/masalah/${masalahID}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        }
+      });
+      if (response.ok) {
+        const updatedProblems = [...problemsByYear[year]];
+        updatedProblems.splice(index, 1);
+        setProblemsByYear({
+          ...problemsByYear,
+          [year]: updatedProblems
+        });
+        console.log("Row deleted successfully");
+      } else {
+        console.error("Failed to delete row:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting row:", error);
+    }
+  };
+
+  
+
+  const handleDeleteNewRowClick = (year, index) => {
+    const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus row ini?");
+    if (!userConfirmed) {
+      return; // Exit the function if the user cancels the deletion
+    }
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: prevState[year].filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+    const originalValuesCopy = {};
+    selectedYears.forEach(year => {
+      originalValuesCopy[year] = [...problemsByYear[year]];
+    });
+    setOriginalValues(originalValuesCopy);
+
+    // Inisialisasi objek baris baru untuk setiap tahun yang dipilih
+    const newRowsCopy = {};
+    selectedYears.forEach(year => {
+      newRowsCopy[year] = [];
+    });
+    setNewRows(newRowsCopy);
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRow = {
+      Masalah: "",
+      Why: ["", "", "", "", ""],
+      Tindakan: "",
+      Pic: "",
+      Target: "",
+      FolDate: "",
+      Status: "",
+      Year: year
+    };
+
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: [...(prevState[year] || []), newRow]
+    }));
+  };
+
+  const handleSaveClick = async () => {
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const promises = [];
+  
+      selectedYears.forEach(year => {
+        const updatedProblems = problemsByYear[year];
+        updatedProblems.forEach(problem => {
+          const formData = {
+            Masalah_ID: problem.Masalah_ID,
+            Masalah: problem.Masalah,
+            Why: problem.Why,
+            tindakan: problem.Tindakan,
+            pic: problem.Pic,
+            target: problem.Target,
+            folDate: new Date(problem.FolDate).toISOString(),
+            status: problem.Status,
+            Year: problem.Year
+          };
+          
+          console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+  
+          promises.push(fetch(`http://localhost:8080/kpi/masalah/${problem.Masalah_ID}`, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+              "Authorization": `Bearer ${authToken}`
+            },
+            body: JSON.stringify(formData)
+          }));
+        });
+  
+        // Tambahkan data baru ke promises untuk dikirim ke server
+      // Tambahkan data baru ke promises untuk dikirim ke server
+      const newRowsForYear = newRows[year] || [];
+      newRowsForYear.forEach(newRow => {
+        const { Masalah_ID, ...formDataWithoutID } = newRow; // Destructure and remove Masalah_ID
+        const formData = {
+          ...formDataWithoutID,
+          Why: [
+            newRow.Why[0],
+            newRow.Why[1],
+            newRow.Why[2],
+            newRow.Why[3],
+            newRow.Why[4],
+          ],
+          FolDate: new Date(newRow.FolDate).toISOString(), // Ensure FolDate is converted to ISO string format
+          Year: parseInt(newRow.Year) // Ensure Year is sent as an integer
+        };
+        
+  console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+
+  promises.push(fetch(`http://localhost:8080/kpi/masalah`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+      "Authorization": `Bearer ${authToken}`
+    },
+    body: JSON.stringify(formData)
+  }));
+});
+
+      });
+  
+      await Promise.all(promises);
+      setEditMode(false);
+      console.log("Data saved successfully.");
+      alert('Data berhasil disimpan!');
+      fetchMasalahData(); // Refresh data setelah penyimpanan
+     setProblemsByYear({});
+    setNewRows({});
+    } catch (error) {
+      console.error("Failed to save data:", error);
+      alert("Pastikan tanggal pada setiap masalah sudah diisi, apabila sudah diisi kembali mohon anda tekan back button pada browser untuk proses login kembali!");
+
+    }
+    
+  };
+
+  
+  
+
+        return (
+          <div>
+            <div className="container">
+               <div style={{marginBottom:"10px"}} className="filter-containers">
+              <div className="dropdown">
+            <button onClick={toggleDropdown} className="dropdown-button">
+              Filter Tahun
+            </button>
+            {dropdownOpen && (
+              <div className="dropdown-content">
+                {availableYears.map((year, index) => (
+                  <label key={index} className="dropdown-item">
+                    <input
+                      type="checkbox"
+                      value={year}
+                      checked={selectedYears.includes(year)}
+                      onChange={() => handleYearChange(year)}
+                    />
+                    {year}
+                  </label>
+                ))}
+              </div>
+            )}
+
+            
+          </div>
+
+          
+          
+          <div className="savechanges">
+            {!editMode && (
+              <button onClick={handleEditClick}>Update Data Table</button>
+            )}
+          
+            {editMode && (
+              <button onClick={handleSaveClick}>Save Changes</button>
+            )}
+            </div>
+    
+           </div>
+
+          
+       </div>
+
+       
+       <div className='inputfile' style={{ marginLeft:"22px", display: 'flex', alignItems: 'center', marginBottom: '5px',  width: 'calc(100% - 43px)'}}>
+  <input type="file" onChange={handleFileChange} style={{ marginRight: '13px' }} />
+  <button onClick={handleFileUpload} style={{ padding: '5px 10px', borderRadius: '5px', backgroundImage: 'linear-gradient(to right, rgb(26, 171, 0), rgb(12, 217, 29))', color: 'white', border: 'none',  marginRight:"3px" }}>Upload Data</button>
+</div>
+
+
+
+      {selectedYears.map(year => (
+        <div key={year} className="table-containers">
+          <table className="dropdowns-safety">
+            <caption>Saved Analysis Table for {year}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Problem
+                <div className="savechanges">
+
+                <div>
+                  {editMode && (
+                    <button onClick={() => handleAddRowClick(year)}>Add</button>
+                  )}
+                  </div>
+                  </div>
+
+                </th>
+                <th colSpan="5">Causes Analysis</th>
+                <th rowSpan="2">Corrective Action</th>
+                <th rowSpan="2">PIC</th>
+                <th rowSpan="2">Target</th>
+                <th colSpan="2">Follow Up</th>
+              </tr>
+              <tr>
+                <th>Why 1</th>
+                <th>Why 2</th>
+                <th>Why 3</th>
+                <th>Why 4</th>
+                <th>Why 5</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(problemsByYear[year] || []).map((problem, index) => (
+                <tr key={`${year}_${index}_${problem.Masalah_ID || ''}`}>
+                  <td>
+                  <div className="delete">
+
+                    {editMode ? (
+                      <textarea
+                        value={problem.Masalah || ""}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          const updatedProblem = { ...problem };
+                          updatedProblem.Masalah = e.target.value;
+                          updatedProblems[index] = updatedProblem;
+
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Masalah}
+                      />
+                    ) : (
+                      problem.Masalah
+                    )}
+                    <div>
+                 {editMode && (
+                    <button onClick={() => handleDeleteRowClick(year, index, problem.Masalah_ID)}>Delete</button>
+                  )}
+                  </div>
+                  </div>
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[0]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[0] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                          
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Why[0]}
+                      />
+                      
+                    ) : (
+                      problem.Why[0]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[1]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[1] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Why[1]}
+                      />
+                    ) : (
+                      problem.Why[1]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[2]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[2] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Why[2]}
+                      />
+                    ) : (
+                      problem.Why[2]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[3]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[3] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Why[3]}
+                      />
+                    ) : (
+                      problem.Why[3]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[4]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[4] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Why[4]}
+                      />
+                    ) : (
+                      problem.Why[4]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Tindakan}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Tindakan = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Tindakan}
+                      />
+                    ) : (
+                      problem.Tindakan
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Pic}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Pic = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Pic}
+                      />
+                    ) : (
+                      problem.Pic
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Target}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Target = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Target}
+                      />
+                    ) : (
+                      problem.Target
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <input
+                        type="datetime-local"
+                        value={problem.FolDate}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].FolDate = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        className="custominput"
+                        placeholder="Format : YYYY-MM-DDTHH:MM:SS+07:00"
+                      />
+                    ) : (
+                      <span>{problem.FolDate}</span>
+                    )}
+
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Status}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Status = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                        placeholder={problem.Status}
+                      />
+                    ) : (
+                      problem.Status
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {(newRows[year] || []).map((newRow, index) => (
+                <tr key={`${year}_new_${index}`}>
+                  <td>
+                    <textarea
+                      value={newRow.Masalah || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Masalah = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Masalah"
+                    />
+                    <div>
+                    <div className="delete">
+                <button onClick={() => handleDeleteNewRowClick(year, index)}>Delete</button>
+                </div>
+                </div>
+
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[0] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[0] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Why 1"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[1] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[1] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Why 2"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[2] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[2] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Why 3"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[3] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[3] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Why 4"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[4] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[4] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Why 5"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Tindakan || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Tindakan = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Tindakan"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Pic || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Pic = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="PIC"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Target || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Target = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Target"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="datetime-local"
+                      value={newRow.FolDate || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].FolDate = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+ 
+                      placeholder="Date"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Status || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Status = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+
+                      placeholder="Status"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+           <div style={{display:"flex"}}>
+                <div style={{marginRight:"20px"}} className="compare">
+              {editMode && (
+                            <button onClick={() => handleDeleteAllData(year)}>Delete All Data for {year}</button>
+
+                )}
+            </div>      
+          </div>
+            </div>
+       ))}
+    </div>
+  );
+};
+
+export default EditUploadTableAnalysis;
+
+
+
+========================================
+
+import React, { useState, useEffect } from "react";
+import "../Styles/savedsummary.css";
+import * as XLSX from 'xlsx';
+import { Bar } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
+
+
+
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [projectNameDropdownOpen, setProjectNameDropdownOpen] = useState(false);
+
+  const [editMode, setEditMode] = useState(false); // state untuk mode edit
+  const [editTableData, setEditTableData] = useState({}); // state untuk data yang diubah
+  const [issuedDates, setIssuedDates] = useState([]);
+  const [selectedIssuedDates, setSelectedIssuedDates] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const [projectCharts, setProjectCharts] = useState([]);
+  const [selectedProjectName, setSelectedProjectName] = useState("");
+const [selectedIssuedDate, setSelectedIssuedDate] = useState("");
+ const [fileData, setFileData] = useState(null);
+
+ const [selectedProjectNames, setSelectedProjectNames] = useState([]);
+
+ const navigate = useNavigate();
+
+
+ const handleProjectNameCheckboxChange = (projectName) => {
+  setSelectedProjectNames((prevSelectedProjectNames) => {
+    if (prevSelectedProjectNames.includes(projectName)) {
+      return prevSelectedProjectNames.filter((name) => name !== projectName);
+    } else {
+      return [...prevSelectedProjectNames, projectName];
+    }
+  });
+};
+
+const toggleProjectNameDropdown = () => {
+  setProjectNameDropdownOpen((prev) => !prev);
+};
+
+
+
+// This function handles file selection
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  console.log('File selected:', file); // Log the selected file
+  setSelectedFile(file); // Set the selected file to the state
+
+  // Read the file data for preview purposes (optional)
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const workbook = XLSX.read(event.target.result, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      setFileData(data); // Store parsed data for preview
+    };
+    reader.readAsBinaryString(file);
+  }
+};
+
+// This function handles file upload
+const handleFileUpload = async () => {
+  if (selectedFile) { // Check if a file is selected
+    try {
+      console.log('Preparing to upload file:', selectedFile); // Log before uploading
+
+      const formData = new FormData();
+      formData.append('file', selectedFile); // Append the actual file to FormData
+
+      const response = await fetch('http://localhost:8080/kpi/file/summary', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          // 'Content-Type' is not needed; 'fetch' sets it automatically when FormData is used.
+        },
+        body: formData // Send the FormData containing the file
+      });
+
+      if (response.ok) {
+        console.log('File uploaded successfully'); // Log success
+        alert('File berhasil diunggah dan data diproses');
+        window.location.reload(); // Refresh the page after successful upload
+        // Handle further actions if necessary
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to upload file:', errorText); // Log the error message
+        alert('Pastikan anda tidak mengupload data tahun yang sama dan pastikan juga format data tabel sesuai ketentuan!')
+        // alert(`Gagal mengunggah file: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error); // Log the error
+      alert('Error uploading file: ' + error.message);
+    }
+  } else {
+    alert('Harap pilih file terlebih dahulu');
+  }
+};
+
+const handleIssuedDateChange = (issuedDate) => {
+  setSelectedIssuedDates((prevSelectedIssuedDates) => {
+    if (prevSelectedIssuedDates.includes(issuedDate)) {
+      // Jika tanggal sudah dipilih sebelumnya, hapus dari daftar yang dipilih
+      return prevSelectedIssuedDates.filter((date) => date !== issuedDate);
+    } else {
+      // Jika tanggal belum dipilih sebelumnya, tambahkan ke daftar yang dipilih
+      return [...prevSelectedIssuedDates, issuedDate];
+    }
+  });
+};
+
+
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCompareData = (issuedDate) => {
+    const currentTable = tablesData[issuedDate];
+    if (!currentTable || currentTable.columns.length < 2) {
+      alert("To perform a comparison, at least two projects are needed.");
+      return;
+    }
+  
+    const comparisonResult = {
+      columns: currentTable.columns
+        .map((col1, index1) =>
+          currentTable.columns.slice(index1 + 1).map((col2) => ({
+            id: `${col1.id}-${col2.id}`,
+            name: `${col1.name} vs ${col2.name}`,
+            item: `Item diff between ${col1.name} and ${col2.name}`,
+            quantity: `Quantity diff between ${col1.name} and ${col2.name}`,
+          }))
+        )
+        .flat(),
+      rows: currentTable.rows.map((row) => ({
+        projectName: row.projectName,
+        status: row.status
+          .map((stat1, index1) =>
+            row.status.slice(index1 + 1).map((stat2) => ({
+              id: `${stat1.id}-${stat2.id}`,
+              name: Math.abs(stat1.name - stat2.name),
+              quantity: Math.abs(stat1.quantity - stat2.quantity),
+            }))
+          )
+          .flat(),
+        remarks: row.remarks,
+      })),
+    };
+  
+    setComparisonData((prevComparisonData) => ({
+      ...prevComparisonData,
+      [issuedDate]: comparisonResult,
+      itemComparison: comparisonResult.columns.map((col, index) => ({
+        name: col.name,
+        value: comparisonResult.rows.map((row) => row.status[index].name),
+      })),
+      quantityComparison: comparisonResult.columns.map((col, index) => ({
+        name: col.name,
+        value: comparisonResult.rows.map((row) => row.status[index].quantity),
+      })),
+    }));
+  };
+  
+
+ 
+  const handleDeleteRow = (issuedDate, projectName) => {
+
+    const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus row ini?");
+    if (!userConfirmed) {
+      return; // Exit the function if the user cancels the deletion
+    }
+
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows = updatedTableData[issuedDate].rows.filter(
+      (row) => row.projectName !== projectName
+    );
+    setEditTableData(updatedTableData);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const issuedDatesSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          issuedDatesSet.add(issuedDate);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: []
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+             status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }]
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available"
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setIssuedDates(Array.from(issuedDatesSet));
+        setSelectedIssuedDates(Array.from(issuedDatesSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+
+        // Create project charts
+        const projectChartsData = [];
+        Object.entries(tablesDataByIssuedDate).forEach(([issuedDate, tableData]) => {
+          const projectNames = [...new Set(tableData.rows.map(row => row.projectName))];
+
+          projectNames.forEach((projectName) => {
+            const chartData = {
+              labels: tableData.columns.map(col => col.name),
+              datasets: [
+                {
+                  label: 'Item',
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  borderWidth: 1,
+                  hoverBackgroundColor: 'rgba(255, 99, 132, 0.4)',
+                  hoverBorderColor: 'rgba(255, 99, 132, 1)',
+                  data: [],
+                },
+                {
+                  label: 'Quantity',
+                  backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1,
+                  hoverBackgroundColor: 'rgba(54, 162, 235, 0.4)',
+                  hoverBorderColor: 'rgba(54, 162, 235, 1)',
+                  data: [],
+                },
+              ],
+            };
+
+            tableData.columns.forEach((col) => {
+              const row = tableData.rows.find(r => r.projectName === projectName);
+              const status = row ? row.status.find(stat => stat.id === col.id) : null;
+              if (status) {
+                chartData.datasets[0].data.push(status.name);
+                chartData.datasets[1].data.push(status.quantity);
+              } else {
+                chartData.datasets[0].data.push(0);
+                chartData.datasets[1].data.push(0);
+              }
+            });
+
+            projectChartsData.push({
+              projectName: projectName,
+              issuedDate: issuedDate,
+              chartData: chartData,
+            });
+          });
+        });
+
+        setProjectCharts(projectChartsData);
+      }
+
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+
+
+  useEffect(() => {
+    fetchData();
+    setSelectedIssuedDates((prevSelectedIssuedDates) => {
+      // Pastikan setidaknya satu item yang dipilih, jika tidak, pertahankan item pertama
+      if (prevSelectedIssuedDates.length === 0 && issuedDates.length > 0) {
+        return [issuedDates[0]];
+      }
+      return prevSelectedIssuedDates;
+    });
+  }, []);
+  
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveClick = async () => {
+    setEditMode(false);
+    try {
+      const authToken = localStorage.getItem("authToken");
+  
+      for (const [issuedDate, tableData] of Object.entries(editTableData)) {
+        const summaryId = tableData.summary_id;
+  
+        // Construct data for the PUT request
+        const dataToUpdate = {
+          Summary_ID: summaryId,
+          IssuedDate: new Date(issuedDate).toISOString(),
+          Projects: tableData.columns.map((col) => {
+            const projectData = {
+              Project_ID: col.id,
+              Name: col.name,
+              Summary_ID: summaryId,
+              Item: [],
+              Quantity: []
+            };
+  
+            // Match row status to columns
+            tableData.rows.forEach((row) => {
+              const status = row.status.find((status) => status.id === col.id);
+              projectData.Item.push(status ? parseInt(status.name) : 0);
+              projectData.Quantity.push(status ? parseInt(status.quantity) : 0);
+            });
+  
+            return projectData;
+          }),
+          Status: tableData.rows.map(row => row.projectName),
+          Remarks: tableData.rows.map(row => row.remarks)
+        };
+  
+        // Execute the PUT request
+        let response = await fetch(`http://localhost:8080/kpi/summary/entire/${summaryId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dataToUpdate)
+        });
+  
+        if (!response.ok) {
+          const responseData = await response.json();
+          console.log(responseData); // Log the error message from the server
+          throw new Error("Failed to update summary data");
+        }
+  
+        // Construct and execute POST requests for new rows
+        const newRows = tableData.rows.filter(row => row.isNew);
+        for (const newRow of newRows) {
+          const projectsData = tableData.columns.map((col) => ({
+            Project_ID: col.id,
+            Name: newRow.projectName,
+            Item: newRow.status.find(s => s.id === col.id) ? parseInt(newRow.status.find(s => s.id === col.id).name) : 0,
+            Quantity: newRow.status.find(s => s.id === col.id) ? parseInt(newRow.status.find(s => s.id === col.id).quantity) : 0,
+            Summary_ID: summaryId
+          }));
+  
+          const postData = {
+            Summary_ID: summaryId,
+            IssuedDate: new Date(issuedDate).toISOString(),
+            Projects: projectsData,
+            Status: newRow.projectName,
+            Remarks: newRow.remarks
+          };
+  
+          response = await fetch(`http://localhost:8080/kpi/summary/entire`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(postData)
+          });
+  
+          if (!response.ok) {
+            const responseData = await response.json();
+            console.log(responseData); // Log the error message from the server
+            throw new Error("Failed to add new row data");
+          }
+        }
+      }
+  
+      fetchData(); // Refresh data after updates
+      alert("Anda telah mengubah data summary, tolong refresh halaman untuk melihat data perbandingan yang baru!");
+  
+    } catch (error) {
+      console.error("Error updating data:", error.message);
+      alert('Please log in again.');
+      navigate('/login'); // Redirect to login page   
+    }
+  };
+
+  
+  const handleAddColumnClick = (issuedDate) => {
+    const newColumn = {
+ 
+      name: "", // Empty name initially
+      item: `Item ${editTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${editTableData[issuedDate].columns.length + 1}`
+    };
+  
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].columns.push(newColumn);
+  
+    // Update Projects with the new column name
+    updatedTableData[issuedDate].rows.forEach(row => {
+      row.status.push({
+        name: "", // Empty name initially
+        quantity: "",
+         statuses: []
+      });
+    });
+  
+    setEditTableData(updatedTableData);
+  };
+  
+  const handleAddRowClick = (issuedDate) => {
+    const newRow = {
+      projectName: "",
+      status: editTableData[issuedDate].columns.map((col) => ({
+        name: "", // Empty name initially
+        quantity: "",
+        id: col.id,
+        statuses: []
+      })),
+      remarks: ""
+    };
+  
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push(newRow);
+    setEditTableData(updatedTableData);
+  };
+  
+  const handleColumnChange = (issuedDate, colIndex, field, value) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].columns[colIndex][field] = value;
+    setEditTableData(updatedTableData);
+  };
+  
+  const handleChange = (issuedDate, rowIndex, field, value, statIndex = null) => {
+    const updatedTableData = { ...editTableData };
+    if (statIndex === null) {
+      updatedTableData[issuedDate].rows[rowIndex][field] = value;
+    } else {
+      updatedTableData[issuedDate].rows[rowIndex].status[statIndex][field] = value;
+    }
+    setEditTableData(updatedTableData);
+  };
+  
+  const handleDeleteProject = (issuedDate, projectId) => {
+    const userConfirmed = window.confirm("Apakah anda yakin ingin menghapus kolom ini?");
+    if (!userConfirmed) {
+      return; // Exit the function if the user cancels the deletion
+    }
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].columns = updatedTableData[issuedDate].columns.filter(col => col.id !== projectId);
+    updatedTableData[issuedDate].rows.forEach(row => {
+      row.status = row.status.filter(stat => stat.id !== projectId);
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  const handleDeleteAllData = async (issuedDate) => {
+    // Menampilkan konfirmasi sebelum menghapus semua data
+    const confirmDelete = window.confirm("Apakah Anda yakin ingin menghapus seluruh data pada tanggal ini?");
+    if (!confirmDelete) {
+      return; // Batalkan penghapusan jika pengguna membatalkan konfirmasi
+    }
+  
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const summaryId = editTableData[issuedDate].summary_id;
+  
+      // Execute the DELETE request
+      const response = await fetch(`http://localhost:8080/kpi/summary/entire/${summaryId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+  
+      if (response.ok) {
+        console.log('All data deleted successfully');
+        fetchData(); // Refresh data after deletion
+      } else {
+        throw new Error("Failed to delete all data");
+      }
+    } catch (error) {
+      console.error("Error deleting all data:", error.message);
+    }
+  };
+  
+  const handleSelectAllProjectNamesChange = (event) => {
+    if (event.target.checked) {
+      setSelectedProjectNames(Array.from(new Set(projectCharts.map((chart) => chart.projectName))));
+    } else {
+      setSelectedProjectNames([]);
+    }
+  };
+  
+  return (
+    <div>
+      {warningMessage && <div className="warning">{warningMessage}</div>}
+      <div style={{marginBottom:"10px"}} className="filter-containers">
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Filter Tanggal 
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+               {issuedDates.map((issuedDate, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={issuedDate}
+                    checked={selectedIssuedDates.includes(issuedDate)}
+                    onChange={() => handleIssuedDateChange(issuedDate)}
+                  />
+                  {issuedDate}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="savechanges">
+      
+              <button onClick={handleEditClick} className="dropdown-button">Update Data</button>
+         
+        </div>
+      </div>
+
+      <div className='inputfile' style={{ marginLeft:"22px", display: 'flex', alignItems: 'center', marginBottom: '5px',  width: 'calc(100% - 43px)' }}>
+        <input type="file" onChange={handleFileChange} style={{ marginRight: '10px' }} />
+        <button onClick={handleFileUpload} style={{ padding: '5px 10px', borderRadius: '5px', backgroundImage: 'linear-gradient(to right, rgb(26, 171, 0), rgb(12, 217, 29))', color: 'white', border: 'none' }}>Upload Data</button>
+      </div>
+  
+      {Object.entries(tablesData)
+        .filter(([issuedDate]) => selectedIssuedDates.includes(issuedDate)) // Menggunakan selectedIssuedDates untuk filter
+        .map(([issuedDate, tableData]) => (
+                  <div key={issuedDate} className="table-container">
+            <table className="dropdowns-safety-sum">
+              <caption>Summary Table {issuedDate}</caption>
+              <thead>
+                <tr>
+                  <th rowSpan="2">
+                    Item Category Project
+                    <div>
+                    {editMode && (
+                      <React.Fragment>
+                        <div className="savechanges">
+                        <button
+                          style={{ marginTop: "10px" }}
+                          onClick={() => handleAddRowClick(issuedDate)}
+                        >
+                          Add Status
+                        </button>
+                        <button
+                          style={{ marginTop: "5px", marginLeft: "5px" }}
+                          onClick={() => handleAddColumnClick(issuedDate)}
+                        >
+                          Add Project
+                        </button>
+                        </div>
+                      </React.Fragment>
+                      
+                    )}
+                    </div>
+                  </th>
+                  {tableData.columns.map((col, colIndex) => (
+                    <th colSpan="2" key={col.id}>
+                      <div className="delete">
+                      {editMode ? (
+                        <textarea
+                          value={editTableData[issuedDate].columns[colIndex].name}
+                          onChange={(e) =>
+                            handleColumnChange(
+                              issuedDate,
+                              colIndex,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        col.name
+                      )}
+                      <div>
+                      {editMode && (
+                        <button
+                          style={{ marginLeft: "10px" }}
+                          onClick={() => handleDeleteProject(issuedDate, col.id)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                      </div>
+                      </div>
+                    </th>
+                  ))}
+                  <th rowSpan="2">Remarks</th>
+                </tr>
+                <tr>
+                  {tableData.columns.map((col) => (
+                    <React.Fragment key={col.id}>
+                      <th>{col.item}</th>
+                      <th>{col.quantity}</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                
+                {tableData.rows.map((row, rowIndex) => (
+
+                  <tr key={rowIndex}>
+                     <td>
+                      
+                     <div className="delete">
+
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={editTableData[issuedDate].rows[rowIndex].projectName}
+                          onChange={(e) =>
+                            handleChange(
+                              issuedDate,
+                              rowIndex,
+                              "projectName",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        row.projectName
+                      )}
+                         {editMode && (
+                        <button style={{marginTop:"10px"}} onClick={() => handleDeleteRow(issuedDate, row.projectName)}>
+                          Delete
+                        </button>
+                        
+                      )}
+                      </div>
+ 
+                    </td>
+
+                    {row.status.map((stat, statIndex) => (
+                      <React.Fragment key={stat.id}>
+                        <td>
+                          {editMode ? (
+                            <input
+                              type="number"
+                              value={editTableData[issuedDate].rows[rowIndex].status[statIndex].name}
+                              onChange={(e) =>
+                                handleChange(
+                                  issuedDate,
+                                  rowIndex,
+                                  "name",
+                                  e.target.value,
+                                  statIndex
+                                )
+                              }
+                            />
+                          ) : (
+                            stat.name
+                          )}
+                        </td>
+                        <td>
+                          {editMode ? (
+                            <input
+                              type="number"
+                              value={editTableData[issuedDate].rows[rowIndex].status[statIndex].quantity}
+                              onChange={(e) =>
+                                handleChange(
+                                  issuedDate,
+                                  rowIndex,
+                                  "quantity",
+                                  e.target.value,
+                                  statIndex
+                                )
+                              }
+                            />
+                          ) : (
+                            stat.quantity
+                          )}
+                        </td>
+                      </React.Fragment>
+                    ))}
+                    <td>
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={editTableData[issuedDate].rows[rowIndex].remarks}
+                          onChange={(e) =>
+                            handleChange(
+                              issuedDate,
+                              rowIndex,
+                              "remarks",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        row.remarks
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+                
+            <div style={{display:"inline-block"}}>
+                <div style={{marginRight:"10px", marginTop:"10px"}} className="savechanges">
+             
+                <div style={{marginRight:"10px"}} className="compare">
+                {editMode && (
+                    <div className="delete">
+                      <button
+                        style={{ marginRight: "10px" }}
+                        onClick={() => handleDeleteAllData(issuedDate)}
+                      >
+                        Delete All Data
+                      </button>
+                    </div>
+                    
+                  )}
+                                  <button onClick={() => handleCompareData(issuedDate)}>Compare Data</button>
+
+                </div>
+                {editMode && (
+                  <button style={{marginRight:"10px"}} onClick={handleSaveClick}>Save Changes</button>
+                )}
+                </div>      
+          </div>
+          </div>
+        ))}
+    {Object.entries(comparisonData)
+  .filter(([issuedDate]) => selectedIssuedDates.includes(issuedDate)) // Menggunakan selectedIssuedDates untuk filter
+  .map(([issuedDate, compData]) => (
+          <div key={issuedDate} className="table-container">
+            <hr /> {/* Section line above the comparison table */}
+            <h2
+            style={{
+            
+                     fontFamily:"Calibri, sans-serif",
+          fontSize: "30px",
+          color: "#333",
+          textShadow:"2px 2px 4px rgba(0, 0, 0, 0.3)",
+          marginBottom:"10px"
+            }}
+            
+            
+            >Data Compared</h2>
+            <table className="dropdowns-safety-sum">
+              <caption>Comparison Table for {issuedDate}</caption>
+              <thead>
+                <tr>
+                  <th rowSpan="2">Item Category Project</th>
+                  {compData.columns.map((col) => (
+                    <th colSpan="2" key={col.id}>
+                      {col.name}
+                    </th>
+                  ))}
+                  <th rowSpan="2">Remarks</th>
+                </tr>
+                <tr>
+                  {compData.columns.map((col) => (
+                    <React.Fragment key={col.id}>
+                      <th>{col.item}</th>
+                      <th>{col.quantity}</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {compData.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    <td>{row.projectName}</td>
+                    {row.status.map((stat) => (
+                      <React.Fragment key={stat.id}>
+                        <td>{stat.name}</td>
+                        <td>{stat.quantity}</td>
+                      </React.Fragment>
+                    ))}
+                    <td>{row.remarks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+
+<div style={{ color: "white", marginTop: "10px" }} className="filter-containers">
+   <div className="dropdown">
+    <button onClick={toggleDropdown} className="dropdown-button" style={{ marginLeft: "10px" }}>
+      Filter Tanggal
+    </button>
+    {dropdownOpen && (
+      <div className="dropdown-content" style={{ backgroundColor: "#a10909", color: "white", padding: "10px", borderRadius: "5px", border: "1px solid white" }}>
+        {issuedDates.map((issuedDate, index) => (
+          <label key={index} className="dropdown-item">
+            <input
+              type="checkbox"
+              value={issuedDate}
+              checked={selectedIssuedDates.includes(issuedDate)}
+              onChange={() => handleIssuedDateChange(issuedDate)}
+              style={{ marginRight: "5px" }}
+            />
+            {issuedDate}
+          </label>
+        ))}
+      </div>
+    )}
+  </div>
+  <div className="dropdown" >
+        <button onClick={toggleProjectNameDropdown} className="dropdown-button"  >
+          Filter Project Name
+        </button>
+        {projectNameDropdownOpen && (
+          <div className="dropdown-content" style={{ backgroundColor: "#a10909", color: "white", padding: "10px", borderRadius: "5px", border: "1px solid white", maxHeight: "200px", overflowY: "auto"}}>
+            <label className="dropdown-item" style={{ display: "flex", alignItems: "center", marginBottom: "5px", justifyContent: "flex-start", padding: "5px 0" }}>
+              <input
+                type="checkbox"
+                onChange={handleSelectAllProjectNamesChange}
+                checked={selectedProjectNames.length === Array.from(new Set(projectCharts.map((chart) => chart.projectName))).length}
+                style={{ marginRight: "10px" }}
+              />
+              <span style={{ color: "white", textAlign: "left", width: "100%", marginRight:"100%" }}>Select All</span>
+            </label>
+            {Array.from(new Set(projectCharts.map((chart) => chart.projectName))).map((projectName) => (
+              <label key={projectName} className="dropdown-item" style={{ display: "flex", alignItems: "center", marginBottom: "5px", justifyContent: "flex-start"}}>
+                <input
+                  type="checkbox"
+                  value={projectName}
+                  checked={selectedProjectNames.includes(projectName)}
+                  onChange={() => handleProjectNameCheckboxChange(projectName)}
+                 />
+<span style={{ color: "white", textAlign: "left", width: "100%", marginRight:"100%" }}>{projectName}</span>
+</label>
+            ))}
+          </div>
+        )}
+      </div>
+</div>
+
+    
+<div style={{ 
+  display: 'flex',
+  flexWrap: 'wrap',
+  padding: '10px',
+  justifyContent:"space-evenly"
+}}>
+  {projectCharts
+    .filter(chart => 
+      (selectedIssuedDates.length === 0 || selectedIssuedDates.includes(chart.issuedDate)) &&
+      (selectedProjectNames.length === 0 || selectedProjectNames.includes(chart.projectName))
+    )
+    .map((chart) => (
+      <div 
+        style={{ 
+          flexBasis: '48%', // Approximately half of the container width
+          marginBottom: '20px',
+          borderRadius: '15px', 
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', 
+          overflow: 'hidden', 
+          maxWidth: '600px', 
+        }} 
+        key={`${chart.projectName}-${chart.issuedDate}`}
+      >
+        <h2 style={{
+          fontFamily: 'Calibri, sans-serif',
+          fontSize: '30px',
+          color: '#333',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+          marginBottom: '10px',
+          textAlign: 'center' // Center align the heading
+        }}    
+        >{chart.projectName} Chart for {chart.issuedDate}</h2>
+        <div style={{ padding: '10px', backgroundColor: 'white', borderRadius: '15px' }}>
+          <Bar
+            data={chart.chartData}
+            options={{
+              scales: {
+                yAxes: [{
+                  ticks: {
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                  },
+                }],
+              },
+            }}
+          />
+        </div>
+      </div>
+    ))}
+</div>
+
+
+   </div>
+  );
+};
+
+export default SavedSummaryTable;

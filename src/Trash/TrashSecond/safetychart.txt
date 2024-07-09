@@ -1,0 +1,218 @@
+import React, { useState, useEffect } from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart } from 'chart.js/auto'; // Import Chart.js auto for version 3+
+import '../Styles/chart.css';
+import { registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+function ChartComponent({ chartSize }) {
+  const [targetData, setTargetData] = useState([]);
+  const [actualData, setActualData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
+  const [filteredIndices, setFilteredIndices] = useState([]);
+  Chart.register(...registerables, ChartDataLabels);
+
+  const chartDescriptions = [
+    { kpiResult: "KPI result 1", kpiFactorName: "Factor 1", unit: "Unit 1", target: "Target 1" },
+    { kpiResult: "KPI result 1", kpiFactorName: "Factor 1", unit: "Unit 2", target: "Target 2" },
+    { kpiResult: "KPI result 3", kpiFactorName: "Factor 3", unit: "Unit 3", target: "Target 3" }
+  ];
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearch = () => {
+    setActiveSearchTerm(searchTerm);
+  };
+
+  const handleRemoveFilter = () => {
+    setSearchTerm('');
+    setActiveSearchTerm('');
+  };
+
+  useEffect(() => {
+    // Inisialisasi filteredIndices dengan semua indeks chart
+    setFilteredIndices(chartDescriptions.map((_, index) => index));
+  }, []);
+
+  useEffect(() => {
+    if (activeSearchTerm === '') {
+      // Jika activeSearchTerm kosong, semua chart akan ditampilkan
+      setFilteredIndices(chartDescriptions.map((_, index) => index));
+    } else {
+      // Jika activeSearchTerm tidak kosong, lakukan filter berdasarkan activeSearchTerm
+      const newFilteredIndices = chartDescriptions.reduce((acc, { kpiResult, kpiFactorName }, index) => {
+        if (kpiResult.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+          kpiFactorName.toLowerCase().includes(activeSearchTerm.toLowerCase())) {
+          acc.push(index);
+        }
+        return acc;
+      }, []);
+      setFilteredIndices(newFilteredIndices);
+    }
+  }, [activeSearchTerm]);
+
+  useEffect(() => {
+    // Fungsi untuk mengisi data target dan actual
+    const loadData = async () => {
+      const exampleTargetData = [30, 20, 35, 25, 40, 30, 15, 25, 35, 20, 30, 40];
+      const exampleActualData = [25, 15, 30, 20, 35, 25, 10, 20, 30, 15, 25, 35];
+      setTargetData(exampleTargetData);
+      setActualData(exampleActualData);
+    };
+    loadData();
+  }, []);
+
+  const gradientColor = (context, isExceedTarget = true) => {
+    const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 300);
+    if (isExceedTarget) {
+      gradient.addColorStop(0, '#FF0000'); // Warna merah
+      gradient.addColorStop(1, '#8b0000'); // Warna merah tua
+    } else {
+      gradient.addColorStop(0, '#00FF00'); // Warna hijau
+      gradient.addColorStop(1, '#FFFF00'); // Warna kuning
+    }
+    return gradient;
+  };
+
+  const chartData = (actualData, targetData) => {
+    const ctx = document.createElement('canvas').getContext('2d'); // Buat konteks canvas sementara
+    return {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'],
+      datasets: [
+        {
+          label: 'Actual Data',
+          data: actualData,
+          backgroundColor: actualData.map((value, index) => (value >= targetData[index] ? gradientColor({ chart: { ctx } }, false) : gradientColor({ chart: { ctx } }))),
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          pointStyle: 'circle',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          datalabels: {
+            display: true, // Selalu tampilkan datalabels untuk dataset ini
+            offset: -21, // Menggeser label 10 piksel ke bawah dari pusat batang
+            anchor: 'end', // Anchor pada akhir bar sehingga muncul di atas bar
+            align: 'top', // Arahkan ke atas
+            color: 'white', // Warna teks
+            font: {
+              size: 10 // Ukuran font
+            }
+          }
+        },
+        {
+          label: 'Target Data',
+          data: targetData,
+          backgroundColor: 'rgba(0, 0, 0, 0)',
+          borderColor: gradientColor({ chart: { ctx } }),
+          borderWidth: 2,
+          type: 'line',
+          fill: false,
+          pointStyle: 'circle',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          datalabels: {
+            color: 'black',
+            size: 10, // Ukuran font
+            align: 'end',
+            anchor: 'end',
+            offset: 0.5 // Offset spesifik untuk line chart
+          }
+        },
+      ],
+    };
+  };
+
+  const chartOptions = {
+    plugins: {
+      title: {
+        display: true,
+        text: `Tahun ${""}`, // Judul bisa diatur dinamis sesuai kebutuhan
+        padding: {
+          top: 0,
+          bottom: 5
+        },
+        font: {
+          size: 18,
+          weight: 'bold'
+        }
+      },
+      datalabels: {
+        display: true, // Pastikan datalabels diaktifkan
+        formatter: function (value, context) {
+          // Tampilkan nilai sebenarnya dari bar
+          return value;
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'category',
+      },
+      y: {
+        beginAtZero: true,
+        min: 1,
+        max: 50,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9,
+      },
+    },
+  };
+
+  return (
+    <div className='chart'>
+      <div style={{ textAlign: 'left', marginBottom: '0px', marginTop: '60px', marginLeft: '140px' }}>
+        <h2>Safety Chart</h2>
+        <input type="text" placeholder="Search KPI Result or Factor..." onChange={handleSearchChange} />
+        <div className='search'>
+          <button onClick={handleSearch}>Search</button>
+          <button onClick={handleRemoveFilter} style={{ marginLeft: '7px' }}>Remove Filter</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+          {/* Render only the first chart */}
+          {filteredIndices.length > 0 && (
+            <ChartContainer
+              description={chartDescriptions[filteredIndices[0]]}
+              data={chartData(actualData, targetData)}
+              options={chartOptions}
+              size={chartSize}
+              title={`202${filteredIndices[0] + 1}`}
+            />
+          )}
+        </div>
+        {/* <div className="chart-divider"></div> Divider line */}
+      </div>
+    </div>
+  );
+}
+
+// Chart container component to avoid repetition
+const ChartContainer = ({ description, data, options, size, title }) => (
+  <div style={{
+    width: size.width,
+    height: size.height,
+    paddingLeft: size.paddingLeft,
+    paddingTop: size.paddingTop,
+    marginTop: size.marginTop,
+    paddingBottom: size.paddingBottom,
+    marginLeft: '5px', // Adjust if necessary
+    marginRight: '5px',
+    border: '2px solid #8b0000',
+    boxShadow: '5px 5px 10px rgba(139, 0, 0, 0.5)',
+    borderRadius: '10px',
+  }}>
+    <Bar data={data} options={{ ...options, plugins: { ...options.plugins, title: { ...options.plugins.title, text: `Tahun ${title}` } } }} />
+    <div className="chart-description">
+      <ul>
+        <li>KPI Result: {description.kpiResult}</li>
+        <li>KPI Factor Name: {description.kpiFactorName}</li>
+        <li>Unit: {description.unit}</li>
+        <li>Target: {description.target}</li>
+      </ul>
+    </div>
+  </div>
+);
+
+export default ChartComponent;

@@ -1,0 +1,2131 @@
+import React, { useState, useEffect } from "react";
+import "../Styles/table.css";
+import { Chart } from 'chart.js/auto'; // Import Chart.js auto for version 3+
+ 
+const SummaryTable = () => {
+  const [columns, setColumns] = useState([
+    { id: 1, item: "Item 1", quantity: "Quantity 1" }
+  ]);
+
+  const [rows, setRows] = useState([
+    {
+      category: <input type="number" placeholder="Category 1" id={1} />, // nama category ( contoh: DR, PR, etc)
+      
+      status: [  // nama status item... ( contoh:  23OB, 23RB-4, etc)
+        {
+          name: <input type="number" placeholder="Item 1" />, // item
+          id: 1,
+          statuses: [{ name: <input type="number" placeholder="Quantity 1" />, id: 1 }], //quantity
+        },
+      ],
+      remarks:  <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>, //remarks
+    },
+  ]);
+
+  const [chartData, setChartData] = useState(null);
+  const [chartData2, setChartData2] = useState(null);
+
+  useEffect(() => {
+    let chartInstance = null; // Variable untuk menyimpan instance grafik
+  
+    if (chartData) {
+      const chartCanvas = document.getElementById('comparisonChartByItem');
+      if (chartCanvas) {
+        const ctx = chartCanvas.getContext('2d');
+  
+        // Hancurkan instance grafik sebelumnya jika ada
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+  
+        // Buat grafik baru
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: chartData,
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-x
+              },
+              y: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-y
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+    }
+  
+    // Hapus instance grafik sebelum komponen di-unmount
+    return () => {
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+    };
+  }, [chartData]);
+
+  useEffect(() => {
+    let chartInstance2 = null; // Variable untuk menyimpan instance grafik
+
+    if (chartData2) {
+      const chartCanvas2 = document.getElementById('comparisonChartByQuantity');
+      if (chartCanvas2) {
+        const ctx2 = chartCanvas2.getContext('2d');
+
+        // Hancurkan instance grafik sebelumnya jika ada
+        if (chartInstance2) {
+          chartInstance2.destroy();
+        }
+
+        // Buat grafik baru
+        chartInstance2 = new Chart(ctx2, {
+          type: 'bar',
+          data: chartData2,
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-x
+              },
+              y: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-y
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    // Hapus instance grafik sebelum komponen di-unmount
+    return () => {
+      if (chartInstance2) {
+        chartInstance2.destroy();
+      }
+    };
+  }, [chartData2]);
+
+  const handleDeleteClick = (index) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+        const newRows = [...rows];
+        newRows.splice(index, 1);
+        setRows(newRows);
+    }
+  };
+  
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      category: <input type="number" placeholder={`Category ${rows.length + 1}`} id={rows.length + 1} />,
+      status: columns.map(col => ({
+        name: <input type="number" placeholder={`Item ${col.id}`} />,
+        id: col.id,
+        statuses: [{ name: <input type="number" placeholder={`Quantity ${col.id}`} />, id: col.id }],
+      })),
+      remarks: <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleAddColumnClick = () => {
+    // Dapatkan ID terbesar dari kolom yang sudah ada
+    const maxColumnId = Math.max(...columns.map(col => col.id));
+    // Hitung ID baru dengan menambahkan 1 dari ID terbesar
+    const newColumnId = maxColumnId + 1;
+  
+    // Tambahkan kolom baru dengan ID yang sesuai
+    setColumns([...columns, { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }]);
+  
+    // Tambahkan status baru ke setiap baris dengan ID kolom yang sesuai
+    const updatedRows = rows.map(row => ({
+      ...row,
+      status: [
+        ...row.status,
+        {
+          name: <input type="number" placeholder={`Item ${newColumnId}`} />,
+          id: newColumnId,
+          statuses: [{ name: <input type="number" placeholder={`Quantity ${newColumnId}`} />, id: newColumnId }]
+        }
+      ]
+    }));
+  
+    setRows(updatedRows);
+  };
+  
+  const handleRemoveColumnClick = (colId) => {
+    // Temukan status category dengan ID yang akan dihapus
+    const statusItemCount = rows[0].status.length;
+    if (statusItemCount === 1) {
+      alert("At least you should have 1 Status Item and no less!");
+      return;
+    }
+  
+    // Hapus kolom dengan ID yang sesuai
+    const updatedColumns = columns.filter(col => col.id !== colId);
+    setColumns(updatedColumns);
+    
+    // Loop melalui setiap baris dan hapus sel <td> yang sesuai dengan ID kolom yang dihapus
+    const updatedRows = rows.map(row => {
+      const updatedStatus = row.status.filter(stat => stat.id !== colId);
+      return { ...row, status: updatedStatus };
+    });
+    setRows(updatedRows);
+  };
+
+  const handleShowChartComparisonByItem = () => {
+    const datasets = [];
+  
+    columns.forEach((col, colIndex) => {
+      const itemDataset = {
+        label: `Item ${col.id}`,
+        backgroundColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 0.5)`,
+        borderColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 1)`,
+        borderWidth: 1,
+        data: [],
+      };
+  
+      rows.forEach((row, rowIndex) => {
+        const randomValue = getRandomNumberInRange(1, 50);
+        itemDataset.data.push(randomValue);
+      });
+  
+      datasets.push(itemDataset);
+    });
+  
+    const categoryLabels = rows.map(row => row.category.props.placeholder);
+  
+    const newChartData = {
+      labels: categoryLabels,
+      datasets,
+    };
+  
+    setChartData(newChartData);
+    setChartData2(null); // Reset chartData2
+  };
+  const handleShowChartComparisonByQuantity = () => {
+    const datasets = [];
+  
+    columns.forEach((col, colIndex) => {
+      const itemDataset = {
+        label: `Item ${col.id}`,
+        backgroundColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 0.5)`,
+        borderColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 1)`,
+        borderWidth: 1,
+        data: [],
+      };
+
+      rows.forEach((row, rowIndex) => {
+        const randomValue = getRandomNumberInRange(1, 50);
+        itemDataset.data.push(randomValue);
+      });
+
+      datasets.push(itemDataset);
+    });
+
+    const categoryLabels = rows.map(row => row.category.props.placeholder);
+
+    const newChartData2 = {
+      labels: categoryLabels,
+      datasets,
+    };
+
+    setChartData(null); // Reset chartData
+    setChartData2(newChartData2);
+  };
+
+// Fungsi untuk mendapatkan angka acak dalam rentang tertentu
+const getRandomNumberInRange = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// Fungsi untuk mendapatkan nilai warna acak antara 0 dan 255
+const getRandomColor = () => {
+  return getRandomNumberInRange(0, 255);
+};
+  
+const handleCompareData = () => {
+  if (columns.length < 2) {
+    alert("You need at least 2 Status Items to compare!");
+    return;
+  }
+
+  let comparisonHeader = [];
+  let comparisonSubheader = [];
+
+  const firstColumn = columns[0];
+
+  columns.slice(1).forEach(col => {
+    comparisonHeader.push(`Status Item ${firstColumn.id} vs Status Item ${col.id}`);
+    comparisonSubheader.push(`Item ${firstColumn.id} vs Item ${col.id}`, `Quantity ${firstColumn.id} vs Quantity ${col.id}`);
+  });
+
+  let comparisonRows = rows.map(row => {
+    let resultRow = [];
+    const firstItem = row.status.find(status => status.id === firstColumn.id);
+
+    columns.slice(1).forEach(col => {
+      const otherItem = row.status.find(status => status.id === col.id);
+      const itemComparison = `${firstItem.name.props.placeholder} vs ${otherItem.name.props.placeholder}`;
+      const quantityComparison = `${firstItem.statuses[0].name.props.placeholder} vs ${otherItem.statuses[0].name.props.placeholder}`;
+      resultRow.push(itemComparison, quantityComparison);
+    });
+    return { category: row.category.props.placeholder, data: resultRow };
+  });
+
+  let comparisonTableHTML = "<h2 class='comparison-table'>Comparison Table</h2><table class='comparison-table' border='1'><thead><tr>";
+  comparisonTableHTML += `<th rowspan="2" class='comparison-table'>Item Category Project</th>`;
+  comparisonHeader.forEach(header => {
+    comparisonTableHTML += `<th colspan="2" class='comparison-table'>${header}</th>`;
+  });
+  comparisonTableHTML += "</tr><tr>";
+  comparisonSubheader.forEach(subheader => {
+    comparisonTableHTML += `<th class='comparison-table'>${subheader}</th>`;
+  });
+  comparisonTableHTML += "</tr></thead><tbody>";
+
+  comparisonRows.forEach((row, index, array) => {
+    comparisonTableHTML += "<tr>";
+    if (index === 0 || array[index - 1].category !== row.category) { // Check if new category
+      const rowspan = array.filter(r => r.category === row.category).length;
+      comparisonTableHTML += `<td rowspan="${rowspan}" class='comparison-table'>${row.category}</td>`;
+    }
+    row.data.forEach(cell => {
+      comparisonTableHTML += `<td class='comparison-table'>${cell}</td>`;
+    });
+    comparisonTableHTML += "</tr>";
+  });
+
+  comparisonTableHTML += "</tbody></table>";
+  comparisonTableHTML += `<button class="comparison-chart-button" id="chartByItemButton">Show Chart Comparison By Item</button>`;
+  comparisonTableHTML += `<button class="comparison-chart-button chart-button-second" id="chartByQuantityButton">Show Chart Comparison By Quantity</button>`;
+
+  const buttonContainer = document.querySelector('.buttonsum');
+  buttonContainer.insertAdjacentHTML('afterend', comparisonTableHTML);
+
+  const chartByItemButton = document.getElementById('chartByItemButton');
+  chartByItemButton.addEventListener('click', handleShowChartComparisonByItem);
+
+  const chartByQuantityButton = document.getElementById('chartByQuantityButton');
+  chartByQuantityButton.addEventListener('click', handleShowChartComparisonByQuantity);
+};
+return (
+  <div className="table-container">
+    <table className="safety-table">
+      <caption>Summary Table</caption>
+      <thead>
+        <tr>
+          <th rowSpan="2">
+            Item Category Project
+            <div className="add">
+              <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+            </div>
+          </th>
+          {columns.map(col => (
+            <th colSpan="2" key={col.id}>
+              <input type="text" placeholder={`Status Item ${col.id}`} />
+              <div className="removecol">
+                <button className="remove-column-button" onClick={() => handleRemoveColumnClick(col.id)}>-</button>
+              </div>
+            </th>
+          ))}
+          <th rowSpan="2">Remarks</th>
+        </tr>
+        <tr>
+          {columns.map(col => (
+            <>
+              <th key={`item-${col.id}`}>{col.item}</th>
+              <th key={`quantity-${col.id}`}>{col.quantity}</th>
+            </>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, rowIndex) => (
+          <tr key={rowIndex}>
+            <td>{row.category}
+              <div className="add">
+                <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>- category</button>
+              </div>
+            </td>
+            {row.status.map((stat, statIndex) => (
+              <>
+                <td key={`status-name-${stat.id}`}>{stat.name}</td>
+                <td key={`status-quantity-${stat.id}`}>{stat.statuses[0].name}</td>
+              </>
+            ))}
+            <td>{row.remarks}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <div className="buttonsum" style={{ display: 'inline-block'}}>
+      <div className="save">
+        <button onClick={handleSaveData} style={{ marginRight:'5px'}} >Save Data</button>
+      </div>
+      <div className="compare">
+        <button onClick={handleCompareData}>Compare Data</button>
+      </div>
+      <div className="additem">
+        <button onClick={handleAddColumnClick} style={{ marginLeft:'5px'}} >Add Status Item</button> 
+      </div>
+    </div>
+    {chartData && (
+      <div className="chart-container">
+        <h2>Project Yearly {null} By Item</h2>
+        <canvas id="comparisonChartByItem" width="800" height="400"></canvas>
+      </div>
+    )}
+
+    {chartData2 && (
+      <div className="chart-container">
+        <h2>Project Yearly {null} By Quantity</h2>
+        <canvas id="comparisonChartByQuantity" width="800" height="400"></canvas>
+      </div>
+    )}
+  </div>
+);
+};
+
+export default SummaryTable;
+
+======
+
+import React, { useState, useEffect } from "react";
+import "../Styles/table.css";
+import { Chart } from 'chart.js/auto'; // Import Chart.js auto for version 3+
+ 
+const EditUploadSummary = () => {
+  const [columns, setColumns] = useState([
+    { id: 1, item: "Item 1", quantity: "Quantity 1" }
+  ]);
+
+  const [rows, setRows] = useState([
+    {
+      category: <input type="text" placeholder="Category 1" id={1} />, // nama category ( contoh: DR, PR, etc)
+      
+      status: [  // nama status   item... ( contoh:  23OB, 23RB-4, etc)
+        {
+          name: <input type="number" placeholder="Item 1" />, // item
+          id: 1,
+          statuses: [{ name: <input type="number" placeholder="Quantity 1" />, id: 1 }], //quantity
+        },
+      ],
+      remarks:  <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>, //remarks
+    },
+  ]);
+
+  const [chartData, setChartData] = useState(null);
+  const [chartData2, setChartData2] = useState(null);
+
+  useEffect(() => {
+    let chartInstance = null; // Variable untuk menyimpan instance grafik
+  
+    if (chartData) {
+      const chartCanvas = document.getElementById('comparisonChartByItem');
+      if (chartCanvas) {
+        const ctx = chartCanvas.getContext('2d');
+  
+        // Hancurkan instance grafik sebelumnya jika ada
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+  
+        // Buat grafik baru
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: chartData,
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-x
+              },
+              y: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-y
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+    }
+  
+    // Hapus instance grafik sebelum komponen di-unmount
+    return () => {
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+    };
+  }, [chartData]);
+
+  useEffect(() => {
+    let chartInstance2 = null; // Variable untuk menyimpan instance grafik
+
+    if (chartData2) {
+      const chartCanvas2 = document.getElementById('comparisonChartByQuantity');
+      if (chartCanvas2) {
+        const ctx2 = chartCanvas2.getContext('2d');
+
+        // Hancurkan instance grafik sebelumnya jika ada
+        if (chartInstance2) {
+          chartInstance2.destroy();
+        }
+
+        // Buat grafik baru
+        chartInstance2 = new Chart(ctx2, {
+          type: 'bar',
+          data: chartData2,
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-x
+              },
+              y: {
+                stacked: false, // Mengubah stacked menjadi false untuk sumbu-y
+                beginAtZero: true,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
+    }
+
+    // Hapus instance grafik sebelum komponen di-unmount
+    return () => {
+      if (chartInstance2) {
+        chartInstance2.destroy();
+      }
+    };
+  }, [chartData2]);
+
+  const handleDeleteClick = (index) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+        const newRows = [...rows];
+        newRows.splice(index, 1);
+        setRows(newRows);
+    }
+  };
+  
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      category: <input type="text" placeholder={`Category ${rows.length + 1}`} id={rows.length + 1} />,
+      status: columns.map(col => ({
+        name: <input type="number" placeholder={`Item ${col.id}`} />,
+        id: col.id,
+        statuses: [{ name: <input type="number" placeholder={`Quantity ${col.id}`} />, id: col.id }],
+      })),
+      remarks: <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleAddColumnClick = () => {
+    // Dapatkan ID terbesar dari kolom yang sudah ada
+    const maxColumnId = Math.max(...columns.map(col => col.id));
+    // Hitung ID baru dengan menambahkan 1 dari ID terbesar
+    const newColumnId = maxColumnId + 1;
+  
+    // Tambahkan kolom baru dengan ID yang sesuai
+    setColumns([...columns, { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }]);
+  
+    // Tambahkan status baru ke setiap baris dengan ID kolom yang sesuai
+    const updatedRows = rows.map(row => ({
+      ...row,
+      status: [
+        ...row.status,
+        {
+          name: <input type="number" placeholder={`Item ${newColumnId}`} />,
+          id: newColumnId,
+          statuses: [{ name: <input type="number" placeholder={`Quantity ${newColumnId}`} />, id: newColumnId }]
+        }
+      ]
+    }));
+  
+    setRows(updatedRows);
+  };
+  
+  const handleRemoveColumnClick = (colId) => {
+    // Temukan status category dengan ID yang akan dihapus
+    const statusItemCount = rows[0].status.length;
+    if (statusItemCount === 1) {
+      alert("At least you should have 1 Status Item and no less!");
+      return;
+    }
+  
+    // Hapus kolom dengan ID yang sesuai
+    const updatedColumns = columns.filter(col => col.id !== colId);
+    setColumns(updatedColumns);
+    
+    // Loop melalui setiap baris dan hapus sel <td> yang sesuai dengan ID kolom yang dihapus
+    const updatedRows = rows.map(row => {
+      const updatedStatus = row.status.filter(stat => stat.id !== colId);
+      return { ...row, status: updatedStatus };
+    });
+    setRows(updatedRows);
+  };
+
+  const handleShowChartComparisonByItem = () => {
+    const datasets = [];
+  
+    columns.forEach((col, colIndex) => {
+      const itemDataset = {
+        label: `Item ${col.id}`,
+        backgroundColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 0.5)`,
+        borderColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 1)`,
+        borderWidth: 1,
+        data: [],
+      };
+  
+      rows.forEach((row, rowIndex) => {
+        const randomValue = getRandomNumberInRange(1, 50);
+        itemDataset.data.push(randomValue);
+      });
+  
+      datasets.push(itemDataset);
+    });
+  
+    const categoryLabels = rows.map(row => row.category.props.placeholder);
+  
+    const newChartData = {
+      labels: categoryLabels,
+      datasets,
+    };
+  
+    setChartData(newChartData);
+    setChartData2(null); // Reset chartData2
+  };
+  const handleShowChartComparisonByQuantity = () => {
+    const datasets = [];
+  
+    columns.forEach((col, colIndex) => {
+      const itemDataset = {
+        label: `Item ${col.id}`,
+        backgroundColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 0.5)`,
+        borderColor: `rgba(${getRandomColor()}, ${getRandomColor()}, ${getRandomColor()}, 1)`,
+        borderWidth: 1,
+        data: [],
+      };
+
+      rows.forEach((row, rowIndex) => {
+        const randomValue = getRandomNumberInRange(1, 50);
+        itemDataset.data.push(randomValue);
+      });
+
+      datasets.push(itemDataset);
+    });
+
+    const categoryLabels = rows.map(row => row.category.props.placeholder);
+
+    const newChartData2 = {
+      labels: categoryLabels,
+      datasets,
+    };
+
+    setChartData(null); // Reset chartData
+    setChartData2(newChartData2);
+  };
+
+// Fungsi untuk mendapatkan angka acak dalam rentang tertentu
+const getRandomNumberInRange = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// Fungsi untuk mendapatkan nilai warna acak antara 0 dan 255
+const getRandomColor = () => {
+  return getRandomNumberInRange(0, 255);
+};
+  
+const handleCompareData = () => {
+  if (columns.length < 2) {
+    alert("You need at least 2 Status Items to compare!");
+    return;
+  }
+
+  let comparisonHeader = [];
+  let comparisonSubheader = [];
+
+  const firstColumn = columns[0];
+
+  columns.slice(1).forEach(col => {
+    comparisonHeader.push(`Status Item ${firstColumn.id} vs Status Item ${col.id}`);
+    comparisonSubheader.push(`Item ${firstColumn.id} vs Item ${col.id}`, `Quantity ${firstColumn.id} vs Quantity ${col.id}`);
+  });
+
+  let comparisonRows = rows.map(row => {
+    let resultRow = [];
+    const firstItem = row.status.find(status => status.id === firstColumn.id);
+
+    columns.slice(1).forEach(col => {
+      const otherItem = row.status.find(status => status.id === col.id);
+      const itemComparison = `${firstItem.name.props.placeholder} vs ${otherItem.name.props.placeholder}`;
+      const quantityComparison = `${firstItem.statuses[0].name.props.placeholder} vs ${otherItem.statuses[0].name.props.placeholder}`;
+      resultRow.push(itemComparison, quantityComparison);
+    });
+    return { category: row.category.props.placeholder, data: resultRow };
+  });
+
+  let comparisonTableHTML = "<h2 class='comparison-table'>Comparison Table</h2><table class='comparison-table' border='1'><thead><tr>";
+  comparisonTableHTML += `<th rowspan="2" class='comparison-table'>Item Category Project</th>`;
+  comparisonHeader.forEach(header => {
+    comparisonTableHTML += `<th colspan="2" class='comparison-table'>${header}</th>`;
+  });
+  comparisonTableHTML += "</tr><tr>";
+  comparisonSubheader.forEach(subheader => {
+    comparisonTableHTML += `<th class='comparison-table'>${subheader}</th>`;
+  });
+  comparisonTableHTML += "</tr></thead><tbody>";
+
+  comparisonRows.forEach((row, index, array) => {
+    comparisonTableHTML += "<tr>";
+    if (index === 0 || array[index - 1].category !== row.category) { // Check if new category
+      const rowspan = array.filter(r => r.category === row.category).length;
+      comparisonTableHTML += `<td rowspan="${rowspan}" class='comparison-table'>${row.category}</td>`;
+    }
+    row.data.forEach(cell => {
+      comparisonTableHTML += `<td class='comparison-table'>${cell}</td>`;
+    });
+    comparisonTableHTML += "</tr>";
+  });
+
+  comparisonTableHTML += "</tbody></table>";
+  comparisonTableHTML += `<button class="comparison-chart-button" id="chartByItemButton">Show Chart Comparison By Item</button>`;
+  comparisonTableHTML += `<button class="comparison-chart-button chart-button-second" id="chartByQuantityButton">Show Chart Comparison By Quantity</button>`;
+
+  const buttonContainer = document.querySelector('.buttonsum');
+  buttonContainer.insertAdjacentHTML('afterend', comparisonTableHTML);
+
+  const chartByItemButton = document.getElementById('chartByItemButton');
+  chartByItemButton.addEventListener('click', handleShowChartComparisonByItem);
+
+  const chartByQuantityButton = document.getElementById('chartByQuantityButton');
+  chartByQuantityButton.addEventListener('click', handleShowChartComparisonByQuantity);
+};
+return (
+  <div className="table-container">
+    <table className="safety-table">
+      <caption>Summary Table</caption>
+      <thead>
+        <tr>
+          <th rowSpan="2">
+            Item Category Project
+            <div className="add">
+              <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+            </div>
+          </th>
+          {columns.map(col => (
+            <th colSpan="2" key={col.id}>
+              <input type="text" placeholder={`Status Item ${col.id}`} />
+              <div className="removecol">
+                <button className="remove-column-button" onClick={() => handleRemoveColumnClick(col.id)}>-</button>
+              </div>
+            </th>
+          ))}
+          <th rowSpan="2">Remarks</th>
+        </tr>
+        <tr>
+          {columns.map(col => (
+            <>
+              <th key={`item-${col.id}`}>{col.item}</th>
+              <th key={`quantity-${col.id}`}>{col.quantity}</th>
+            </>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, rowIndex) => (
+          <tr key={rowIndex}>
+            <td>{row.category}
+              <div className="add">
+                <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>- category</button>
+              </div>
+            </td>
+            {row.status.map((stat, statIndex) => (
+              <>
+                <td key={`status-name-${stat.id}`}>{stat.name}</td>
+                <td key={`status-quantity-${stat.id}`}>{stat.statuses[0].name}</td>
+              </>
+            ))}
+            <td>{row.remarks}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <div className="buttonsum" style={{ display: 'inline-block'}}>
+      <div className="save">
+        <button onClick={handleSaveData} style={{ marginRight:'5px'}} >Save Data</button>
+      </div>
+      <div className="compare">
+        <button onClick={handleCompareData}>Compare Data</button>
+      </div>
+      <div className="additem">
+        <button onClick={handleAddColumnClick} style={{ marginLeft:'5px'}} >Add Status Item</button> 
+      </div>
+    </div>
+    {chartData && (
+      <div className="chart-container">
+        <h2>Project Yearly {null} By Item</h2>
+        <canvas id="comparisonChartByItem" width="800" height="400"></canvas>
+      </div>
+    )}
+
+    {chartData2 && (
+      <div className="chart-container">
+        <h2>Project Yearly {null} By Quantity</h2>
+        <canvas id="comparisonChartByQuantity" width="800" height="400"></canvas>
+      </div>
+    )}
+  </div>
+);
+};
+
+export default EditUploadSummary;
+
+
+==== chart
+
+import React, { useState, useEffect, useRef } from "react";
+import "../Styles/savedsummary.css";
+import Chart from "chart.js/auto";
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editTableData, setEditTableData] = useState({});
+  const [showItemChart, setShowItemChart] = useState(false);
+  const [showQuantityChart, setShowQuantityChart] = useState(false);
+  const chartRef = useRef(null);
+
+  const handleShowItemChart = () => {
+    setShowItemChart(true);
+    setShowQuantityChart(false);
+  };
+
+  const handleShowQuantityChart = () => {
+    setShowItemChart(false);
+    setShowQuantityChart(true);
+  };
+
+  const ComparisonChart = ({ data, type }) => {
+    useEffect(() => {
+      if (data && data.length > 0) {
+        const labels = data.map((item) => item.name);
+        const chartData = data.map((item) => item[type]);
+
+        const ctx = document.getElementById("comparisonChart").getContext("2d");
+
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+
+        chartRef.current = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: `Comparison by ${type}`,
+                data: chartData,
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      return () => {
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+      };
+    }, [data, type]);
+
+    return <canvas id="comparisonChart" width="400" height="400"></canvas>;
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCompareData = (issuedDate) => {
+    const currentTable = tablesData[issuedDate];
+
+    if (!currentTable || currentTable.columns.length < 2) {
+      alert("Untuk melakukan perbandingan minimal harus memiliki 2 nama project!");
+      return;
+    }
+
+    const comparisonResult = {
+      columns: currentTable.columns
+        .map((col1, index1) =>
+          currentTable.columns.slice(index1 + 1).map((col2, index2) => ({
+            id: `${col1.id}-${col2.id}`,
+            name: `${col1.name} vs ${col2.name}`,
+            item: `Diff Item ${col1.id} vs ${col2.id}`,
+            quantity: `Diff Quantity ${col1.id} vs ${col2.id}`,
+          }))
+        )
+        .flat(),
+      rows: currentTable.rows.map((row) => ({
+        projectName: row.projectName,
+        status: row.status
+          .map((stat1, index1) =>
+            row.status.slice(index1 + 1).map((stat2, index2) => ({
+              id: `${stat1.id}-${stat2.id}`,
+              name: Math.abs(stat1.name - stat2.name),
+              quantity: Math.abs(stat1.quantity - stat2.quantity),
+            }))
+          )
+          .flat(),
+        remarks: row.remarks,
+      })),
+    };
+
+    setComparisonData((prevComparisonData) => ({
+      ...prevComparisonData,
+      [issuedDate]: comparisonResult,
+      itemComparison: comparisonResult.columns,
+      quantityComparison: comparisonResult.rows.map((row) => row.status),
+    }));
+  };
+
+  const handleDeleteRow = (issuedDate, projectName) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows = updatedTableData[issuedDate].rows.filter(
+      (row) => row.projectName !== projectName
+    );
+    setEditTableData(updatedTableData);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const yearsSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          const year = new Date(entry.IssuedDate).getFullYear();
+          yearsSet.add(year);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: [],
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`,
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+            status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }],
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available",
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setYears(Array.from(yearsSet));
+        setSelectedYears(Array.from(yearsSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveClick = async () => {
+    setEditMode(false);
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      for (const [issuedDate, tableData] of Object.entries(editTableData)) {
+        const response = await fetch(
+          `http://localhost:8080/kpi/update?issuedDate=${issuedDate}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tableData),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to save data for issuedDate: ${issuedDate}`);
+        }
+      }
+      setTablesData(editTableData);
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
+  };
+
+  const handleAddRowClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push({
+      projectName: "",
+      status: Array(updatedTableData[issuedDate].columns.length).fill({
+        name: "",
+        quantity: "",
+      }),
+      remarks: "",
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  const handleAddColumnClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    const newColumn = {
+      id: updatedTableData[issuedDate].columns.length + 1,
+      name: `Column ${updatedTableData[issuedDate].columns.length + 1}`,
+      item: `Item ${updatedTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${updatedTableData[issuedDate].columns.length + 1}`,
+    };
+    updatedTableData[issuedDate].columns.push(newColumn);
+
+    updatedTableData[issuedDate].rows.forEach((row) => {
+      row.status.push({ name: "", quantity: "" });
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  return (
+    <div className="summary-table">
+      <div className="year-dropdown">
+        <button onClick={toggleDropdown} className="dropdown-button">
+          {dropdownOpen ? "Close" : "Select Year"}
+        </button>
+        {dropdownOpen && (
+          <ul className="dropdown-menu">
+            {years.map((year) => (
+              <li key={year}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedYears.map((year) => (
+        <div key={year} className="year-section">
+          <h2>{year}</h2>
+          {Object.keys(tablesData)
+            .filter((issuedDate) => new Date(issuedDate).getFullYear() === year)
+            .map((issuedDate) => (
+              <div key={issuedDate} className="issued-date-section">
+                <h3>Issued Date: {issuedDate}</h3>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Project Name</th>
+                        {tablesData[issuedDate].columns.map((column) => (
+                          <th key={column.id}>
+                            {column.name} ({column.item}, {column.quantity})
+                          </th>
+                        ))}
+                        <th>Remarks</th>
+                        {editMode && <th>Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tablesData[issuedDate].rows.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.projectName}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].projectName = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.projectName
+                            )}
+                          </td>
+                          {row.status.map((status, colIndex) => (
+                            <td key={colIndex}>
+                              {editMode ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={status.name}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].name = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={status.quantity}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].quantity = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  {status.name} / {status.quantity}
+                                </div>
+                              )}
+                            </td>
+                          ))}
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.remarks}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].remarks = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.remarks
+                            )}
+                          </td>
+                          {editMode && (
+                            <td>
+                              <button onClick={() => handleDeleteRow(issuedDate, row.projectName)}>Delete</button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {editMode && (
+                    <div className="table-actions">
+                      <button onClick={() => handleAddRowClick(issuedDate)}>Add Row</button>
+                      <button onClick={() => handleAddColumnClick(issuedDate)}>Add Column</button>
+                    </div>
+                  )}
+                </div>
+                <div className="comparison-container">
+                  <button onClick={() => handleCompareData(issuedDate)}>Compare Data</button>
+                  {comparisonData[issuedDate] && (
+                    <div>
+                      <button onClick={handleShowItemChart}>Show Item Comparison Chart</button>
+                      <button onClick={handleShowQuantityChart}>Show Quantity Comparison Chart</button>
+                      {showItemChart && (
+                        <ComparisonChart data={comparisonData.itemComparison} type="item" />
+                      )}
+                      {showQuantityChart && (
+                        <ComparisonChart data={comparisonData.quantityComparison} type="quantity" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <div className="edit-save-container">
+        {editMode ? (
+          <button onClick={handleSaveClick}>Save</button>
+        ) : (
+          <button onClick={handleEditClick}>Edit</button>
+        )}
+      </div>
+      <p className="warning-message">{warningMessage}</p>
+    </div>
+  );
+};
+
+export default SavedSummaryTable;
+
+==== chart least
+import React, { useState, useEffect, useRef } from "react";
+import "../Styles/savedsummary.css";
+import Chart from "chart.js/auto";
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editTableData, setEditTableData] = useState({});
+  const [showItemChart, setShowItemChart] = useState(false);
+  const [showQuantityChart, setShowQuantityChart] = useState(false);
+  const chartRef = useRef(null);
+
+  const handleShowItemChart = () => {
+    setShowItemChart(true);
+    setShowQuantityChart(false);
+  };
+
+  const handleShowQuantityChart = () => {
+    setShowItemChart(false);
+    setShowQuantityChart(true);
+  };
+
+  const ComparisonChart = ({ data, type }) => {
+    useEffect(() => {
+      if (data && data.length > 0) {
+        const labels = data.map((item) => item.name);
+        const chartData = data.map((item) => item[type]);
+
+        const ctx = document.getElementById("comparisonChart").getContext("2d");
+
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+
+        chartRef.current = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: `Comparison by ${type}`,
+                data: chartData,
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      return () => {
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+      };
+    }, [data, type]);
+
+    return <canvas id="comparisonChart" width="400" height="400"></canvas>;
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCompareData = (issuedDate) => {
+    const currentTable = tablesData[issuedDate];
+
+    if (!currentTable || currentTable.columns.length < 2) {
+      alert("Untuk melakukan perbandingan minimal harus memiliki 2 nama project!");
+      return;
+    }
+
+    const comparisonResult = {
+      columns: currentTable.columns
+        .map((col1, index1) =>
+          currentTable.columns.slice(index1 + 1).map((col2, index2) => ({
+            id: `${col1.id}-${col2.id}`,
+            name: `${col1.name} vs ${col2.name}`,
+            item: `Diff Item ${col1.id} vs ${col2.id}`,
+            quantity: `Diff Quantity ${col1.id} vs ${col2.id}`,
+          }))
+        )
+        .flat(),
+      rows: currentTable.rows.map((row) => ({
+        projectName: row.projectName,
+        status: row.status
+          .map((stat1, index1) =>
+            row.status.slice(index1 + 1).map((stat2, index2) => ({
+              id: `${stat1.id}-${stat2.id}`,
+              name: Math.abs(stat1.name - stat2.name),
+              quantity: Math.abs(stat1.quantity - stat2.quantity),
+            }))
+          )
+          .flat(),
+        remarks: row.remarks,
+      })),
+    };
+
+    setComparisonData((prevComparisonData) => ({
+      ...prevComparisonData,
+      [issuedDate]: comparisonResult,
+      itemComparison: comparisonResult.columns,
+      quantityComparison: comparisonResult.rows.map((row) => row.status),
+    }));
+  };
+
+  const handleDeleteRow = (issuedDate, projectName) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows = updatedTableData[issuedDate].rows.filter(
+      (row) => row.projectName !== projectName
+    );
+    setEditTableData(updatedTableData);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const yearsSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          const year = new Date(entry.IssuedDate).getFullYear();
+          yearsSet.add(year);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: [],
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`,
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+            status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }],
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available",
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setYears(Array.from(yearsSet));
+        setSelectedYears(Array.from(yearsSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveClick = async () => {
+    setEditMode(false);
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      for (const [issuedDate, tableData] of Object.entries(editTableData)) {
+        const response = await fetch(
+          `http://localhost:8080/kpi/update?issuedDate=${issuedDate}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tableData),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to save data for issuedDate: ${issuedDate}`);
+        }
+      }
+      setTablesData(editTableData);
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
+  };
+
+  const handleAddRowClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push({
+      projectName: "",
+      status: Array(updatedTableData[issuedDate].columns.length).fill({
+        name: "",
+        quantity: "",
+      }),
+      remarks: "",
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  const handleAddColumnClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    const newColumn = {
+      id: updatedTableData[issuedDate].columns.length + 1,
+      name: `Column ${updatedTableData[issuedDate].columns.length + 1}`,
+      item: `Item ${updatedTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${updatedTableData[issuedDate].columns.length + 1}`,
+    };
+    updatedTableData[issuedDate].columns.push(newColumn);
+
+    updatedTableData[issuedDate].rows.forEach((row) => {
+      row.status.push({ name: "", quantity: "" });
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  return (
+    <div className="summary-table">
+      <div className="year-dropdown">
+        <button onClick={toggleDropdown} className="dropdown-button">
+          {dropdownOpen ? "Close" : "Select Year"}
+        </button>
+        {dropdownOpen && (
+          <ul className="dropdown-menu">
+            {years.map((year) => (
+              <li key={year}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedYears.map((year) => (
+        <div key={year} className="year-section">
+          <h2>{year}</h2>
+          {Object.keys(tablesData)
+            .filter((issuedDate) => new Date(issuedDate).getFullYear() === year)
+            .map((issuedDate) => (
+              <div key={issuedDate} className="issued-date-section">
+                <h3>Issued Date: {issuedDate}</h3>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Project Name</th>
+                        {tablesData[issuedDate].columns.map((column) => (
+                          <th key={column.id}>
+                            {column.name} ({column.item}, {column.quantity})
+                          </th>
+                        ))}
+                        <th>Remarks</th>
+                        {editMode && <th>Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tablesData[issuedDate].rows.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.projectName}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].projectName = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.projectName
+                            )}
+                          </td>
+                          {row.status.map((status, colIndex) => (
+                            <td key={colIndex}>
+                              {editMode ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={status.name}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].name = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={status.quantity}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].quantity = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  {status.name} / {status.quantity}
+                                </div>
+                              )}
+                            </td>
+                          ))}
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.remarks}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].remarks = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.remarks
+                            )}
+                          </td>
+                          {editMode && (
+                            <td>
+                              <button onClick={() => handleDeleteRow(issuedDate, row.projectName)}>Delete</button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {editMode && (
+                    <div className="table-actions">
+                      <button onClick={() => handleAddRowClick(issuedDate)}>Add Row</button>
+                      <button onClick={() => handleAddColumnClick(issuedDate)}>Add Column</button>
+                    </div>
+                  )}
+                </div>
+                <div className="comparison-container">
+                  <button onClick={() => handleCompareData(issuedDate)}>Compare Data</button>
+                  {comparisonData[issuedDate] && (
+                    <div>
+                      <button onClick={handleShowItemChart}>Show Item Comparison Chart</button>
+                      <button onClick={handleShowQuantityChart}>Show Quantity Comparison Chart</button>
+                      {showItemChart && (
+                        <ComparisonChart data={comparisonData.itemComparison} type="item" />
+                      )}
+                      {showQuantityChart && (
+                        <ComparisonChart data={comparisonData.quantityComparison} type="quantity" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <div className="edit-save-container">
+        {editMode ? (
+          <button onClick={handleSaveClick}>Save</button>
+        ) : (
+          <button onClick={handleEditClick}>Edit</button>
+        )}
+      </div>
+      <p className="warning-message">{warningMessage}</p>
+    </div>
+  );
+};
+
+export default SavedSummaryTable;
+
+
+===
+
+import React, { useState, useEffect, useRef } from "react";
+import "../Styles/savedsummary.css";
+import Chart from "chart.js/auto";
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editTableData, setEditTableData] = useState({});
+  const [showItemChart, setShowItemChart] = useState(false);
+  const [showQuantityChart, setShowQuantityChart] = useState(false);
+  const chartRef = useRef(null);
+
+  const handleShowItemChart = () => {
+    setShowItemChart(true);
+    setShowQuantityChart(false);
+  };
+
+  const handleShowQuantityChart = () => {
+    setShowItemChart(false);
+    setShowQuantityChart(true);
+  };
+
+ const ComparisonChart = ({ data, type }) => {
+  useEffect(() => {
+    if (data && data.length > 0) {
+      const labels = data.map((item) => item.itemName || item.quantityName);
+      const chartData1 = data.map((item) => item.values1);
+      const chartData2 = data.map((item) => item.values2);
+
+      const ctx = document.getElementById("comparisonChart").getContext("2d");
+
+      if (chartRef.current) {
+        chartRef.current.destroy();
+      }
+
+      chartRef.current = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: `${type} of first item`,
+              data: chartData1,
+              backgroundColor: "rgba(75, 192, 192, 0.2)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 1,
+            },
+            {
+              label: `${type} of second item`,
+              data: chartData2,
+              backgroundColor: "rgba(192, 75, 75, 0.2)",
+              borderColor: "rgba(192, 75, 75, 1)",
+              borderWidth: 1,
+            }
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+          plugins: {
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+            },
+          }
+        },
+      });
+    }
+
+    return () => chartRef.current?.destroy();
+  }, [data, type]);
+
+  return <canvas id="comparisonChart" width="400" height="400"></canvas>;
+};
+
+  
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCompareData = (issuedDate) => {
+    const currentTable = tablesData[issuedDate];
+    if (!currentTable || currentTable.columns.length < 2) {
+      alert("To perform a comparison, at least two projects are needed.");
+      return;
+    }
+  
+    const comparisonResult = {
+      columns: currentTable.columns
+        .map((col1, index1) =>
+          currentTable.columns.slice(index1 + 1).map((col2) => ({
+            id: `${col1.id}-${col2.id}`,
+            name1: col1.name,
+            name2: col2.name,
+            itemName: `Item comparison between ${col1.name} and ${col2.name}`,
+            quantityName: `Quantity comparison between ${col1.name} and ${col2.name}`,
+          }))
+        )
+        .flat(),
+      rows: currentTable.rows.map((row) => ({
+        projectName: row.projectName,
+        status: row.status
+          .map((stat1, index1) =>
+            row.status.slice(index1 + 1).map((stat2) => ({
+              id: `${stat1.id}-${stat2.id}`,
+              name1: stat1.name,
+              name2: stat2.name,
+              quantity1: stat1.quantity,
+              quantity2: stat2.quantity,
+            }))
+          )
+          .flat(),
+        remarks: row.remarks,
+      })),
+    };
+  
+    setComparisonData((prevComparisonData) => ({
+      ...prevComparisonData,
+      [issuedDate]: comparisonResult,
+      itemComparison: comparisonResult.columns.map((col, index) => ({
+        itemName: col.itemName,
+        values1: comparisonResult.rows.map((row) => row.status[index].name1),
+        values2: comparisonResult.rows.map((row) => row.status[index].name2),
+      })),
+      quantityComparison: comparisonResult.columns.map((col, index) => ({
+        quantityName: col.quantityName,
+        values1: comparisonResult.rows.map((row) => row.status[index].quantity1),
+        values2: comparisonResult.rows.map((row) => row.status[index].quantity2),
+      })),
+    }));
+  };
+  
+  
+
+  const handleDeleteRow = (issuedDate, projectName) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows = updatedTableData[issuedDate].rows.filter(
+      (row) => row.projectName !== projectName
+    );
+    setEditTableData(updatedTableData);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const yearsSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          const year = new Date(entry.IssuedDate).getFullYear();
+          yearsSet.add(year);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: [],
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`,
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+            status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }],
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available",
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setYears(Array.from(yearsSet));
+        setSelectedYears(Array.from(yearsSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveClick = async () => {
+    setEditMode(false);
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      for (const [issuedDate, tableData] of Object.entries(editTableData)) {
+        const response = await fetch(
+          `http://localhost:8080/kpi/update?issuedDate=${issuedDate}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tableData),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to save data for issuedDate: ${issuedDate}`);
+        }
+      }
+      setTablesData(editTableData);
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
+  };
+
+  const handleAddRowClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push({
+      projectName: "",
+      status: Array(updatedTableData[issuedDate].columns.length).fill({
+        name: "",
+        quantity: "",
+      }),
+      remarks: "",
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  const handleAddColumnClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    const newColumn = {
+      id: updatedTableData[issuedDate].columns.length + 1,
+      name: `Column ${updatedTableData[issuedDate].columns.length + 1}`,
+      item: `Item ${updatedTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${updatedTableData[issuedDate].columns.length + 1}`,
+    };
+    updatedTableData[issuedDate].columns.push(newColumn);
+
+    updatedTableData[issuedDate].rows.forEach((row) => {
+      row.status.push({ name: "", quantity: "" });
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  return (
+    <div className="summary-table">
+      <div className="year-dropdown">
+        <button onClick={toggleDropdown} className="dropdown-button">
+          {dropdownOpen ? "Close" : "Select Year"}
+        </button>
+        {dropdownOpen && (
+          <ul className="dropdown-menu">
+            {years.map((year) => (
+              <li key={year}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedYears.map((year) => (
+        <div key={year} className="year-section">
+          <h2>{year}</h2>
+          {Object.keys(tablesData)
+            .filter((issuedDate) => new Date(issuedDate).getFullYear() === year)
+            .map((issuedDate) => (
+              <div key={issuedDate} className="issued-date-section">
+                <h3>Issued Date: {issuedDate}</h3>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Project Name</th>
+                        {tablesData[issuedDate].columns.map((column) => (
+                          <th key={column.id}>
+                            {column.name} ({column.item}, {column.quantity})
+                          </th>
+                        ))}
+                        <th>Remarks</th>
+                        {editMode && <th>Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tablesData[issuedDate].rows.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.projectName}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].projectName = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.projectName
+                            )}
+                          </td>
+                          {row.status.map((status, colIndex) => (
+                            <td key={colIndex}>
+                              {editMode ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={status.name}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].name = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={status.quantity}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].quantity = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  {status.name} / {status.quantity}
+                                </div>
+                              )}
+                            </td>
+                          ))}
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.remarks}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].remarks = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.remarks
+                            )}
+                          </td>
+                          {editMode && (
+                            <td>
+                              <button onClick={() => handleDeleteRow(issuedDate, row.projectName)}>Delete</button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {editMode && (
+                    <div className="table-actions">
+                      <button onClick={() => handleAddRowClick(issuedDate)}>Add Row</button>
+                      <button onClick={() => handleAddColumnClick(issuedDate)}>Add Column</button>
+                    </div>
+                  )}
+                </div>
+                <div className="comparison-container">
+                  <button onClick={() => handleCompareData(issuedDate)}>Compare Data</button>
+                  {comparisonData[issuedDate] && (
+                    <div>
+                      <button onClick={handleShowItemChart}>Show Item Comparison Chart</button>
+                      <button onClick={handleShowQuantityChart}>Show Quantity Comparison Chart</button>
+                      {showItemChart && (
+                        <ComparisonChart data={comparisonData.itemComparison} type="item" />
+                      )}
+                      {showQuantityChart && (
+                        <ComparisonChart data={comparisonData.quantityComparison} type="quantity" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <div className="edit-save-container">
+        {editMode ? (
+          <button onClick={handleSaveClick}>Save</button>
+        ) : (
+          <button onClick={handleEditClick}>Edit</button>
+        )}
+      </div>
+      <p className="warning-message">{warningMessage}</p>
+    </div>
+  );
+};
+
+export default SavedSummaryTable;
+

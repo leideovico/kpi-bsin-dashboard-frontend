@@ -11,7 +11,30 @@
     margin-top: 30px; /* Atur jarak antara grafik dan garis pembatas */
   }
 
+  .chart-divider2 {
+    border-top: 2px dashed rgba(139, 0, 0, 0.7); /* Garis putus-putus merah gelap */
+    margin-top: 30px; /* Atur jarak antara grafik dan garis pembatas */
+  }
+  
   .chart{
     margin-top: 10px;
   }
+
+  .search button {
+    background-image: linear-gradient(to right, #8b0000, #ad2b2b);
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: flex;
+    display: inline-block;
+  }
+  
+  
+  .search button:hover {
+    filter: brightness(1.2); /* Misalnya, 1.2 untuk meningkatkan kecerahan */
+  }
+  
   

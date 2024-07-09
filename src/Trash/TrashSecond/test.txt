@@ -1,0 +1,680 @@
+import React, { useState } from "react";
+import { months } from "./months.jsx"; // Import months
+
+const EnvironmentTable = () => {
+  const [kpiResults, setKpiResults] = useState([
+    {
+      id: 1,
+      kpiFactorsCount: 0,
+      statusCount: 0,
+      kpiFactors: [], // Tambah properti kpiFactors untuk menyimpan faktor-faktor KPI
+    },
+  ]);
+
+  const handleAddKpiResult = () => {
+    const newId = kpiResults[kpiResults.length - 1].id + 1;
+    setKpiResults([
+      ...kpiResults,
+      { id: newId, kpiFactorsCount: 0, kpiFactors: [] },
+    ]);
+  };
+
+  const handleRemoveKpiResult = () => {
+    if (kpiResults.length > 1) {
+      setKpiResults(kpiResults.slice(0, -1));
+    } else {
+      alert("Must have at least one KPI result.");
+    }
+  };
+  
+
+  const handleAddKpiFactor = (resultId) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          const newFactor = {
+            id: result.kpiFactors.length + 1,
+            statusCount: 0,
+            statusRows: [], // Tambah properti statusRows pada setiap faktor KPI baru
+          };
+          return {
+            ...result,
+            kpiFactors: [...result.kpiFactors, newFactor],
+            kpiFactorsCount: result.kpiFactorsCount + 1,
+          };
+        }
+        return result;
+      }),
+    );
+  };
+
+  const handleRemoveKpiFactor = (resultId) => {
+    setKpiResults(kpiResults.map((result) => {
+      if (result.id === resultId && result.kpiFactors.length > 0) {
+        return {
+          ...result,
+          kpiFactors: result.kpiFactors.slice(0, -1),
+          kpiFactorsCount: result.kpiFactorsCount - 1
+        };
+      }
+      return result;
+    }));
+  };
+  
+
+  const handleAddStatusForFactor = (resultId, factorIndex) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            kpiFactors: result.kpiFactors.map((factor, index) => {
+              if (index === factorIndex) {
+                const newStatusCount = (factor.statusCount || 0) + 1;
+                const newFactor = {
+                  ...factor,
+                  statusCount: newStatusCount,
+                };
+                // Buat array baru dengan menambahkan baris baru untuk "New Status"
+                const newStatusRows = Array.from(
+                  { length: newStatusCount },
+                  (_, i) => ({
+                    id: i + 1, // id unik untuk setiap status
+                  }),
+                );
+                return {
+                  ...newFactor,
+                  statusRows: newStatusRows,
+                };
+              }
+              return factor;
+            }),
+          };
+        }
+        return result;
+      }),
+    );
+  };
+
+
+  const handleRemoveStatusForFactor = (resultId, factorIndex) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            kpiFactors: result.kpiFactors.map((factor, index) => {
+              if (index === factorIndex && factor.statusCount > 0) {
+                const newStatusCount = factor.statusCount - 1;
+                const newFactor = {
+                  ...factor,
+                  statusCount: newStatusCount,
+                };
+                // Buat array baru dengan menghapus baris terakhir untuk "Remove Status"
+                const newStatusRows = newFactor.statusRows.slice(0, newStatusCount);
+                return {
+                  ...newFactor,
+                  statusRows: newStatusRows,
+                };
+              }
+              return factor;
+            }),
+          };
+        }
+        return result;
+      })
+    );
+  };
+  
+
+  const handleAddStatus = (resultId) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            statusCount: (result.statusCount || 0) + 1,
+          };
+        }
+        return result;
+      }),
+    );
+  };
+
+  const handleRemoveStatus = (resultId) => {
+    setKpiResults(kpiResults.map((result) => {
+      if (result.id === resultId && result.statusCount > 0) {
+        return {
+          ...result,
+          statusCount: result.statusCount - 1,
+        };
+      }
+      return result;
+    }));
+  };
+  
+
+  // Hitung total baris termasuk baris baru yang ditambahkan
+  const totalRows =
+    2 +
+    kpiResults.reduce(
+      (total, result) =>
+        total +
+        2 +
+        result.kpiFactorsCount * 2 +
+        (result.statusCount || 0) +
+        result.kpiFactors.reduce(
+          (acc, factor) => acc + (factor.statusCount || 0),
+          0,
+        ),
+      0,
+    );
+
+  return (
+    <table className="input-table">
+      <thead>
+        <h2>Environment</h2>
+        <tr>
+          <th rowSpan={totalRows}>Item</th>
+          <th rowSpan={totalRows}>
+            KPI Result{" "}
+            <div className="result">
+            <button className="add-result-button" onClick={handleAddKpiResult}>
+              +  
+            </button>
+            <button className="remove-result-button" onClick={handleRemoveKpiResult}>
+             -  
+            </button>
+            </div>
+          </th>
+          <th colSpan="2">KPI Factor</th>
+          <th rowSpan="2">Unit</th>
+          <th rowSpan="2">Target</th>
+          <th colSpan={months.length}>Tahun 2024</th>
+        </tr>
+        <tr>
+          <th>KPI Factor Name</th>
+          <th>Status</th>
+          {months.map((month, index) => (
+            <th key={index}>{month}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {kpiResults.map((result, index) => (
+          <React.Fragment key={result.id}>
+            <tr>
+              {index === 0 && <td rowSpan={totalRows}>Environtment</td>}
+
+              <td
+                rowSpan={
+                  2 +
+                  result.kpiFactorsCount * 2 +
+                  (result.statusCount || 0) +
+                  result.kpiFactors.reduce(
+                    (acc, curr) => acc + (curr.statusRows?.length || 0),
+                    0,
+                  )
+                }
+              >
+                <input type="text" />
+                <div className="factor">
+                <button
+                  className="add-factor-button"
+                  onClick={() => handleAddKpiFactor(result.id)}
+                >
+                  + Factor
+                </button>
+                <button
+                  className="remove-factor-button"
+                  onClick={() => handleRemoveKpiFactor(result.id)}
+                >
+                  - Factor
+                </button>
+                </div>
+              </td>
+
+              <td rowSpan={2 + (result.statusCount || 0)}>
+              <input type="text" />
+                <div className="status"> 
+                <button
+                  className="add-status-button"
+                  onClick={() => handleAddStatus(result.id)}
+                >
+                  + Status
+                </button>
+                <button
+                  className="remove-status-button"
+                  onClick={() => handleRemoveStatus(result.id)}
+                >
+                  - Status
+                </button>
+                </div>
+              </td>
+
+              <td>
+                <div className="kpi-factor-status"><input type="text" /></div>
+              </td>
+              <td rowSpan={2 + (result.statusCount || 0)}>
+                <input type="text" />
+              </td>
+              <td rowSpan={2 + (result.statusCount || 0)}>
+                <input type="text" />
+              </td>
+
+              {months.map((_, index) => (
+                <td key={index}>
+                  <input type="number" />
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td>
+                <div className="kpi-factor-status"><input type="text" /></div>
+              </td>
+              {months.map((_, index) => (
+                <td key={index}>
+                  <input type="number" />
+                </td>
+              ))}
+            </tr>
+
+            {/* Logika tambah KPI Status */}
+            {Array.from({ length: result.statusCount || 0 }, (_, i) => (
+              <React.Fragment key={i}>
+                <tr>
+                  <td>New Status</td>
+
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+              </React.Fragment>
+            ))}
+
+            {/* Logika tambah KPI Factor */}
+            {Array.from({ length: result.kpiFactorsCount }, (_, i) => (
+              <React.Fragment key={i}>
+                <tr>
+                <td
+                  rowSpan={
+                    2 +
+                    (result.kpiFactors[i].statusRows
+                      ? result.kpiFactors[i].statusRows.length
+                      : 0)
+                  }
+                >
+                  <input type="text" />
+                  <div className="status"> 
+                  <button
+                    className="add-status-button"
+                    onClick={() => handleAddStatusForFactor(result.id, i)}
+                  >
+                    + Status
+                  </button>
+                  <button
+                    className="remove-status-button"
+                    onClick={() => handleRemoveStatusForFactor(result.id, i)}
+                  >
+                    - Status
+                  </button>
+                  </div>
+                </td>
+                  <td>
+                    <div className="kpi-factor-status">Plan</div>
+                  </td>
+                  <td
+                    rowSpan={
+                      2 +
+                      (result.kpiFactors[i].statusRows
+                        ? result.kpiFactors[i].statusRows.length
+                        : 0)
+                    }
+                  >
+                    <input type="text" />
+                  </td>
+                  <td
+                    rowSpan={
+                      2 +
+                      (result.kpiFactors[i].statusRows
+                        ? result.kpiFactors[i].statusRows.length
+                        : 0)
+                    }
+                  >
+                    <input type="text" />
+                  </td>
+
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td>
+                    <div className="kpi-factor-status">Actual</div>
+                  </td>
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+                {/* Tambahkan baris baru untuk "New Status" */}
+                {result.kpiFactors[i].statusRows.map((statusRow) => (
+                  <tr key={statusRow.id}>
+                    <td>New Status</td>
+                    {months.map((_, index) => (
+                      <td key={index}>
+                        <input type="number" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </React.Fragment>
+        ))}
+      </tbody>
+    </table>
+  );
+};
+
+export default EnvironmentTable;
+
+CHART
+
+import React, { useState, useEffect } from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart } from 'chart.js/auto'; // Import Chart.js auto for version 3+
+import '../Styles/chart.css';
+import { registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+function ChartComponent({ chartSize }) {
+  const [firstTargetData, setFirstTargetData] = useState([]);
+  const [firstActualData, setFirstActualData] = useState([]);
+  const [secondTargetData, setSecondTargetData] = useState([]);
+  const [secondActualData, setSecondActualData] = useState([]);
+  const [thirdTargetData, setThirdTargetData] = useState([]);
+  const [thirdActualData, setThirdActualData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
+  const [filteredIndices, setFilteredIndices] = useState([]);
+  Chart.register(...registerables, ChartDataLabels);
+
+
+  const chartDescriptions = [
+    { kpiResult: "KPI result 1", kpiFactorName: "Factor 1", unit: "Unit 1", target: "Target 1" },
+    { kpiResult: "KPI result 1", kpiFactorName: "Factor 1", unit: "Unit 2", target: "Target 2" },
+    { kpiResult: "KPI result 3", kpiFactorName: "Factor 3", unit: "Unit 3", target: "Target 3" }
+  ];
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearch = () => {
+    setActiveSearchTerm(searchTerm);
+  };
+
+  const handleRemoveFilter = () => {
+    setSearchTerm('');
+    setActiveSearchTerm('');
+  };
+
+  useEffect(() => {
+    // Inisialisasi filteredIndices dengan semua indeks chart
+    setFilteredIndices(chartDescriptions.map((_, index) => index));
+  }, []);
+
+  useEffect(() => {
+    if (activeSearchTerm === '') {
+      // Jika activeSearchTerm kosong, semua chart akan ditampilkan
+      setFilteredIndices(chartDescriptions.map((_, index) => index));
+    } else {
+      // Jika activeSearchTerm tidak kosong, lakukan filter berdasarkan activeSearchTerm
+      const newFilteredIndices = chartDescriptions.reduce((acc, { kpiResult, kpiFactorName }, index) => {
+        if (kpiResult.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+            kpiFactorName.toLowerCase().includes(activeSearchTerm.toLowerCase())) {
+          acc.push(index);
+        }
+        return acc;
+      }, []);
+      setFilteredIndices(newFilteredIndices);
+    }
+  }, [activeSearchTerm]);
+
+
+  useEffect(() => {
+    const loadFirstChartData = async () => {
+      let exampleFirstActualData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 31) + 10);
+      let exampleFirstTargetData = exampleFirstActualData.map(actual => actual + Math.floor(Math.random() * (41 - actual)) + 1);
+    
+      // Pastikan minimal 2 angka yang melebihi atau sama dengan target
+      let countExceed = 0;
+      for (let i = 0; i < 12; i++) {
+        if (exampleFirstActualData[i] >= exampleFirstTargetData[i]) {
+          countExceed++;
+        }
+        if (countExceed >= 2) {
+          break;
+        }
+      }
+    
+      // Jika tidak ada minimal 2 angka yang melebihi atau sama dengan target, ubah 2 nilai pertama
+      if (countExceed < 2) {
+        exampleFirstActualData[0] += 2;
+        exampleFirstActualData[1] += 1;
+      }
+    
+      setFirstActualData(exampleFirstActualData);
+      setFirstTargetData(exampleFirstTargetData);
+    };
+    
+    const loadSecondChartData = async () => {
+      let exampleSecondActualData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 31) + 10);
+      let exampleSecondTargetData = exampleSecondActualData.map(actual => actual + Math.floor(Math.random() * (41 - actual)) + 1);
+    
+      // Pastikan minimal 2 angka yang melebihi atau sama dengan target
+      let countExceed = 0;
+      for (let i = 0; i < 12; i++) {
+        if (exampleSecondActualData[i] >= exampleSecondTargetData[i]) {
+          countExceed++;
+        }
+        if (countExceed >= 2) {
+          break;
+        }
+      }
+    
+      // Jika tidak ada minimal 2 angka yang melebihi atau sama dengan target, ubah 2 nilai pertama
+      if (countExceed < 2) {
+        exampleSecondActualData[0] += 2;
+        exampleSecondActualData[1] += 1;
+      }
+    
+      setSecondActualData(exampleSecondActualData);
+      setSecondTargetData(exampleSecondTargetData);
+    };
+    
+    const loadThirdChartData = async () => {
+      let exampleThirdActualData = Array.from({ length: 12 }, () => Math.floor(Math.random() * 31) + 10);
+      let exampleThirdTargetData = exampleThirdActualData.map(actual => actual + Math.floor(Math.random() * (41 - actual)) + 1);
+    
+      // Pastikan minimal 2 angka yang melebihi atau sama dengan target
+      let countExceed = 0;
+      for (let i = 0; i < 12; i++) {
+        if (exampleThirdActualData[i] >= exampleThirdTargetData[i]) {
+          countExceed++;
+        }
+        if (countExceed >= 2) {
+          break;
+        }
+      }
+    
+      // Jika tidak ada minimal 2 angka yang melebihi atau sama dengan target, ubah 2 nilai pertama
+      if (countExceed < 2) {
+        exampleThirdActualData[0] += 2;
+        exampleThirdActualData[1] += 1;
+      }
+    
+      setThirdActualData(exampleThirdActualData);
+      setThirdTargetData(exampleThirdTargetData);
+    };
+    
+    loadFirstChartData();
+    loadSecondChartData();
+    loadThirdChartData();
+  }, []);
+
+  const gradientColor = (context, isExceedTarget = true) => {
+    const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 300);
+    if (isExceedTarget) {
+      gradient.addColorStop(0, '#FF0000'); // Warna merah
+      gradient.addColorStop(1, '#8b0000'); // Warna merah tua
+
+    } else {
+      gradient.addColorStop(0, '#00FF00'); // Warna hijau
+      gradient.addColorStop(1, '#FFFF00'); // Warna kuning
+    }
+    return gradient;
+  };
+  
+  const chartData = (actualData, targetData) => {
+    const ctx = document.createElement('canvas').getContext('2d'); // Buat konteks canvas sementara
+    return {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct','Nov', 'Dec'],
+      datasets: [
+        {
+          label: 'Actual Data',
+          data: actualData,
+          backgroundColor: actualData.map((value, index) => (value >= targetData[index] ? gradientColor({ chart: { ctx } }, false) : gradientColor({ chart: { ctx } }))),
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          pointStyle: 'circle',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          datalabels: {
+            display: true, // Selalu tampilkan datalabels untuk dataset ini
+            offset: -21, // Menggeser label 10 piksel ke bawah dari pusat batang
+            anchor: 'end', // Anchor pada akhir bar sehingga muncul di atas bar
+            align: 'top', // Arahkan ke atas
+            color: 'white', // Warna teks
+            font: {
+              size: 10 // Ukuran font
+            }
+          }
+
+        },
+        {
+          label: 'Target Data',
+          data: targetData,
+          backgroundColor: 'rgba(0, 0, 0, 0)',
+          borderColor: gradientColor({ chart: { ctx } }),
+          borderWidth: 2,
+          type: 'line',
+          fill: false,
+          pointStyle: 'circle',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          datalabels: {
+            color: 'black',
+            size: 10, // Ukuran font
+            align: 'end',
+            anchor: 'end',
+            offset: 0.5 // Offset spesifik untuk line chart
+          }
+        },
+      ],
+    };
+  };
+  
+  const chartOptions = {
+    plugins: {
+      title: {
+        display: true,
+        text: `Tahun ${""}`, // Judul bisa diatur dinamis sesuai kebutuhan
+        padding: {
+          top: 0,
+          bottom: 5
+        },
+        font: {
+          size: 18,
+          weight: 'bold'
+        }
+      },
+      datalabels: {
+        display: true, // Pastikan datalabels diaktifkan
+        formatter: function(value, context) {
+          // Tampilkan nilai sebenarnya dari bar
+          return value;
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'category',
+      },
+      y: {
+        beginAtZero: true,
+        min: 1,
+        max: 50,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9,
+      },
+    },
+  };
+  
+  
+
+  return (
+    <div className='chart'>
+      <div style={{ textAlign: 'left', marginBottom: '0px', marginTop: '60px', marginLeft: '140px' }}>
+        <h2>Safety Chart</h2>
+        <input type="text" placeholder="Search KPI Result or Factor..." onChange={handleSearchChange} />
+        <div className='search'>
+          <button onClick={handleSearch}>Search</button>
+          <button onClick={handleRemoveFilter} style={{ marginLeft: '7px' }}>Remove Filter</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+          {filteredIndices.includes(0) && <ChartContainer description={chartDescriptions[0]} data={chartData(firstActualData, firstTargetData)} options={chartOptions} size={chartSize} title="2021" />}
+          {filteredIndices.includes(1) && <ChartContainer description={chartDescriptions[1]} data={chartData(secondActualData, secondTargetData)} options={chartOptions} size={chartSize} title="2022" />}
+          {filteredIndices.includes(2) && <ChartContainer description={chartDescriptions[2]} data={chartData(thirdActualData, thirdTargetData)} options={chartOptions} size={chartSize} title="2023" />}
+        </div>
+        <div className="chart-divider"></div> {/* Divider line */}
+      </div>
+    </div>
+  );
+  
+}
+
+// Chart container component to avoid repetition
+  const ChartContainer = ({ description, data, options, size, title }) => (
+    <div style={{
+      width: size.width,
+      height: size.height,
+      paddingLeft: size.paddingLeft,
+      paddingTop: size.paddingTop,
+      marginTop: size.marginTop,
+      paddingBottom: size.paddingBottom,
+      marginLeft: '5px', // Adjust if necessary
+      marginRight: '5px',
+      border: '2px solid #8b0000',
+      boxShadow: '5px 5px 10px rgba(139, 0, 0, 0.5)',
+      borderRadius: '10px',
+    }}>
+      <Bar data={data} options={{ ...options, plugins: { ...options.plugins, title: { ...options.plugins.title, text: `Tahun ${title}` } } }} />
+      <div className="chart-description">
+        <ul>
+          <li>KPI Result: {description.kpiResult}</li>
+          <li>KPI Factor Name: {description.kpiFactorName}</li>
+          <li>Unit: {description.unit}</li>
+          <li>Target: {description.target}</li>
+        </ul>
+      </div>
+    </div>
+  );
+
+export default ChartComponent;

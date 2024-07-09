@@ -1,0 +1,27 @@
+.loading-screen-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Background color with transparency for overlay effect */
+    z-index: 9999; /* Ensure it's on top of other elements */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loading-screen-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  
+  .loading-screen-content img {
+    width: 50px; /* Adjust width of the loading spinner */
+    height: 50px; /* Adjust height of the loading spinner */
+    margin-bottom: 10px;
+  }
+  

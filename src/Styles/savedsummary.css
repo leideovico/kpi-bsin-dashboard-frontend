@@ -1,0 +1,599 @@
+.container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start
+
+  }
+  
+
+.dropdowns {
+     position: relative;
+    display: inline-block;
+   }
+  
+  .dropdowns-button {
+    padding: 10px;
+     border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    border: none;
+    outline: none;
+  }
+
+  
+
+  .buttons-container{
+    
+      border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    border: none;
+    outline: none;
+   }
+
+  .buttons-container button{
+    background: linear-gradient(to right, #ffffff6d, #ff00007c); /* Gradien dari merah gelap ke merah terang */
+
+  }
+
+
+
+  .dropdowns-button:hover {
+    background: linear-gradient(to right, #ff0000, #cc1f1f);
+  }
+  
+  .dropdowns-content {
+     position: absolute;
+     padding: 10px;
+    z-index: 1;
+    border-radius: 5px;
+    background-color: white;
+    border: 1px solid black;
+      }
+  
+  .dropdowns-item {
+    display: block;
+    padding: 10px;
+    cursor: pointer;
+  }
+  
+  .dropdowns-item:hover {
+    background-color: #ddd;
+  }
+  
+
+  /* CSS untuk style judul h2 */
+h2.comparison-table {
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    border: 2px solid #fff; /* Tambahkan border putih 2px */
+    border-radius: 10px; /* Berikan radius 10px */
+    color: #fff; /* Warna teks putih */
+    padding: 10px 20px; /* Padding 10px atas/bawah, 20px kiri/kanan */
+    margin-bottom: 20px; /* Jarak bawah 20px */
+    text-align: center;
+  }
+  
+  /* CSS untuk style tabel */
+  table.comparison-table {
+    width: 100%;
+    border-collapse: collapse; /* Gabungkan border */
+    text-align: center;
+  }
+  
+  th.comparison-table  {
+    background: #b90c0c; /* Gradien dari merah gelap ke merah terang */
+     padding: 8px; /* Padding 8px */
+     color: white;
+     text-align: center;
+     border: 2px solid #ffffff; /* Tambahkan border 1px dengan warna abu-abu */
+  
+  }
+  
+   
+  
+  
+   
+  /* default style */
+  
+  .result {
+    display: flex;
+    justify-content: center; /* Memposisikan secara horizontal di tengah */
+    align-items: center; /* Memposisikan secara vertikal di tengah */
+    margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+  }
+  
+  .factor {
+    display: flex;
+    justify-content: center; /* Memposisikan secara horizontal di tengah */
+    align-items: center; /* Memposisikan secara vertikal di tengah */
+    margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+  }
+  
+  .status {
+    display: flex;
+    justify-content: center; /* Memposisikan secara horizontal di tengah */
+    align-items: center; /* Memposisikan secara vertikal di tengah */
+    margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
+  }
+  
+  .add-result-button, .remove-column-button {
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+     margin-right: 5px;
+     margin-top: 5px;
+  
+  }
+  
+  .add-item-button {
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+     margin-right: 5px;
+     margin-top: 5px;
+  }
+  
+  .add-cause-button {
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+      margin-left: 5px;
+  }
+  
+  input[type="text"].custominput {
+    width: 200px;
+    height: 150px; /* Atau nilai spesifik seperti 300px, 50em, dll */
+  }
+  
+  
+  
+  
+  .add-factor-button, 
+  .remove-factor-button,.add-cause-button {
+    margin-top: 5px;
+    padding: 5px 10px;
+    background: rgba(255, 0, 0, 0.651); /* Transparan merah */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+  
+  .add-status-button,
+  .remove-status-button {
+    padding: 5px 10px;
+    background: rgba(255, 0, 0, 0.522); /* Transparan merah */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+     margin-right: 5px;
+  }
+  
+  .add-factor-button:hover,
+  .remove-factor-button:hover {
+    background: rgba(255, 0, 0, 0.77); /* Transparan merah */
+  }
+  
+  .add-status-button:hover,
+  .remove-status-button:hover {
+    background: rgba(255, 0, 0, 0.77); /* Transparan merah */
+  }
+  
+  .add-result-button:hover,
+  .remove-result-button:hover {
+    background: rgba(255, 0, 0, 0.5); /* Transparan merah */
+  }
+  
+  .add-button {
+    background-color: #ddd; /* Warna Hijau */
+    color: white;
+    padding: 5px 10px;
+    margin-left: 10px; /* Jarak dari teks */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 10px;
+  }
+  
+  .add-button2 {
+    background-color: hsl(0, 36%, 78%); /* Warna Hijau */
+    color: white;
+    padding: 5px 10px;
+    margin-left: 10px; /* Jarak dari teks */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 10px;
+  }
+  
+  .add-button:hover {
+    background-color: #5b5b5b;
+  }
+  
+  .add-button2:hover {
+    background-color: hsl(0, 76%, 63%);
+  }
+  
+  .input-table th,
+  .input-table td {
+    color:#000000;
+    border: 1px solid #ab0c0c;
+    padding: 8px;
+    text-align: center;
+    word-wrap: break-word; /* Pastikan teks tidak memaksa sel melebar */
+  }
+  
+  .input-table th {
+    background-color: #f2f2f2;
+  }
+  
+  /* Style untuk input di dalam tabel */
+  .input-table input[type="text"],
+  .input-table input[type="number"] {
+    width: 100%; /* Input menyesuaikan lebar sel */
+    box-sizing: border-box; /* Pastikan padding dan border dihitung dalam lebar */
+  }
+  
+  /* Style untuk header setiap tabel */
+  .input-table thead h2 {
+    margin: 0;
+    padding: 10px;
+    background-color: #ab0c0c;
+    color: white;
+    text-align: center;
+    border-top-left-radius: 8px; /* Tambahkan radius sudut pada sisi atas kiri */
+    border-top-right-radius: 8px; /* Tambahkan radius sudut pada sisi atas kanan */
+  }
+  
+  .input-table-container {
+    max-width: 100%; /* Memastikan container tidak melebihi lebar parent-nya */
+    overflow-x: auto; /* Tambahkan scrollbar jika konten melebihi lebar */
+    margin-left: 100px;
+    color: #808080; /* Warna abu-abu */
+    margin-bottom: 20px;
+  }
+  
+  .input-table-container button.editing {
+    color: #000000; /* Warna hitam pekat */
+  }
+  
+  .input-table {
+    width: 100%;
+    margin-bottom: 40px;
+    margin-top: 60px;
+    margin-left: 10px;
+    border-collapse: collapse;
+    overflow: hidden;
+    box-shadow: 0px 2px 4px hsla(0, 95%, 42%, 0.102);
+  }
+   
+  .table-containers {
+      margin-left: 20px;
+      margin-right: 20px;
+      margin-bottom: 20px;
+      margin-top: 0px;
+    }
+    
+    .dropdowns-safety-sum {
+      width: 100%;
+      border-collapse: collapse;
+       overflow: hidden;
+    }
+    
+    .dropdowns-safety-sum th,
+    .dropdowns-safety-sum td {
+      padding: 10px;
+      text-align: center;
+      border: 2px solid #000000; /* Warna hitam dan ketebalan 2px */
+    }
+  
+    .dropdowns-safety-sum td{
+      color: black;
+    }
+    
+    .dropdowns-safety-sum thead {
+      background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+      color: white;
+    }
+    
+    .dropdowns-safety-sum thead th {
+      font-weight: bold;
+    }
+    
+    .chart-divider {
+      border-top: 2px   rgba(139, 0, 0, 0.7); /* Garis putus-putus merah gelap */
+      margin-top: 30px; /* Atur jarak antara grafik dan garis pembatas */
+    }
+  
+    .dropdowns-safety-sum tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  
+    /* table.css */
+  
+  .add-button {
+      margin-left: 10px; /* Jarak dari teks */
+      cursor: pointer; /* Tampilan kursor sebagai pointer */
+      padding: 5px 10px; /* Padding di dalam tombol */
+      border: none; /* Hapus border */
+      background-color: #630000; /* Warna latar belakang merah */
+      color: white; /* Warna teks putih */
+      border-radius: 5px; /* Sudut melengkung */
+    }
+    
+    
+    .add-button:hover {
+      background-color: #cc0000; /* Warna latar saat hover */
+    }
+    
+    
+    .dropdowns-safety-sum tbody tr:hover {
+      background-color: #ddd;
+    }
+    
+    .dropdowns-safety-sum caption {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #ff0000;
+     }
+  
+    .year-container {
+      display: block; /* Mengubah display agar bisa menerapkan margin-top: auto */
+      margin-top: 62px; /* Memungkinkan jarak atas otomatis, tetapi biasanya digunakan dalam flexbox atau grid container */
+      background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+      padding: 10px; /* Menambahkan sedikit padding */
+      color: white; /* Mengubah warna teks menjadi putih */
+      border-radius: 5px; /* Memberikan border bulat */
+    }
+    
+  
+    .dropdowns-safety-sum caption {
+      background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+      color: white; /* Warna teks putih */
+      font-size: 1.5rem; /* Ukuran font */
+      padding: 10px; /* Padding */
+      border-radius: 8px; /* Sudut melengkung */
+      margin-top: 15px;
+    }
+  
+    .styled-select {
+      margin-top: 7px;
+      width: 100%; /* Mengambil lebar penuh dari kontainer */
+      padding: 10px 15px; /* Padding untuk kenyamanan pengguna */
+      border: 1px solid #c65252; /* Batas sederhana */
+      border-radius: 5px; /* Border bulat */
+      background: white; /* Latar belakang putih */
+      color: #333; /* Warna teks */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Bayangan kotak untuk tampilan 3D ringan */
+      cursor: pointer; /* Mengubah cursor saat mengarahkan mouse */
+      appearance: none; /* Menghilangkan gaya bawaan browser */
+      -webkit-appearance: none; /* Menghilangkan gaya bawaan untuk Safari */
+      -moz-appearance: none; /* Menghilangkan gaya bawaan untuk Firefox */
+    }
+    
+    .styled-select:focus {
+      border-color: #80bdff; /* Warna border saat fokus */
+      outline: none; /* Menghilangkan outline bawaan */
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Menambahkan bayangan fokus */
+    }
+    
+    .filter-containers {
+        margin-left: 20px;
+      margin-top: 70px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 10px;
+      background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+      border-radius: 5px;
+      width: calc(100% - 63px);
+    }
+    
+     #item-select {
+      margin-right: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid white;
+      background: #8b0000;
+      color: white;
+      cursor: pointer;
+    }
+    
+    #item-select option {
+      color: white;
+      padding: 10px;  
+      background: #8b0000;
+    }
+    
+    #item-select:hover {
+      background-color: rgba(255, 0, 0, 0.2);
+    }
+    
+    
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-right: 20px;
+    }
+    
+    .dropdown-button {
+      padding: 10px;
+      background: linear-gradient(to right, #ffffff6d, #ff00007c); /* Gradien dari merah gelap ke merah terang */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    .dropdown-button:hover {
+      background-color: #ce0000d1; /* Warna merah terang yang lebih muda */
+    }
+    
+    .dropdown-content {
+      display: none; /* Tampilkan dropdown-content sebagai none secara default */
+      position: absolute;
+      right: 0; /* Menempatkan dropdown-content di kanan */
+      background-color: white;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      z-index: 1;
+      border-radius: 5px;
+      max-height: 0; /* Tinggi awal 0 untuk animasi */
+      overflow-y: hidden; /* Sembunyikan overflow */
+      transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out; 
+      border: 1px solid black;
+      /* Transisi smooth */
+    }
+    
+    .dropdown:hover .dropdown-content {
+      display: block; /* Tampilkan dropdown-content saat dropdown di-hover */
+      max-height: 200px; /* Tinggi maksimal saat dihover */
+      overflow-y: auto; /* Tambahkan scrollbar jika konten melebihi tinggi maksimal */
+      padding: 10px;
+    }
+    
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 5px 0;
+    }
+    
+    .dropdown-item input {
+      margin-right: 10px;
+    }
+    /* table.css */
+  
+  .dropdowns-safety-sum th,
+  .dropdowns-safety-sum td {
+    border: 2px solid #ccc; /* Warna border abu-abu terang */
+    padding: 8px; /* Padding di dalam sel */
+    text-align: center;
+  }
+  
+  .dropdowns-safety-sum {
+    border-collapse: collapse; /* Menghilangkan jarak antar border */
+    width: 100%; /* Lebar tabel penuh */
+  }
+  
+  button {
+    padding: 10px;
+    /* background: linear-gradient(to right, #ffffff6d, #ff00007c); Gradien dari merah gelap ke merah terang */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+.delete button{
+    background-color: red;
+  }
+
+  .savechanges button{
+    background: linear-gradient(to right, #1aab00, #0cd91d); /* Gradien dari merah gelap ke merah terang */
+
+  }
+
+  .savechanges button:hover{
+    background: linear-gradient(to right, #1aab00, #60f860); /* Gradien dari merah gelap ke merah terang */
+
+  }
+  
+  button:hover {
+    background-color: #ce0000d1; /* Warna merah terang yang lebih muda */
+  }
+   
+  .buttonsum {
+    display: inline-block;
+    width: 100%; /* Atur lebar kontainer menjadi 100% */
+  }
+  
+  .save, .additem,.compare {
+    display: inline-block;
+   }
+  
+  .save button, .additem button {
+    background: linear-gradient(to right, #4CAF50, #008000);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+  }
+  
+  .comparison-chart-button {
+    background: linear-gradient(to right, #8b0000, #ff2e2e);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+  }
+  
+  .comparison-chart-button:hover {
+    background: linear-gradient(to right, #6e0d0d, #cc1f1f);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+  }
+  
+  .chart-button-second {
+    margin-left: 5px; /* Tambahkan margin kiri hanya pada tombol kedua */
+  }
+  
+  .compare button {
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradient dari merah tua ke merah terang */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+  }
+  
+  .compare button:hover {
+    background: linear-gradient(to right, #a50000, #ff5c5c); /* Gradient merah tua hover ke merah terang hover */
+  }
+  
+  
+  .save button:hover {
+    background: linear-gradient(to right, #45a049, #007a29);
+  }
+  
+  .additem button {
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradient dari merah tua ke merah terang */
+  }
+  
+  .additem button:hover {
+    background: linear-gradient(to right, #a50000, #ff5c5c); /* Gradient merah tua hover ke merah terang hover */
+  }
+  
+  
+  
+  
+    

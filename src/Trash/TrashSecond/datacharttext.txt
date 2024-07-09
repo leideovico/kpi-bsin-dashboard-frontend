@@ -1,0 +1,7 @@
+
+    const loadThirdChartData = async () => {
+      const exampleThirdTargetData = [120, 150, 120, 200, 300, 100, 150, 200, 250, 250, 200, 210];
+      const exampleThirdActualData = [90, 100, 80, 170, 100, 80, 120, 90, 220, 120,90, 80];
+      setThirdTargetData(exampleThirdTargetData);
+      setThirdActualData(exampleThirdActualData);
+    };

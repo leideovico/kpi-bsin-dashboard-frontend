@@ -1,0 +1,407 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const SavedSafetyTable = () => {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch all data in parallel
+        const [resultResponse, factorResponse, monthlyResponse] = await Promise.all([
+          axios.get('http://localhost:8080/kpi/result'),
+          axios.get('http://localhost:8080/kpi/factor'),
+          axios.get('http://localhost:8080/kpi/monthly'),
+        ]);
+
+        const results = resultResponse.data.data;
+        const factors = factorResponse.data.data;
+        const monthlyData = monthlyResponse.data.data;
+
+        // Ensure all responses are arrays
+        if (Array.isArray(results) && Array.isArray(factors) && Array.isArray(monthlyData)) {
+          // Map results to include corresponding factors and monthly data
+          const combinedData = results.map(result => {
+            const resultFactors = factors.filter(factor => factor.Result_ID === result.Result_ID);
+            const resultMonthly = monthlyData.find(monthly => monthly.Result_ID === result.Result_ID);
+            return {
+              ...result,
+              factors: resultFactors,
+              Plan: resultMonthly ? resultMonthly.Plan : {},
+              Actual: resultMonthly ? resultMonthly.Actual : {},
+            };
+          });
+
+          setRows(combinedData);
+        } else {
+          console.error('Expected arrays in response but got:', { results, factors, monthlyData });
+        }
+      } catch (error) {
+        setError('Error fetching results');
+        console.error('Error fetching results:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const getCellValue = (data, key) => data && data[key] !== undefined ? data[key] : "-";
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Saved Safety Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="3">KPI Result</th>
+            <th colSpan="1">KPI Factor</th>
+            <th colSpan="2" rowSpan="2">Status</th>
+            <th rowSpan="3">Unit</th>
+            <th rowSpan="3">Target</th>
+            <th colSpan="12">Bulan</th>
+          </tr>
+          <tr>
+            <th>KPI Factor Name</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Mar</th>
+            <th>Apr</th>
+            <th>Mei</th>
+            <th>Jun</th>
+            <th>Jul</th>
+            <th>Ags</th>
+            <th>Sept</th>
+            <th>Oct</th>
+            <th>Nov</th>
+            <th>Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length > 0 ? (
+            rows.map((row, rowIndex) => (
+              <React.Fragment key={rowIndex}>
+                {row.factors.length > 0 ? (
+                  row.factors.map((factor, factorIndex) => (
+                    <React.Fragment key={`${rowIndex}-${factorIndex}`}>
+                      <tr>
+                        {factorIndex === 0 && (
+                          <td rowSpan={row.factors.length}>{row.Name}</td>
+                        )}
+                        <td>{factor.Title}</td>
+                        <td colSpan={2}>Plan</td>
+                        <td>{factor.Unit}</td>
+                        <td>{factor.Target}</td>
+                        <td>{getCellValue(row.Plan, 'January')}</td>
+                        <td>{getCellValue(row.Plan, 'February')}</td>
+                        <td>{getCellValue(row.Plan, 'March')}</td>
+                        <td>{getCellValue(row.Plan, 'April')}</td>
+                        <td>{getCellValue(row.Plan, 'May')}</td>
+                        <td>{getCellValue(row.Plan, 'June')}</td>
+                        <td>{getCellValue(row.Plan, 'July')}</td>
+                        <td>{getCellValue(row.Plan, 'August')}</td>
+                        <td>{getCellValue(row.Plan, 'September')}</td>
+                        <td>{getCellValue(row.Plan, 'October')}</td>
+                        <td>{getCellValue(row.Plan, 'November')}</td>
+                        <td>{getCellValue(row.Plan, 'December')}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan={2}>Actual</td>
+                        <td>{getCellValue(row.Actual, 'January')}</td>
+                        <td>{getCellValue(row.Actual, 'February')}</td>
+                        <td>{getCellValue(row.Actual, 'March')}</td>
+                        <td>{getCellValue(row.Actual, 'April')}</td>
+                        <td>{getCellValue(row.Actual, 'May')}</td>
+                        <td>{getCellValue(row.Actual, 'June')}</td>
+                        <td>{getCellValue(row.Actual, 'July')}</td>
+                        <td>{getCellValue(row.Actual, 'August')}</td>
+                        <td>{getCellValue(row.Actual, 'September')}</td>
+                        <td>{getCellValue(row.Actual, 'October')}</td>
+                        <td>{getCellValue(row.Actual, 'November')}</td>
+                        <td>{getCellValue(row.Actual, 'December')}</td>
+                      </tr>
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <React.Fragment>
+                    <tr>
+                      <td rowSpan={2}>{row.Name}</td>
+                      <td rowSpan={2}>{row.Title}</td>
+                      <td colSpan={2}>Plan</td>
+                      <td rowSpan={2}>
+                          unit
+                        </td>
+                        <td rowSpan={2}>
+                          target
+                        </td>
+                      <td>{getCellValue(row.Plan, 'January')}</td>
+                      <td>{getCellValue(row.Plan, 'February')}</td>
+                      <td>{getCellValue(row.Plan, 'March')}</td>
+                      <td>{getCellValue(row.Plan, 'April')}</td>
+                      <td>{getCellValue(row.Plan, 'May')}</td>
+                      <td>{getCellValue(row.Plan, 'June')}</td>
+                      <td>{getCellValue(row.Plan, 'July')}</td>
+                      <td>{getCellValue(row.Plan, 'August')}</td>
+                      <td>{getCellValue(row.Plan, 'September')}</td>
+                      <td>{getCellValue(row.Plan, 'October')}</td>
+                      <td>{getCellValue(row.Plan, 'November')}</td>
+                      <td>{getCellValue(row.Plan, 'December')}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>Actual</td>
+                      <td>{getCellValue(row.Actual, 'January')}</td>
+                      <td>{getCellValue(row.Actual, 'February')}</td>
+                      <td>{getCellValue(row.Actual, 'March')}</td>
+                      <td>{getCellValue(row.Actual, 'April')}</td>
+                      <td>{getCellValue(row.Actual, 'May')}</td>
+                      <td>{getCellValue(row.Actual, 'June')}</td>
+                      <td>{getCellValue(row.Actual, 'July')}</td>
+                      <td>{getCellValue(row.Actual, 'August')}</td>
+                      <td>{getCellValue(row.Actual, 'September')}</td>
+                      <td>{getCellValue(row.Actual, 'October')}</td>
+                      <td>{getCellValue(row.Actual, 'November')}</td>
+                      <td>{getCellValue(row.Actual, 'December')}</td>
+                    </tr>
+                  </React.Fragment>
+                )}
+              </React.Fragment>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="18">No data available</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default SavedSafetyTable;
+
+========================
+
+import React, { useState, useEffect } from "react";
+import "../Styles/table.css";
+
+const SavedSafetyTable = () => {
+  const [results, setResults] = useState([]);
+  const [factors, setFactors] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from /kpi/result endpoint
+    fetch("http://localhost:8080/kpi/result", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Jika diperlukan, tambahkan header Authorization di sini
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch results");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Fetched data:", data); // Log data yang diterima dari server
+        setResults(data.data); // Set array hasil dari properti 'data' ke state results
+      })
+      .catch((error) => {
+        console.error("Error fetching results:", error);
+      });
+
+    // Fetch data from /factor endpoint
+    fetch("http://localhost:8080/kpi/factor", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Jika diperlukan, tambahkan header Authorization di sini
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch factors");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Fetched factor data:", data); // Log data yang diterima dari server
+        setFactors(data.data); // Set array faktor dari properti 'data' ke state factors
+      })
+      .catch((error) => {
+        console.error("Error fetching factors:", error);
+      });
+  }, []);
+
+  useEffect(() => {
+    console.log("Updated results:", results); // Log perubahan pada state results
+  }, [results]);
+
+  useEffect(() => {
+    console.log("Updated factors:", factors); // Log perubahan pada state factors
+  }, [factors]);
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Safety Table</caption>
+        <thead>
+          <tr>
+            <th>KPI Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.isArray(results) && results.map((result) => (
+            <tr key={result.Result_ID}>
+              <td>{result.Name}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <table className="safety-table">
+        <caption>Factor Table</caption>
+        <thead>
+          <tr>
+            <th>Factor Title</th>
+            <th>Unit</th>
+            <th>Target</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.isArray(factors) && factors.map((factor) => (
+            <tr key={factor.Factor_ID}>
+              <td>{factor.Title}</td>
+              <td>{factor.Unit}</td>
+              <td>{factor.Target}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default SavedSafetyTable;
+
+============
+
+import React, { useState, useEffect } from "react";
+import "../Styles/table.css";
+
+const SavedSafetyTable = () => {
+  const [results, setResults] = useState([]);
+  const [factors, setFactors] = useState([]);
+
+  useEffect(() => {
+    // Fetch data from /kpi/result endpoint
+    fetch("http://localhost:8080/kpi/result", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Jika diperlukan, tambahkan header Authorization di sini
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch results");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Fetched data:", data); // Log data yang diterima dari server
+        setResults(data.data); // Set array hasil dari properti 'data' ke state results
+      })
+      .catch((error) => {
+        console.error("Error fetching results:", error);
+      });
+
+    // Fetch data from /factor endpoint
+    fetch("http://localhost:8080/kpi/factor", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Jika diperlukan, tambahkan header Authorization di sini
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch factors");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Fetched factor data:", data); // Log data yang diterima dari server
+        setFactors(data.data); // Set array faktor dari properti 'data' ke state factors
+      })
+      .catch((error) => {
+        console.error("Error fetching factors:", error);
+      });
+  }, []);
+
+  useEffect(() => {
+    console.log("Updated results:", results); // Log perubahan pada state results
+  }, [results]);
+
+  useEffect(() => {
+    console.log("Updated factors:", factors); // Log perubahan pada state factors
+  }, [factors]);
+
+  return (
+    
+    <div className="table-container">
+  {Array.isArray(results) && results.map((result) => (
+
+      <table className="safety-table">
+        <caption>Safety Table</caption>
+        <thead>
+          <tr>
+            <th>KPI Result</th>
+          </tr>
+        </thead>
+        <tbody>
+            <tr key={result.Result_ID}>
+              <td>{result.Name}</td>
+            </tr>
+        </tbody>
+        
+      </table>
+   ))}
+
+      <table className="safety-table">
+        <caption>Factor Table</caption>
+        <thead>
+          <tr>
+            <th>Factor Title</th>
+            <th>Unit</th>
+            <th>Target</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.isArray(factors) && factors.map((factor) => (
+            <tr key={factor.Factor_ID}>
+              <td>{factor.Title}</td>
+              <td>{factor.Unit}</td>
+              <td>{factor.Target}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default SavedSafetyTable;
+
+

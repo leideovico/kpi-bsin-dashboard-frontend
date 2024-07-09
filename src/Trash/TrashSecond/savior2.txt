@@ -1,0 +1,447 @@
+import React, { useState, useEffect } from 'react';
+import "../Styles/saved-table.css";
+
+const SavedSafetyTable = () => {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('S');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
+
+  const handleNameChange = (e) => {
+    setSearchName(e.target.value);
+  };
+
+  useEffect(() => {
+    // Fetch data from the /item endpoint
+    fetch('http://localhost:8080/kpi/item')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Response JSON (item):', data);
+        setItems(data.data); // Save item data
+        if (data.data.length > 0) {
+          setSelectedItem(data.data[0].Name); // Set the first item's name as the default
+          const years = Array.from(new Set(data.data.map(item => item.Year)));
+          setAvailableYears(years); // Set available years for filter
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching item data:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.Name === selectedItem &&
+      (selectedYears.length === 0 || selectedYears.includes(item.Year))
+    );
+    setFilteredItems(filtered);
+  }, [selectedItem, selectedYears, items]);
+
+  const handleYearChange = (year) => {
+    setSelectedYears(prevSelectedYears =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter(y => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYears([]);
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+ 
+
+  // Method Delete
+  const handleDeleteData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  const handleExportData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  return (
+    <div className="table-container">
+      <div className="filter-container">
+        <label htmlFor="item-select"> </label>
+        <select
+          id="item-select"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+        >
+          <option value="S">Safety</option>
+          <option value="E">Environment</option>
+          <option value="Q">Quality</option>
+          <option value="C">Cost</option>
+          <option value="D">Delivery</option>
+        </select>
+
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Pilih Tahun
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              {availableYears.map((year, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={year}
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <button onClick={handleResetFilters}>Hapus Semua Filter</button>
+      </div>
+
+      {filteredItems.length > 0 ? (
+        filteredItems.map((item, itemIndex) => (
+          <div key={itemIndex}>
+        {item.Results.length > 0 ? (
+              <table key={`${itemIndex}-${item.Year}`} className="saved-safety-table">
+                  <caption>{`Tahun ${item.Year}`}</caption>
+                <thead>
+                  <tr>
+                    <th rowSpan="2">KPI Result</th>
+                    <th colSpan="1">KPI Factor</th>
+                    <th colSpan="2" rowSpan="2">Status</th>
+                    <th rowSpan="3">Unit</th>
+                    <th rowSpan="3">Target</th>
+                    <th colSpan="12">Bulan</th>
+                  </tr>
+                  <tr>
+                    <th>KPI Factor Name</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {item.Results.map((result, resultIndex) => (
+                    result.Factors.length > 0 ? (
+                      result.Factors.map((factor, factorIndex) => (
+                        <React.Fragment key={`${itemIndex}-${resultIndex}-${factorIndex}`}>
+                          <tr>
+                            <td rowSpan={2}>{result.Name}</td>
+                            <td rowSpan={2}>{factor.Title}</td>
+                            <td colSpan={2}>Plan</td>
+                            <td rowSpan={2}>{factor.Unit}</td>
+                            <td rowSpan={2}>{factor.Target}</td>
+                            <td>{factor.Planned?.Monthly[0]?.January || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.February || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.March || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.April || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.May || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.June || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.July || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.August || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.September || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.October || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.November || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.December || '-'}</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={2}>Actual</td>
+                            <td>{factor.Actual?.Monthly[0]?.January || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.February || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.March || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.April || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.May || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.June || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.July || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.August || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.September || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.October || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.November || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.December || '-'}</td>
+                          </tr>
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <tr key={`${itemIndex}-${resultIndex}-no-factors`}>
+                        <td colSpan="18">Data factors tidak tersedia</td>
+                      </tr>
+                    )
+                  ))}
+                </tbody>
+                <div className="buttonsum" style={{ display: 'inline-block'}}>
+          <div className="save">
+            <button onClick={handleExportData} style={{ marginRight:'5px'}} >Export Data</button>
+          </div>
+          <div className="compare">
+            <button onClick={handleDeleteData}>Delete Data Table</button>
+          </div>
+        </div>
+               </table>
+            ) : (
+              <p key={`${itemIndex}-no-results`}>Data results tidak tersedia</p>
+            )}
+          </div>
+        ))
+      ) : (
+        <p>Data items tidak tersedia</p>
+      )}
+    </div>
+  );
+};
+
+ 
+ export default SavedSafetyTable;
+
+ ===
+
+ import React, { useState, useEffect } from 'react';
+import "../Styles/saved-table.css";
+
+const SavedSafetyTable = () => {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('S');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
+
+  const handleNameChange = (e) => {
+    setSearchName(e.target.value);
+  };
+
+  useEffect(() => {
+    // Fetch data from the /item endpoint
+    fetch('http://localhost:8080/kpi/item')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Response JSON (item):', data);
+        setItems(data.data); // Save item data
+        if (data.data.length > 0) {
+          setSelectedItem(data.data[0].Name); // Set the first item's name as the default
+          const years = Array.from(new Set(data.data.map(item => item.Year)));
+          setAvailableYears(years); // Set available years for filter
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching item data:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.Name === selectedItem &&
+      (selectedYears.length === 0 || selectedYears.includes(item.Year)) &&
+      (item.Results.some(result => result.Name.toLowerCase().includes(searchName.toLowerCase())))
+    );
+    setFilteredItems(filtered);
+  }, [selectedItem, selectedYears, items, searchName]);
+
+  const handleYearChange = (year) => {
+    setSelectedYears(prevSelectedYears =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter(y => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYears([]);
+    setSearchName('');
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  // Method Delete
+  const handleDeleteData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  const handleExportData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  return (
+    <div className="table-container">
+      <div className="filter-container">
+        <label htmlFor="item-select"></label>
+        <select
+          id="item-select"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+        >
+          <option value="S">Safety</option>
+          <option value="E">Environment</option>
+          <option value="Q">Quality</option>
+          <option value="C">Cost</option>
+          <option value="D">Delivery</option>
+        </select>
+
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Pilih Tahun
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              {availableYears.map((year, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={year}
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+ 
+  <button onClick={handleResetFilters} style={{ float: 'right', marginRight: '10px' }}>Hapus Semua Filter</button>
+  <div style={{ float: 'right', marginRight: '10px',marginLeft: '794px'  }}>
+    <input
+      type="text"
+      placeholder="Filter Result..."
+      value={searchName}
+      onChange={handleNameChange}
+      style={{ width: '150px' }}
+    />
+  </div>
+      </div>
+    
+      {filteredItems.length > 0 ? (
+        filteredItems.map((item, itemIndex) => (
+          <div key={itemIndex}>
+            {item.Results.length > 0 ? (
+              <table key={`${itemIndex}-${item.Year}`} className="saved-safety-table">
+                <caption>{`Tahun ${item.Year}`}</caption>
+                <thead>
+                  <tr>
+                    <th rowSpan="2">KPI Result</th>
+                    <th colSpan="1">KPI Factor</th>
+                    <th colSpan="2" rowSpan="2">Status</th>
+                    <th rowSpan="3">Unit</th>
+                    <th rowSpan="3">Target</th>
+                    <th colSpan="12">Bulan</th>
+                  </tr>
+                  <tr>
+                    <th>KPI Factor Name</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {item.Results.map((result, resultIndex) => (
+                    result.Factors.length > 0 ? (
+                      result.Factors.map((factor, factorIndex) => (
+                        <React.Fragment key={`${itemIndex}-${resultIndex}-${factorIndex}`}>
+                          <tr>
+                            <td rowSpan={2}>{result.Name}</td>
+                            <td rowSpan={2}>{factor.Title}</td>
+                            <td colSpan={2}>Plan</td>
+                            <td rowSpan={2}>{factor.Unit}</td>
+                            <td rowSpan={2}>{factor.Target}</td>
+                            <td>{factor.Planned?.Monthly[0]?.January || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.February || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.March || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.April || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.May || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.June || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.July || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.August || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.September || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.October || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.November || '-'}</td>
+                            <td>{factor.Planned?.Monthly[0]?.December || '-'}</td>
+                          </tr>
+                          <tr>
+                            <td colSpan={2}>Actual</td>
+                            <td>{factor.Actual?.Monthly[0]?.January || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.February || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.March || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.April || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.May || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.June || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.July || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.August || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.September || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.October || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.November || '-'}</td>
+                            <td>{factor.Actual?.Monthly[0]?.December || '-'}</td>
+                          </tr>
+                        </React.Fragment>
+                      ))
+                    ) : (
+                      <tr key={`${itemIndex}-${resultIndex}-no-factors`}>
+                        <td colSpan="18">Data factors tidak tersedia</td>
+                      </tr>
+                    )
+                  ))}
+                </tbody>
+                <div className="buttonsum" style={{ display: 'inline-block'}}>
+          <div className="save">
+            <button onClick={handleExportData} style={{ marginRight:'5px'}} >Export Data</button>
+          </div>
+          <div className="compare">
+            <button onClick={handleDeleteData}>Delete Data Table</button>
+          </div>
+        </div>
+               </table>
+              
+              
+            ) : (
+              <p key={`${itemIndex}-no-results`}>Data results tidak tersedia</p>
+            )}
+          </div>
+        ))
+      ) : (
+        <p>Data items tidak tersedia</p>
+      )}
+    </div>
+  );  
+};
+
+export default SavedSafetyTable;
+

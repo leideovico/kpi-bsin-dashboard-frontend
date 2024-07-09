@@ -1,0 +1,1128 @@
+import React, { useState, useEffect } from "react";
+import "../Styles/dropdowns.css";
+
+const EditUploadTableAnalysis = () => {
+  const [problemsByYear, setProblemsByYear] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    fetchMasalahData();
+  }, []);
+
+  const fetchMasalahData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/kpi/masalah");
+      if (response.ok) {
+        const responseData = await response.json();
+        const data = responseData.data;
+        console.log("Received data:", data);
+
+        // Group problems by year
+        const groupedProblems = {};
+        data.forEach(problem => {
+          if (!groupedProblems[problem.Year]) {
+            groupedProblems[problem.Year] = [];
+          }
+          groupedProblems[problem.Year].push(problem);
+        });
+
+        setProblemsByYear(groupedProblems);
+
+        // Extract available years
+        const years = Object.keys(groupedProblems);
+        setAvailableYears(years);
+        setSelectedYears(years); // Initially select all years
+      } else {
+        console.error("Failed to fetch masalah data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching masalah data:", error);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleYearChange = (year) => {
+    const updatedSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(selectedYear => selectedYear !== year)
+      : [...selectedYears, year];
+    setSelectedYears(updatedSelectedYears);
+  };
+
+  return (
+    <div>
+      
+      <div className="dropdowns">
+        <button onClick={toggleDropdown} className="dropdowns-button">
+          Filter Tahun
+        </button>
+        {dropdownOpen && (
+          <div className="dropdowns-content">
+            {availableYears.map((year, index) => (
+              <label key={index} className="dropdown-item">
+                <input
+                  type="checkbox"
+                  value={year}
+                  checked={selectedYears.includes(year)}
+                  onChange={() => handleYearChange(year)}
+                />
+                {year}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedYears.map(year => (
+        <div key={year} className="table-container">
+          <table className="dropdowns-safety">
+            <caption>Saved Analysis Table for {year}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Problem</th>
+                <th colSpan="5">Causes Analysis</th>
+                <th rowSpan="2">Corrective Action</th>
+                <th rowSpan="2">PIC</th>
+                <th rowSpan="2">Target</th>
+                <th colSpan="2">Follow Up</th>
+              </tr>
+              <tr>
+                <th>Why 1</th>
+                <th>Why 2</th>
+                <th>Why 3</th>
+                <th>Why 4</th>
+                <th>Why 5</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {problemsByYear[year].map((problem, index) => (
+                <tr key={index}>
+                  <td>{problem.Masalah}</td>
+                  <td>{problem.Why[0]}</td>
+                  <td>{problem.Why[1]}</td>
+                  <td>{problem.Why[2]}</td>
+                  <td>{problem.Why[3]}</td>
+                  <td>{problem.Why[4]}</td>
+                  <td>{problem.Tindakan}</td>
+                  <td>{problem.Pic}</td>
+                  <td>{problem.Target}</td>
+                  <td>{problem.FolDate}</td>
+                  <td>{problem.Status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default EditUploadTableAnalysis;
+
+====
+
+import React, { useState, useEffect } from "react";
+import "../Styles/dropdowns.css";
+
+const EditUploadTableAnalysis = () => {
+  const [problemsByYear, setProblemsByYear] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [originalValues, setOriginalValues] = useState({});
+
+  useEffect(() => {
+    fetchMasalahData();
+  }, []);
+
+  const fetchMasalahData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/kpi/masalah");
+      if (response.ok) {
+        const responseData = await response.json();
+        const data = responseData.data;
+        console.log("Received data:", data);
+
+        // Group problems by year
+        const groupedProblems = {};
+        data.forEach(problem => {
+          if (!groupedProblems[problem.Year]) {
+            groupedProblems[problem.Year] = [];
+          }
+          groupedProblems[problem.Year].push(problem);
+        });
+
+        setProblemsByYear(groupedProblems);
+
+        // Extract available years
+        const years = Object.keys(groupedProblems);
+        setAvailableYears(years);
+        setSelectedYears(years); // Initially select all years
+      } else {
+        console.error("Failed to fetch masalah data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching masalah data:", error);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleYearChange = (year) => {
+    const updatedSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(selectedYear => selectedYear !== year)
+      : [...selectedYears, year];
+    setSelectedYears(updatedSelectedYears);
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+    const originalValuesCopy = {};
+    selectedYears.forEach(year => {
+      originalValuesCopy[year] = [...problemsByYear[year]];
+    });
+    setOriginalValues(originalValuesCopy);
+  };
+
+  const handleSaveClick = async () => {
+    const authToken = localStorage.getItem('authToken');
+
+    try {
+      const promises = [];
+      selectedYears.forEach(year => {
+        const updatedProblems = problemsByYear[year];
+        updatedProblems.forEach(problem => {
+          const formData = {
+            Masalah_ID: problem.Masalah_ID,
+            Masalah: problem.Masalah,
+            Why: problem.Why,
+            tindakan: problem.Tindakan, // Perhatikan penggunaan huruf kecil
+            pic: problem.Pic, // Perhatikan penggunaan huruf kecil
+            target: problem.Target,
+            folDate: new Date(problem.FolDate).toISOString(), // Ubah ke format ISO
+            status: problem.Status,
+            Year: problem.Year
+          };
+          promises.push(fetch(`http://localhost:8080/kpi/masalah/${problem.Masalah_ID}`, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+              "Authorization": `Bearer ${authToken}`
+            },
+            body: JSON.stringify(formData)
+          }));
+        });
+      });
+      await Promise.all(promises);
+      setEditMode(false);
+      console.log("Data saved successfully.");
+    } catch (error) {
+      console.error("Failed to save data:", error);
+    }
+  };
+
+  
+  
+  return (
+    <div>
+      <div className="container">
+      <div className="filter-containers">
+
+      <div className="dropdown">
+        <button onClick={toggleDropdown} className="dropdown-button">
+          Filter Tahun
+        </button>
+        {dropdownOpen && (
+          <div className="dropdown-content">
+            {availableYears.map((year, index) => (
+              <label key={index} className="dropdown-item">
+                <input
+                  type="checkbox"
+                  value={year}
+                  checked={selectedYears.includes(year)}
+                  onChange={() => handleYearChange(year)}
+                />
+                {year}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="buttons-container">
+        {!editMode && (
+          <button onClick={handleEditClick}>Update Data Table</button>
+        )}
+        {editMode && (
+          <button onClick={handleSaveClick}>Save Changes</button>
+        )}
+      </div>
+      </div>
+      </div>
+      
+
+      {selectedYears.map(year => (
+        <div key={year} className="table-containers">
+
+          <table className="dropdowns-safety">
+            <caption>Saved Analysis Table for {year}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Problem</th>
+                <th colSpan="5">Causes Analysis</th>
+                <th rowSpan="2">Corrective Action</th>
+                <th rowSpan="2">PIC</th>
+                <th rowSpan="2">Target</th>
+                <th colSpan="2">Follow Up</th>
+              </tr>
+              <tr>
+                <th>Why 1</th>
+                <th>Why 2</th>
+                <th>Why 3</th>
+                <th>Why 4</th>
+                <th>Why 5</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+  {problemsByYear[year].map((problem, index) => (
+    <tr key={index}>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Masalah}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Masalah = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Masalah}
+          />
+        ) : (
+          problem.Masalah
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Why[0]}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Why[0] = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Why[0]}
+          />
+        ) : (
+          problem.Why[0]
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Why[1]}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Why[1] = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Why[1]}
+          />
+        ) : (
+          problem.Why[1]
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Why[2]}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Why[2] = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Why[2]}
+          />
+        ) : (
+          problem.Why[2]
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Why[3]}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Why[3] = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Why[3]}
+          />
+        ) : (
+          problem.Why[3]
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Why[4]}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Why[4] = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Why[4]}
+          />
+        ) : (
+          problem.Why[4]
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Tindakan}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Tindakan = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Tindakan}
+          />
+        ) : (
+          problem.Tindakan
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Pic}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Pic = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Pic}
+          />
+        ) : (
+          problem.Pic
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Target}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Target = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Target}
+          />
+        ) : (
+          problem.Target
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.FolDate}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].FolDate = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.FolDate}
+          />
+        ) : (
+          problem.FolDate
+        )}
+      </td>
+      <td>
+        {editMode ? (
+          <textarea
+            value={problem.Status}
+            onChange={e => {
+              const updatedProblems = [...problemsByYear[year]];
+              updatedProblems[index].Status = e.target.value;
+              setProblemsByYear({
+                ...problemsByYear,
+                [year]: updatedProblems
+              });
+            }}
+            placeholder={problem.Status}
+          />
+        ) : (
+          problem.Status
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
+          </table>
+        </div>
+      ))}
+    </div>  
+    );
+  };
+
+  export default EditUploadTableAnalysis;
+
+
+====
+
+import React, { useState, useEffect } from "react";
+import "../Styles/dropdowns.css";
+
+const EditUploadTableAnalysis = () => {
+  const [problemsByYear, setProblemsByYear] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [originalValues, setOriginalValues] = useState({});
+  const [newRows, setNewRows] = useState([]); // State untuk menyimpan baris-baris data baru
+
+  useEffect(() => {
+    fetchMasalahData();
+  }, []);
+
+  const fetchMasalahData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/kpi/masalah");
+      if (response.ok) {
+        const responseData = await response.json();
+        const data = responseData.data;
+        console.log("Received data:", data);
+
+        // Group problems by year
+        const groupedProblems = {};
+        data.forEach(problem => {
+          if (!groupedProblems[problem.Year]) {
+            groupedProblems[problem.Year] = [];
+          }
+          groupedProblems[problem.Year].push(problem);
+        });
+
+        setProblemsByYear(groupedProblems);
+
+        // Extract available years
+        const years = Object.keys(groupedProblems);
+        setAvailableYears(years);
+        setSelectedYears(years); // Initially select all years
+      } else {
+        console.error("Failed to fetch masalah data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching masalah data:", error);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleYearChange = (year) => {
+    const updatedSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(selectedYear => selectedYear !== year)
+      : [...selectedYears, year];
+    setSelectedYears(updatedSelectedYears);
+  };
+
+  const handleDeleteRowClick = async (year, index, masalahID) => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await fetch(`http://localhost:8080/kpi/masalah/${masalahID}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        }
+      });
+      if (response.ok) {
+        const updatedProblems = [...problemsByYear[year]];
+        updatedProblems.splice(index, 1);
+        setProblemsByYear({
+          ...problemsByYear,
+          [year]: updatedProblems
+        });
+        console.log("Row deleted successfully");
+      } else {
+        console.error("Failed to delete row:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting row:", error);
+    }
+  };
+
+  
+
+  const handleDeleteNewRowClick = (year, index) => {
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: prevState[year].filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+    const originalValuesCopy = {};
+    selectedYears.forEach(year => {
+      originalValuesCopy[year] = [...problemsByYear[year]];
+    });
+    setOriginalValues(originalValuesCopy);
+
+    // Inisialisasi objek baris baru untuk setiap tahun yang dipilih
+    const newRowsCopy = {};
+    selectedYears.forEach(year => {
+      newRowsCopy[year] = [];
+    });
+    setNewRows(newRowsCopy);
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRow = {
+      Masalah: "",
+      Why: ["", "", "", "", ""],
+      Tindakan: "",
+      Pic: "",
+      Target: "",
+      FolDate: "",
+      Status: "",
+      Year: year
+    };
+
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: [...(prevState[year] || []), newRow]
+    }));
+  };
+
+  const handleSaveClick = async () => {
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const promises = [];
+  
+      selectedYears.forEach(year => {
+        const updatedProblems = problemsByYear[year];
+        updatedProblems.forEach(problem => {
+          const formData = {
+            Masalah_ID: problem.Masalah_ID,
+            Masalah: problem.Masalah,
+            Why: problem.Why,
+            tindakan: problem.Tindakan,
+            pic: problem.Pic,
+            target: problem.Target,
+            folDate: new Date(problem.FolDate).toISOString(),
+            status: problem.Status,
+            Year: problem.Year
+          };
+          
+          console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+  
+          promises.push(fetch(`http://localhost:8080/kpi/masalah/${problem.Masalah_ID}`, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+              "Authorization": `Bearer ${authToken}`
+            },
+            body: JSON.stringify(formData)
+          }));
+        });
+  
+        // Tambahkan data baru ke promises untuk dikirim ke server
+      // Tambahkan data baru ke promises untuk dikirim ke server
+const newRowsForYear = newRows[year] || [];
+newRowsForYear.forEach(newRow => {
+  const { Masalah_ID, ...formDataWithoutID } = newRow; // Destructure and remove Masalah_ID
+  const formData = {
+    ...formDataWithoutID,
+    Why: [
+      newRow.Why[0],
+      newRow.Why[1],
+      newRow.Why[2],
+      newRow.Why[3],
+      newRow.Why[4],
+    ],
+    Year: parseInt(newRow.Year) // Ensure Year is sent as an integer
+  };
+
+  console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+
+  promises.push(fetch(`http://localhost:8080/kpi/masalah`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+      "Authorization": `Bearer ${authToken}`
+    },
+    body: JSON.stringify(formData)
+  }));
+});
+
+      });
+  
+      await Promise.all(promises);
+      setEditMode(false);
+      console.log("Data saved successfully.");
+      fetchMasalahData(); // Refresh data setelah penyimpanan
+     setProblemsByYear({});
+    setNewRows({});
+    } catch (error) {
+      console.error("Failed to save data:", error);
+    }
+  };
+
+  
+  
+
+  return (
+    <div>
+      <div className="container">
+        <div className="filter-containers">
+          <div className="dropdown">
+            <button onClick={toggleDropdown} className="dropdown-button">
+              Filter Tahun
+            </button>
+            {dropdownOpen && (
+              <div className="dropdown-content">
+                {availableYears.map((year, index) => (
+                  <label key={index} className="dropdown-item">
+                    <input
+                      type="checkbox"
+                      value={year}
+                      checked={selectedYears.includes(year)}
+                      onChange={() => handleYearChange(year)}
+                    />
+                    {year}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="buttons-container">
+            {!editMode && (
+              <button onClick={handleEditClick}>Update Data Table</button>
+            )}
+            {editMode && (
+              <button onClick={handleSaveClick}>Save Changes</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {selectedYears.map(year => (
+        <div key={year} className="table-containers">
+          <table className="dropdowns-safety">
+            <caption>Saved Analysis Table for {year}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Problem
+                <div>
+                  {editMode && (
+                    <button onClick={() => handleAddRowClick(year)}>Add</button>
+                  )}
+                  </div>
+                </th>
+                <th colSpan="5">Causes Analysis</th>
+                <th rowSpan="2">Corrective Action</th>
+                <th rowSpan="2">PIC</th>
+                <th rowSpan="2">Target</th>
+                <th colSpan="2">Follow Up</th>
+              </tr>
+              <tr>
+                <th>Why 1</th>
+                <th>Why 2</th>
+                <th>Why 3</th>
+                <th>Why 4</th>
+                <th>Why 5</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(problemsByYear[year] || []).map((problem, index) => (
+                <tr key={`${year}_${index}_${problem.Masalah_ID || ''}`}>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Masalah || ""}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          const updatedProblem = { ...problem };
+                          updatedProblem.Masalah = e.target.value;
+                          updatedProblems[index] = updatedProblem;
+
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Masalah}
+                      />
+                    ) : (
+                      problem.Masalah
+                    )}
+                    <div>
+                 {editMode && (
+                    <button onClick={() => handleDeleteRowClick(year, index, problem.Masalah_ID)}>Delete</button>
+                  )}
+                  </div>
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[0]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[0] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[0]}
+                      />
+                    ) : (
+                      problem.Why[0]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[1]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[1] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[1]}
+                      />
+                    ) : (
+                      problem.Why[1]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[2]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[2] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[2]}
+                      />
+                    ) : (
+                      problem.Why[2]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[3]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[3] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[3]}
+                      />
+                    ) : (
+                      problem.Why[3]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[4]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[4] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[4]}
+                      />
+                    ) : (
+                      problem.Why[4]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Tindakan}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Tindakan = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Tindakan}
+                      />
+                    ) : (
+                      problem.Tindakan
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Pic}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Pic = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Pic}
+                      />
+                    ) : (
+                      problem.Pic
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Target}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Target = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Target}
+                      />
+                    ) : (
+                      problem.Target
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.FolDate}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].FolDate = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.FolDate}
+                      />
+                    ) : (
+                      problem.FolDate
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Status}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Status = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Status}
+                      />
+                    ) : (
+                      problem.Status
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {(newRows[year] || []).map((newRow, index) => (
+                <tr key={`${year}_new_${index}`}>
+                  <td>
+                    <textarea
+                      value={newRow.Masalah || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Masalah = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Masalah"
+                    />
+                <button onClick={() => handleDeleteNewRowClick(year, index)}>Delete</button>
+
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[0] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[0] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 1"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[1] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[1] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 2"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[2] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[2] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 3"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[3] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[3] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 4"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[4] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[4] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 5"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Tindakan || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Tindakan = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Tindakan"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Pic || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Pic = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="PIC"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Target || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Target = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Target"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.FolDate || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].FolDate = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Date"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Status || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Status = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Status"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default EditUploadTableAnalysis;

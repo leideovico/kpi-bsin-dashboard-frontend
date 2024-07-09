@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "../Styles/styles.css";
 import InputTable from "../Table/InputTable.jsx";
+
+import SavedTable1 from "../Table/SavedTable1.jsx";
+ 
+
+import TemplateTable2 from "../Table/TemplateTable2.jsx";
+import TemplateTable3 from "../Table/TemplateTable3.jsx";
 import Chart from "../Chart/SafetyChart.jsx" ;
-import ChartComponent2 from "../Chart/QualityChart.jsx";
-import ChartComponent3 from "../Chart/EnvironmentChart.jsx";
-import ChartComponent4 from "../Chart/DeliveryChart.jsx";
-import ChartComponent5 from "../Chart/CostChart.jsx";
 import DragDropFiles from "../Components/dragdropfiles.jsx";
 import OptionIcon from "../Components/optionIcon.jsx";
-import { useLocation } from 'react-router-dom';
+import AnalysisTableInput from "../Table/AnalysisTableInput.jsx";
+import SummaryInputTable from "../Table/SummaryTableInput.jsx";
+
+import { useLocation, useNavigate } from 'react-router-dom';
 
 
 function hideMainContent() {
@@ -21,22 +26,45 @@ function hideMainContent() {
 const Dashboard = () => { // Terima properti location untuk mendapatkan state dari route
 
   const location = useLocation();
-  const username = location.state.username;
+  const navigate = useNavigate();
+   const [username, setUsername] = useState('');
+
+
+  
+   useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      setUsername(storedUsername);
+    } else {
+      navigate('/login'); // Redirect to login if no username found
+    }
+  }, [navigate]);
+
+
 
   const [activeMenu, setActiveMenu] = useState("KPI");
   const [activeSubItem, setActiveSubItem] = useState(""); // State untuk menentukan subitem yang aktif
+
   const [isKPIDropdownVisible, setKPIDropdownVisible] = useState(false);
   const [isPeopleDropdownVisible, setPeopleDropdownVisible] = useState(false);
   const [isInputDropdownVisible, setInputDropdownVisible] = useState(false);
   const [isAbsensiDropdownVisible, setAbsensiDropdownVisible] = useState(false);
+  const [isAnalysisDropdownVisible, setAnalysisDropdownVisible] = useState(false);
+  const [isSummaryDropdownVisible, setSummaryDropdownVisible] = useState(false);
+
   const [isKPIRotated, setKPIRotated] = useState(false);
   const [isPeopleRotated, setPeopleRotated] = useState(false);
   const [isAbsensiRotated, setAbsensiRotated] = useState(false);
   const [isInputRotated, setInputRotated] = useState(false);
+  const [isAnalysisRotated, setAnalysisRotated] = useState(false);
+  const [isSummaryRotated, setSummaryRotated] = useState(false);
 
   const [isChartVisible, setIsChartVisible] = useState(false);
   const [isDragDropVisible, setIsDragDropVisible] = useState(false);
 
+  const handleLogoClick = () => {
+       window.location.reload(); // Merefresh halaman dashboard
+    };
 
   const handleChartToggle = () => {
     setIsChartVisible(!isChartVisible);
@@ -60,69 +88,18 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
 
   // Safety Chart
   const [chartSize, setChartSize] = useState({
-    width: "500px",
-    height: "310px",
+    width: "425px",
+    height: "390px",
     paddingLeft: "10px",
     paddingRight: "10px",
     paddingTop: "30px",
-    marginTop: "0px",
+    marginTop: "20px",
     marginBottom: "50px",
-    paddingBottom: "0px",
+    paddingBottom: "25px",
     marginLeft: "110px",
   });
 
-  // Quality Chart
-  const [chartSize2, setChartSize2] = useState({
-    width: "500px",
-    height: "310px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    paddingTop: "30px",
-    marginTop: "0px",
-    marginBottom: "50px",
-    paddingBottom: "0px",
-    marginLeft: "110px",
-  });
-
-  // Environment Chart
-  const [chartSize3, setChartSize3] = useState({
-    width: "500px",
-    height: "310px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    paddingTop: "30px",
-    marginTop: "0px",
-    marginBottom: "50px",
-    paddingBottom: "0px",
-    marginLeft: "110px",
-  });
-
-  // Delivery Chart
-
-  const [chartSize4, setChartSize4] = useState({
-    width: "500px",
-    height: "310px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    paddingTop: "30px",
-    marginTop: "0px",
-    marginBottom: "50px",
-    paddingBottom: "0px",
-    marginLeft: "110px",
-  });
-
-  // Cost Chart
-  const [chartSize5, setChartSize5] = useState({
-    width: "500px",
-    height: "310px",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    paddingTop: "30px",
-    marginTop: "0px",
-    marginBottom: "50px",
-    paddingBottom: "0px",
-    marginLeft: "110px",
-  });
+   
 
   const [activeMode, setActiveMode] = useState(null);
 
@@ -133,7 +110,64 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
 
   const [isInputKpiVisible, setIsInputKpiVisible] = useState(false);
+  const [isInputAnalysisVisible, setIsInputAnalysisVisible] = useState(false);
+  const [isInputSummaryVisible, setIsInputSummaryVisible] = useState(false);
   
+  const [isEditKpiVisible, setIsEditKpiVisible] = useState(false);
+  const [isEditAnalysisVisible, setIsEditAnalysisVisible] = useState(false);
+  const [isEditSummaryVisible, setIsEditSummaryVisible] = useState(false);
+  
+  const [isSavedSafetyVisible, setIsSavedSafetyVisible] = useState(false);
+  const [isSavedEnvironmentVisible, setIsSavedEnvironmentVisible] = useState(false);
+  const [isSavedQualityVisible, setIsSavedQualityVisible] = useState(false);
+  const [isSavedCostVisible, setIsSavedCostVisible] = useState(false);
+  const [isSavedDeliveryVisible, setIsSavedDeliveryVisible] = useState(false);
+
+
+  const handleSavedSafetyClick = () => {
+    setIsSavedSafetyVisible(true);
+  };
+
+  const handleHideSavedSafetyClick = () => {
+    setIsSavedSafetyVisible(false);
+  };
+
+  const handleSavedEnvironmentClick = () => {
+    setIsSavedEnvironmentVisible(true);
+  };
+
+  const handleHideSavedEnvironmentClick = () => {
+    setIsSavedEnvironmentVisible(false);
+  };
+
+
+  const handleSavedQualityClick = () => {
+    setIsSavedQualityVisible(true);
+  };
+
+  const handleHideSavedQualityClick = () => {
+    setIsSavedQualityVisible(false);
+  };
+
+
+  const handleSavedCostClick = () => {
+    setIsSavedCostVisible(true);
+  };
+
+  const handleHideSavedCostClick = () => {
+    setIsSavedCostVisible(false);
+  };
+
+
+  const handleSavedDeliveryClick = () => {
+    setIsSavedDeliveryVisible(true);
+  };
+
+  const handleHideSavedDeliveryClick = () => {
+    setIsSavedDeliveryVisible(false);
+  };
+
+
 
   const handleInputKpiClick = () => {
     setIsInputKpiVisible(true);
@@ -141,6 +175,47 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
 
   const handlehideInputKpiClick = () => {
     setIsInputKpiVisible(false);
+  };
+
+  const handleInputAnalysisClick = () => {
+    setIsInputAnalysisVisible(true);
+  };
+
+  const handlehideInputAnalysisClick = () => {
+    setIsInputAnalysisVisible(false);
+  };
+
+  const handleInputSummaryClick = () => {
+    setIsInputSummaryVisible(true);
+  };
+
+  const handlehidesummaryclick = () => {
+    setIsInputSummaryVisible(false);
+  };
+
+  const handleEditKpiClick = () => {
+    setIsEditKpiVisible(true);
+  };
+
+  const handlehideEditKpiClick = () => {
+    setIsEditKpiVisible(false);
+  };
+
+  
+  const handleEditAnalysisClick = () => {
+    setIsEditAnalysisVisible(true);
+  };
+
+  const handlehideAnalysisKpiClick = () => {
+    setIsEditAnalysisVisible(false);
+  };
+  
+  const handleEditSummaryClick = () => {
+    setIsEditSummaryVisible(true);
+  };
+
+  const handlehideEditSummaryClick = () => {
+    setIsEditSummaryVisible(false);
   };
 
   const toggleSidebarHover = () => {
@@ -168,6 +243,14 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
     setInputRotated(!isInputRotated);
   };
 
+  const toggleAnalysisRotated = () => {
+    setAnalysisRotated(!isAnalysisRotated);
+  };
+
+  const toggleSummaryRotated = () => {
+    setSummaryRotated(!isSummaryRotated);
+  };
+
   useEffect(() => {
     if (activeMenu === "KPI") {
       handleShowChart(); // Panggil handleShowChart saat activeMenu berubah menjadi "KPI"
@@ -185,7 +268,11 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
       activeSubItem === "Cost" ||
       activeSubItem === "Delivery" ||
       activeSubItem === "Input and Export Table Data" ||
-      activeSubItem === "Edit and Upload Table Data"
+      activeSubItem === "Edit and Upload Table Data" ||
+      activeSubItem === "AnalysisInput" ||
+      activeSubItem === "AnalysisOutput" ||
+      activeSubItem === "SummaryInput" ||
+      activeSubItem === "SummaryOutput" 
     ) {
       setTopBarVisible(true);
       setTopBarContent(activeSubItem);
@@ -193,7 +280,10 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
         activeMenu === "KPI" ||
         activeMenu === "People" ||
         activeMenu === "Absensi" ||
-        activeMenu === "Input" 
+        activeMenu === "Input" ||
+        activeMenu === "Analysis" ||
+        activeMenu === "Summary" 
+
     ) { // Jika activeMenu adalah KPI dan tidak ada activeSubItem yang dipilih
       setTopBarVisible(true);
       setTopBarContent(activeMenu);
@@ -241,6 +331,8 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                 ${topBarContent === "People" ? "top-bar-content0" : ""}
                 ${topBarContent === "Absensi" ? "top-bar-content0" : ""}
                 ${topBarContent === "Input" ? "top-bar-content0" : ""}
+                ${topBarContent === "Analysis" ? "top-bar-content0" : ""}
+                ${topBarContent === "Summary" ? "top-bar-content0" : ""}
 
 
                 ${topBarContent === "Safety" ? "top-bar-content1" : ""} 
@@ -248,6 +340,12 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                 ${topBarContent === "Quality" ? "top-bar-content3" : ""}
                 ${topBarContent === "Cost" ? "top-bar-content4" : ""}
                 ${topBarContent === "Delivery" ? "top-bar-content5" : ""}
+                ${topBarContent === "AnalysisInput" ? "top-bar-content5" : ""}
+                ${topBarContent === "AnalysisOutput" ? "top-bar-content5" : ""}
+                ${topBarContent === "SummaryInput" ? "top-bar-content5" : ""}
+                ${topBarContent === "SummaryOutput" ? "top-bar-content5" : ""}
+
+
                 ${topBarContent === "Edit and Upload Table Data"
                     ? "top-bar-content6"
                     : ""
@@ -257,33 +355,89 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                     : ""
                 }`}
               >
-                {(
+                  {(
 
-                  topBarContent === "KPI" ||
-                  topBarContent === "People" ||
-                  topBarContent === "Absensi" ||
-                  topBarContent === "Input" ||
+                    topBarContent === "KPI" ||
+                    topBarContent === "People" ||
+                    topBarContent === "Absensi" ||
+                    topBarContent === "Input" ||
+                    topBarContent === "Analysis" ||
+                    topBarContent === "Summary" ||
 
-                  topBarContent === "Safety" ||
-                  topBarContent === "Environment" ||
-                  topBarContent === "Quality" ||
-                  topBarContent === "Cost" ||
-                  topBarContent === "Delivery" ||
-                  activeSubItem === "Input and Export Table Data" ||
-                  activeSubItem === "Edit and Upload Table Data" 
-                ) && (
-                  <>
-                    {topBarContent === "KPI" && (
+                    topBarContent === "Safety" ||
+                    topBarContent === "Environment" ||
+                    topBarContent === "Quality" ||
+                    topBarContent === "Cost" ||
+                    topBarContent === "Delivery" ||
+                    topBarContent === "AnalysisInput" ||
+                    topBarContent === "AnalysisOutput" ||
+                    topBarContent === "SummaryInput" ||
+                    topBarContent === "SummaryOutput" ||
+                    activeSubItem === "Input and Export Table Data" ||
+                    activeSubItem === "Edit and Upload Table Data" 
+                  ) && (
+                    <>
+                      {topBarContent === "KPI" && (
+                        <>
+                            KPI Chart  
+                            <OptionIcon username={username} />
+
+                        </>
+                      )}
+                    
+                    {topBarContent === "Input" && (
                       <>
-                          KPI Dashboard Visualisation
+                          KPI Chart   
                           <OptionIcon username={username} />
 
                       </>
                     )}
-                  
-                  {topBarContent === "Input" && (
+
+                    {topBarContent === "Analysis" && (
+                      <>
+                          KPI Chart   
+                          <OptionIcon username={username} />
+
+                      </>
+                    )}
+
+                  {topBarContent === "AnalysisInput" && (
                     <>
-                        KPI Dashboard Visualisation 
+                        Input Project Analysis 
+                        <OptionIcon username={username} />
+
+                    </>
+                  )}
+
+                  {topBarContent === "AnalysisOutput" && (
+                    <>
+                        Project Analysis 
+                        <OptionIcon username={username} />
+
+                    </>
+                  )}
+
+                  {topBarContent === "SummaryInput" && (
+                    <>
+                        Input Project Summary 
+                        <OptionIcon username={username} />
+
+                    </>
+                  )}
+
+                  {topBarContent === "Summary" && (
+                    <>
+                        KPI Chart   
+                        <OptionIcon username={username} />
+
+                    </>
+                  )}
+
+ 
+
+                  {topBarContent === "SummaryOutput" && (
+                    <>
+                        Project Summary 
                         <OptionIcon username={username} />
 
                     </>
@@ -291,39 +445,12 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
 
                    {topBarContent === "Safety" && (
                     <>
-                        Safety Table
+                      Categories Table
                         <OptionIcon username={username} />
 
                     </>
                   )}
-                  {topBarContent === "Environment" && (
-                    <>
-                        Environment Table
-                        <OptionIcon username={username} />
-
-                    </>
-                  )}
-                  {topBarContent === "Quality" && (
-                    <>
-                        Quality Table
-                        <OptionIcon username={username} />
-
-                    </>
-                  )}
-                  {topBarContent === "Cost" && (
-                    <>
-                        Cost Table
-                        <OptionIcon username={username} />
-
-                    </>
-                  )}
-                   {topBarContent === "Delivery" && (
-                    <>
-                        Delivery Table
-                        <OptionIcon username={username} />
-
-                    </>
-                  )}
+                  
                   {topBarContent === "Input and Export Table Data" && (
                     <>
                         Input Table Data
@@ -339,7 +466,6 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                     </>
                   )}
                   
-                  
                 </>
               )}
             </div>
@@ -347,7 +473,7 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
         </nav>
       )}
       <aside className={`sidebar ${isSidebarPinned ? "sidebar-pinned" : ""}`}>
-        <div className="logo-container" >
+      <div className="logo-container" onClick={handleLogoClick}>
           <img src="Images/brid3.png" alt="Logo" />
           <h2
             className={`logo-text ${
@@ -364,7 +490,17 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                 activeMenu === "KPI" ? "active" : ""
               }`}
               onClick={() => {
-                
+                handleHideSavedSafetyClick();
+                handleHideSavedEnvironmentClick();
+                handleHideSavedQualityClick();
+                handleHideSavedCostClick();
+                handleHideSavedDeliveryClick();
+
+                handlehideAnalysisKpiClick();
+                handlehideEditSummaryClick();
+                handlehideInputAnalysisClick();
+                handlehidesummaryclick();
+                handlehideEditKpiClick();
                 handleShowChart();
                 handleHideDragDropFiles();
                 handlehideInputKpiClick();
@@ -411,8 +547,19 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                       isSidebarHovered ? "" : "menu-text-hidden"
                     }`}
                     onClick={(e) => {
-                      handleHideDragDropFiles();
 
+                      handleSavedSafetyClick();
+
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handlehideAnalysisKpiClick();
+                      handlehideEditSummaryClick();
+                      handlehideInputAnalysisClick();
+                      handlehidesummaryclick();
+                      handleHideDragDropFiles();
+                      handlehideEditKpiClick();
                       handleHideChart();
                       handlehideInputKpiClick();
                       e.preventDefault();
@@ -420,131 +567,9 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                       stopPropagation(e);
                     }}
                   >
-                    ‣ Safety
+                    ‣ All Categories Table 
                   </a>
                 </li>
-                <li>
-                  <a
-                    href="#E"
-                    className={`${
-                      activeSubItem === "Environment" ? "active" : ""
-                    } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
-                    onClick={(e) => {
-                      handleHideChart();
-                      handleHideDragDropFiles();
-                      handlehideInputKpiClick();
-                      e.preventDefault();
-                      setActiveSubItem("Environment");
-                      stopPropagation(e);
-                    }}
-                  >
-                    ‣ Environment
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#Q"
-                    className={`${
-                      activeSubItem === "Quality" ? "active" : ""
-                    } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
-                    onClick={(e) => {
-                      handleHideChart();
-                      handleHideDragDropFiles();
-                      handlehideInputKpiClick();
-                      e.preventDefault();
-                      setActiveSubItem("Quality");
-                      stopPropagation(e);
-                    }}
-                  >
-                    ‣ Quality
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#C"
-                    className={`${activeSubItem === "Cost" ? "active" : ""} ${
-                      isSidebarHovered ? "" : "menu-text-hidden"
-                    }`}
-                    onClick={(e) => {
-                      handleHideChart();
-                      handleHideDragDropFiles();
-                      handlehideInputKpiClick();
-                      e.preventDefault();
-                      setActiveSubItem("Cost");
-                      stopPropagation(e);
-                    }}
-                  >
-                    ‣ Cost
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#D"
-                    className={`${
-                      activeSubItem === "Delivery" ? "active" : ""
-                    } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
-                    onClick={(e) => {
-                      handleHideChart();
-                      handleHideDragDropFiles();
-                      handlehideInputKpiClick();
-                      e.preventDefault();
-                      setActiveSubItem("Delivery");
-                      stopPropagation(e);
-                    }}
-                  >
-                    ‣ Delivery
-                  </a>
-                </li>
-              </ul>
-            </li>
-           
-            <li
-              className={`menu-item ${isInputDropdownVisible ? "open" : ""} ${
-                activeMenu === "Input" ? "active" : ""
-              }`}
-              onClick={() => {
-                handleHideDragDropFiles();
-                handlehideInputKpiClick();
-                handleShowChart();
-                setInputDropdownVisible(!isInputDropdownVisible);
-                toggleInputRotated();
-                setActiveMenu("Input");
-                setActiveSubItem(""); // Reset activeSubItem saat menu utama diklik
-              }}
-            >
-              <img
-                src="Images/input.png"
-                alt="input Icon"
-                className="menu-icon"
-              />
-              <span
-                className={`menu-text ${
-                  isSidebarHovered ? "" : "menu-text-hidden"
-                }`}
-              >
-                Data KPI 
-              </span>
-              <span
-                className={`dropdown-icon rotate-icon ${
-                  isInputDropdownVisible ||
-                  (isSidebarHovered && !isSidebarPinned)
-                    ? "rotated"
-                    : ""
-                } ${
-                  !isSidebarPinned ||
-                  (!isSidebarHovered && !isInputDropdownVisible)
-                    ? "dropdown-icon-hidden"
-                    : ""
-                }`}
-              >
-                &#9658;
-              </span>
-
-              <ul
-                className={`submenu ${isInputDropdownVisible ? "show" : ""} ${
-                  isSidebarHovered ? "" : "menu-text-hidden"
-                }`}
-              >
                 <li>
                   <a
                     href="#Input and Export Table Data"
@@ -554,6 +579,16 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                         : ""
                     } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
                     onClick={(e) => {
+                      handleHideSavedSafetyClick();
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handlehideAnalysisKpiClick();
+                      handlehideEditSummaryClick();
+                      handlehideInputAnalysisClick();
+                      handlehidesummaryclick();
+                      handlehideEditKpiClick();
                       handleInputKpiClick();
                       handleHideDragDropFiles();
                       handleHideChart();
@@ -565,26 +600,237 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
                     ‣ Input Table Data
                   </a>
                 </li>
+                 
+                 
+               
+              </ul>
+            </li>
+           
+            
+            <li
+              className={`menu-item ${isAnalysisDropdownVisible ? "open" : ""} ${
+                activeMenu === "Analysis" ? "active" : ""
+              }`}
+              onClick={() => {
+                handleHideSavedSafetyClick();
+                handleHideSavedEnvironmentClick();
+                handleHideSavedQualityClick();
+                handleHideSavedCostClick();
+                handleHideSavedDeliveryClick();
+                handlehideAnalysisKpiClick();
+                handlehideEditSummaryClick();
+                handlehideInputAnalysisClick();
+                handlehidesummaryclick();
+                handlehideEditKpiClick();
+                handleShowChart();
+                handleHideDragDropFiles();
+                handlehideInputKpiClick();
+                setAnalysisDropdownVisible(!isAnalysisDropdownVisible);
+                toggleAnalysisRotated();
+                setActiveMenu("Analysis");
+                setActiveSubItem(""); // Reset activeSubItem saat menu utama diklik
+              }}
+            >
+              <img src="Images/analysis.png" alt="analysis Icon" className="menu-icon" />
+              {/* Tambahkan class menu-text-hidden jika sidebar tidak di-hover */}
+              <span
+                className={`menu-text ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                Project Analysis
+              </span>
+              {/* Tambahkan class dropdown-icon-hidden jika sidebar tidak di-hover */}
+              <span
+                className={`dropdown-icon rotate-icon ${
+                  isAnalysisDropdownVisible || (isSidebarHovered && !isSidebarPinned)
+                    ? "rotated"
+                    : ""
+                } ${
+                  !isSidebarPinned ||
+                  (!isSidebarHovered && !isAbsensiDropdownVisible)
+                    ? "dropdown-icon-hidden"
+                    : ""
+                }`}
+              >
+                &#9658;
+              </span>
+
+              <ul
+                className={`submenu ${isAnalysisDropdownVisible ? "show" : ""} ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
                 <li>
                   <a
-                    href="#Edit and Upload Table Data"
+                    href="#AnalysisOutput"
                     className={`${
-                      activeSubItem === "Edit and Upload Table Data"
-                        ? "active"
-                        : ""
+                      activeSubItem === "AnalysisOutput" ? "active" : ""
                     } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
                     onClick={(e) => {
-                      handlehideInputKpiClick();
-                      handleDragDropFiles();
+                      handleHideSavedSafetyClick();
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handleEditAnalysisClick();
+                      handlehideEditSummaryClick();
+                      handlehideInputAnalysisClick();
+                      handlehidesummaryclick();
+                      handlehideEditKpiClick();
                       handleHideChart();
+                      handleHideDragDropFiles();
+                      handlehideInputKpiClick();
                       e.preventDefault();
-                      setActiveSubItem("Edit and Upload Table Data");
+                      setActiveSubItem("AnalysisOutput");
                       stopPropagation(e);
                     }}
                   >
-                    ‣ Edit & Upload Table Data
+                    ‣ All Project Analysis
                   </a>
                 </li>
+                <li>
+                  <a
+                    href="#AnalysisInput"
+                    className={`${activeSubItem === "AnalysisInput" ? "active" : ""} ${
+                      isSidebarHovered ? "" : "menu-text-hidden"
+                    }`}
+                    onClick={(e) => {
+                      handleHideSavedSafetyClick();
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handlehideAnalysisKpiClick();
+                      handlehideEditSummaryClick();
+                      handleInputAnalysisClick();
+                      handlehidesummaryclick();
+                      handleHideDragDropFiles();
+                      handlehideEditKpiClick();
+                      handleHideChart();
+                      handlehideInputKpiClick();
+                      e.preventDefault();
+                      setActiveSubItem("AnalysisInput");
+                      stopPropagation(e);
+                    }}
+                  >
+                    ‣ Input Project Analysis
+                  </a>
+                </li>
+                
+              </ul>
+            </li>
+            <li
+              className={`menu-item ${isSummaryDropdownVisible ? "open" : ""} ${
+                activeMenu === "Summary" ? "active" : ""
+              }`}
+              onClick={() => {
+                handleHideSavedSafetyClick();
+                handleHideSavedEnvironmentClick();
+                handleHideSavedQualityClick();
+                handleHideSavedCostClick();
+                handleHideSavedDeliveryClick();
+                handlehideAnalysisKpiClick();
+                handlehideEditSummaryClick();
+                handlehideInputAnalysisClick();
+                handlehidesummaryclick();
+                handlehideEditKpiClick();
+                handleShowChart();
+                handleHideDragDropFiles();
+                handlehideInputKpiClick();
+                setSummaryDropdownVisible(!isSummaryDropdownVisible);
+                toggleSummaryRotated();
+                setActiveMenu("Summary");
+                setActiveSubItem(""); // Reset activeSubItem saat menu utama diklik
+              }}
+            >
+              <img src="Images/summary.png" alt="Summary Icon" className="menu-icon" />
+              {/* Tambahkan class menu-text-hidden jika sidebar tidak di-hover */}
+              <span
+                className={`menu-text ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                 Project Summary
+              </span>
+              {/* Tambahkan class dropdown-icon-hidden jika sidebar tidak di-hover */}
+              <span
+                className={`dropdown-icon rotate-icon ${
+                  isSummaryDropdownVisible || (isSidebarHovered && !isSidebarPinned)
+                    ? "rotated"
+                    : ""
+                } ${
+                  !isSidebarPinned ||
+                  (!isSidebarHovered && !isAbsensiDropdownVisible)
+                    ? "dropdown-icon-hidden"
+                    : ""
+                }`}
+              >
+                &#9658;
+              </span>
+
+              <ul
+                className={`submenu ${isSummaryDropdownVisible ? "show" : ""} ${
+                  isSidebarHovered ? "" : "menu-text-hidden"
+                }`}
+              >
+                <li>
+                  <a
+                    href="#SummaryOutput"
+                    className={`${
+                      activeSubItem === "SummaryOutput" ? "active" : ""
+                    } ${isSidebarHovered ? "" : "menu-text-hidden"}`}
+                    onClick={(e) => {
+                      handleHideSavedSafetyClick();
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handlehideAnalysisKpiClick();
+                      handleEditSummaryClick();
+                      handlehideInputAnalysisClick();
+                      handlehidesummaryclick();
+                      handlehideEditKpiClick();
+                      handleHideChart();
+                      handleHideDragDropFiles();
+                      handlehideInputKpiClick();
+                      e.preventDefault();
+                      setActiveSubItem("SummaryOutput");
+                      stopPropagation(e);
+                    }}
+                  >
+                    ‣ All Project Summary
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#SummaryInput"
+                    className={`${activeSubItem === "SummaryInput" ? "active" : ""} ${
+                      isSidebarHovered ? "" : "menu-text-hidden"
+                    }`}
+                    onClick={(e) => {
+                      handleHideSavedSafetyClick();
+                      handleHideSavedEnvironmentClick();
+                      handleHideSavedQualityClick();
+                      handleHideSavedCostClick();
+                      handleHideSavedDeliveryClick();
+                      handlehideAnalysisKpiClick();
+                      handlehideEditSummaryClick();
+                      handlehideInputAnalysisClick();
+                      handleInputSummaryClick();
+                      handleHideDragDropFiles();
+                      handlehideEditKpiClick();
+                      handleHideChart();
+                      handlehideInputKpiClick();
+                      e.preventDefault();
+                      setActiveSubItem("SummaryInput");
+                      stopPropagation(e);
+                    }}
+                  >
+                    ‣ Input Project Summary
+                  </a>
+                </li>
+                
               </ul>
             </li>
         </ul>
@@ -597,12 +843,23 @@ const Dashboard = () => { // Terima properti location untuk mendapatkan state da
 
       </aside>
       {isInputKpiVisible && <InputTable />}
+      {isInputAnalysisVisible && <AnalysisTableInput />}
+      {isInputSummaryVisible && <SummaryInputTable />}
+ 
+      {isEditAnalysisVisible && <TemplateTable2 />}
+      {isEditSummaryVisible && <TemplateTable3 />}
+
+      {isSavedSafetyVisible && <SavedTable1 />}
+ 
+
+
+
       {isDragDropVisible && <DragDropFiles />}
       {isChartVisible && <Chart chartSize={chartSize} />}{" "}
-      {isChartVisible && <ChartComponent3 chartSize3={chartSize3} />}         
-      {isChartVisible && <ChartComponent2 chartSize2={chartSize2} />}    
-      {isChartVisible && <ChartComponent5 chartSize5={chartSize5} />}         
-      {isChartVisible && <ChartComponent4 chartSize4={chartSize4} />}         
+      {/* {isChartVisible && <ChartComponent3 chartSize3={chartSize3} />}          */}
+      {/* {isChartVisible && <ChartComponent2 chartSize2={chartSize2} />}     */}
+      {/* {isChartVisible && <ChartComponent5 chartSize5={chartSize5} />}         
+      {isChartVisible && <ChartComponent4 chartSize4={chartSize4} />}          */}
 
       <footer className="app-footer">
         <img src="Images/Bridgestone.png" alt="Logo" className="footer-logo" />

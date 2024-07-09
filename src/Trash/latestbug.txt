@@ -1,0 +1,686 @@
+import React, { useState, useEffect } from "react";
+import "../Styles/savedsummary.css";
+import * as XLSX from 'xlsx';
+import { Bar } from 'react-chartjs-2';
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false); // state untuk mode edit
+  const [editTableData, setEditTableData] = useState({}); // state untuk data yang diubah
+  const [issuedDates, setIssuedDates] = useState([]);
+  const [selectedIssuedDates, setSelectedIssuedDates] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+  const [projectCharts, setProjectCharts] = useState([]);
+  const [selectedProjectName, setSelectedProjectName] = useState("");
+const [selectedIssuedDate, setSelectedIssuedDate] = useState("");
+ const [fileData, setFileData] = useState(null);
+
+  const handleIssuedDateChange = (issuedDate) => {
+    setSelectedIssuedDates((prevSelectedIssuedDates) => {
+      if (prevSelectedIssuedDates.includes(issuedDate)) {
+        // Jika tanggal sudah dipilih sebelumnya, hapus dari daftar yang dipilih
+        return prevSelectedIssuedDates.filter((date) => date !== issuedDate);
+      } else {
+        // Jika tanggal belum dipilih sebelumnya, tambahkan ke daftar yang dipilih
+        return [...prevSelectedIssuedDates, issuedDate];
+      }
+    });
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const issuedDatesSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          issuedDatesSet.add(issuedDate);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: []
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+            status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }]
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available"
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setIssuedDates(Array.from(issuedDatesSet));
+        setSelectedIssuedDates(Array.from(issuedDatesSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    setSelectedIssuedDates((prevSelectedIssuedDates) => {
+      // Pastikan setidaknya satu item yang dipilih, jika tidak, pertahankan item pertama
+      if (prevSelectedIssuedDates.length === 0 && issuedDates.length > 0) {
+        return [issuedDates[0]];
+      }
+      return prevSelectedIssuedDates;
+    });
+  }, []);
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = (issuedDate) => {
+    setEditMode((prevEditMode) => ({
+      ...prevEditMode,
+      [issuedDate]: true
+    }));
+  };
+
+  const handleSaveClick = async (issuedDate) => {
+    setEditMode((prevEditMode) => ({
+      ...prevEditMode,
+      [issuedDate]: false
+    }));
+  
+    try {
+      const authToken = localStorage.getItem("authToken");
+  
+      const tableData = editTableData[issuedDate];
+      const summaryId = tableData.summary_id;
+  
+      // Construct data for the PUT request
+      const dataToUpdate = {
+        Summary_ID: summaryId,
+        IssuedDate: new Date(issuedDate).toISOString(),
+        Projects: tableData.columns.map((col) => {
+          const projectData = {
+            Project_ID: col.id,
+            Name: col.name,
+            Summary_ID: summaryId,
+            Item: [],
+            Quantity: []
+          };
+  
+          // Match row status to columns
+          tableData.rows.forEach((row) => {
+            const status = row.status.find((status) => status.id === col.id);
+            projectData.Item.push(status ? parseInt(status.name) : 0);
+            projectData.Quantity.push(status ? parseInt(status.quantity) : 0);
+          });
+  
+          return projectData;
+        }),
+        Status: tableData.rows.map(row => row.projectName),
+        Remarks: tableData.rows.map(row => row.remarks)
+      };
+  
+      // Log the data to be updated
+      console.log('PUT request data:', JSON.stringify(dataToUpdate, null, 2));
+  
+      // Execute the PUT request
+      let response = await fetch(`http://localhost:8080/kpi/summary/entire/${summaryId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dataToUpdate)
+      });
+  
+      // Log the request JSON body
+      console.log('PUT request JSON body:', JSON.stringify(dataToUpdate, null, 2));
+  
+      // Log the response status
+      console.log('PUT request response status:', response.status);
+  
+      if (!response.ok) {
+        throw new Error("Failed to update summary data");
+      }
+  
+      // Construct and execute POST requests for new rows
+      const newRows = tableData.rows.filter(row => row.isNew);
+      for (const newRow of newRows) {
+        const projectsData = tableData.columns.map((col) => ({
+          Project_ID: col.id,
+          Name: newRow.projectName,
+          Item: newRow.status.find(s => s.id === col.id) ? parseInt(newRow.status.find(s => s.id === col.id).name) : 0,
+          Quantity: newRow.status.find(s => s.id === col.id) ? parseInt(newRow.status.find(s => s.id === col.id).quantity) : 0,
+          Summary_ID: summaryId
+        }));
+  
+        const postData = {
+          Summary_ID: summaryId,
+          IssuedDate: new Date(issuedDate).toISOString(),
+          Projects: projectsData,
+          Status: newRow.projectName,
+          Remarks: newRow.remarks
+        };
+  
+        // Log the data to be posted
+        console.log('POST request data:', JSON.stringify(postData, null, 2));
+  
+        // Log the request JSON body
+        console.log('POST request JSON body:', JSON.stringify(postData, null, 2));
+  
+        response = await fetch(`http://localhost:8080/kpi/summary/entire`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(postData)
+        });
+  
+        // Log the response status
+        console.log('POST request response status:', response.status);
+  
+        if (!response.ok) {
+          throw new Error("Failed to add new row data");
+        }
+      }
+  
+      fetchData(); // Refresh data after updates
+      alert("Anda telah mengubah data summary, tolong refresh halaman untuk melihat data perbandingan yang baru!");
+  
+    } catch (error) {
+      // Log any errors
+      console.error("Error updating data:", error.message);
+    }
+  };
+  
+  
+
+  const handleAddColumnClick = (issuedDate) => {
+    const newColumn = {
+      id: editTableData[issuedDate].columns.length + 1,
+      name: "", // Empty name initially
+      item: `Item ${editTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${editTableData[issuedDate].columns.length + 1}`
+    };
+
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].columns.push(newColumn);
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleAddRowClick = (issuedDate) => {
+    const newRow = {
+      projectName: "",
+      status: editTableData[issuedDate].columns.map((col) => ({
+        name: 0,
+        quantity: 0,
+        id: col.id
+      })),
+      remarks: "",
+      isNew: true
+    };
+
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push(newRow);
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleColumnChange = (issuedDate, columnIndex, field, value) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].columns[columnIndex][field] = value;
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleChange = (issuedDate, rowIndex, field, value, statusIndex) => {
+    const updatedTableData = { ...editTableData };
+
+    if (field === "name" || field === "quantity") {
+      updatedTableData[issuedDate].rows[rowIndex].status[statusIndex][field] = value;
+    } else {
+      updatedTableData[issuedDate].rows[rowIndex][field] = value;
+    }
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleDeleteProject = (issuedDate, colIndex) => {
+    const updatedTableData = { ...editTableData };
+
+    // Hapus kolom dari tabel data
+    updatedTableData[issuedDate].columns.splice(colIndex, 1);
+
+    // Hapus status dari setiap baris
+    updatedTableData[issuedDate].rows.forEach((row) => {
+      row.status.splice(colIndex, 1);
+    });
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleDeleteAllData = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+
+    // Hapus semua data terkait issuedDate
+    delete updatedTableData[issuedDate];
+
+    setEditTableData(updatedTableData);
+  };
+
+  const handleCompareData = () => {
+    if (selectedIssuedDates.length !== 2) {
+      setWarningMessage("Please select exactly two issued dates to compare.");
+      return;
+    }
+
+    const [date1, date2] = selectedIssuedDates;
+
+    if (!tablesData[date1] || !tablesData[date2]) {
+      setWarningMessage("Data for the selected issued dates is not available.");
+      return;
+    }
+
+    const comparison = {};
+
+    const compareTables = (data1, data2) => {
+      const result = {
+        columns: [],
+        rows: []
+      };
+
+      const columns1 = data1.columns;
+      const columns2 = data2.columns;
+
+      const columnNames1 = new Set(columns1.map(col => col.name));
+      const columnNames2 = new Set(columns2.map(col => col.name));
+
+      columnNames1.forEach(name => {
+        if (columnNames2.has(name)) {
+          result.columns.push(name);
+        }
+      });
+
+      const rows1 = data1.rows;
+      const rows2 = data2.rows;
+
+      rows1.forEach(row1 => {
+        const matchingRow = rows2.find(row2 => row2.projectName === row1.projectName);
+        if (matchingRow) {
+          const rowComparison = {
+            projectName: row1.projectName,
+            status1: row1.status,
+            status2: matchingRow.status,
+            remarks1: row1.remarks,
+            remarks2: matchingRow.remarks
+          };
+
+          result.rows.push(rowComparison);
+        }
+      });
+
+      return result;
+    };
+
+    comparison[`${date1} vs ${date2}`] = compareTables(tablesData[date1], tablesData[date2]);
+    setComparisonData(comparison);
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    // Lakukan operasi pada file
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    const authToken = localStorage.getItem("authToken");
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:8080/kpi/uploadFile", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        alert("File uploaded successfully");
+        fetchData(); // Refresh data after upload
+      } else {
+        alert("Failed to upload file");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error.message);
+    }
+  };
+
+  return (
+    <div>
+      <div className="filter-container">
+        <button onClick={toggleDropdown}>
+          {dropdownOpen ? "Close Filter" : "Open Filter"}
+        </button>
+        {dropdownOpen && (
+          <div className="dropdown-content">
+            <div className="dropdown">
+              <button className="dropdown-btn">Filter by Issued Date</button>
+              <div className="dropdown-content">
+                {issuedDates.map((issuedDate) => (
+                  <label key={issuedDate}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIssuedDates.includes(issuedDate)}
+                      onChange={() => handleIssuedDateChange(issuedDate)}
+                    />
+                    {issuedDate}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="dropdown">
+              <button className="dropdown-btn">Filter by Project</button>
+              <div className="dropdown-content">
+                {Object.values(tablesData)
+                  .flatMap((tableData) => tableData.columns)
+                  .map((column) => column.name)
+                  .filter((value, index, self) => self.indexOf(value) === index)
+                  .map((projectName) => (
+                    <label key={projectName}>
+                      <input
+                        type="checkbox"
+                        checked={selectedProjectName === projectName}
+                        onChange={() => setSelectedProjectName(projectName)}
+                      />
+                      {projectName}
+                    </label>
+                  ))}
+              </div>
+            </div>
+            <button className="update-btn" onClick={handleCompareData}>
+              Compare Data
+            </button>
+          </div>
+        )}
+      </div>
+
+      {Object.entries(tablesData)
+        .filter(([issuedDate]) => selectedIssuedDates.includes(issuedDate))
+        .map(([issuedDate, tableData]) => (
+          <div key={issuedDate} className="table-container">
+            <table className="dropdowns-safety-sum">
+              <caption>Summary Table {issuedDate}</caption>
+              <thead>
+                <tr>
+                  <th rowSpan="2">Item Category Project</th>
+                  {tableData.columns.map((col, colIndex) => (
+                    <th colSpan="2" key={col.id}>
+                      {editMode[issuedDate] ? (
+                        <textarea
+                          value={editTableData[issuedDate].columns[colIndex].name}
+                          onChange={(e) =>
+                            handleColumnChange(
+                              issuedDate,
+                              colIndex,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        col.name
+                      )}
+                    </th>
+                  ))}
+                  <th rowSpan="2">Remarks</th>
+                </tr>
+                <tr>
+                  {tableData.columns.map((col) => (
+                    <React.Fragment key={col.id}>
+                      <th>{col.item}</th>
+                      <th>{col.quantity}</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    <td>{editMode[issuedDate] ? (
+                      <input
+                        type="text"
+                        value={editTableData[issuedDate].rows[rowIndex].projectName}
+                        onChange={(e) =>
+                          handleChange(
+                            issuedDate,
+                            rowIndex,
+                            "projectName",
+                            e.target.value
+                          )
+                        }
+                      />
+                    ) : (
+                      row.projectName
+                    )}
+                    </td>
+                    {row.status.map((stat, statIndex) => (
+                      <React.Fragment key={stat.id}>
+                        <td>{editMode[issuedDate] ? (
+                          <input
+                            type="number"
+                            value={editTableData[issuedDate].rows[rowIndex].status[statIndex].name}
+                            onChange={(e) =>
+                              handleChange(
+                                issuedDate,
+                                rowIndex,
+                                "name",
+                                e.target.value,
+                                statIndex
+                              )
+                            }
+                          />
+                        ) : (
+                          stat.name
+                        )}
+                        </td>
+                        <td>{editMode[issuedDate] ? (
+                          <input
+                            type="number"
+                            value={editTableData[issuedDate].rows[rowIndex].status[statIndex].quantity}
+                            onChange={(e) =>
+                              handleChange(
+                                issuedDate,
+                                rowIndex,
+                                "quantity",
+                                e.target.value,
+                                statIndex
+                              )
+                            }
+                          />
+                        ) : (
+                          stat.quantity
+                        )}
+                        </td>
+                      </React.Fragment>
+                    ))}
+                    <td>{editMode[issuedDate] ? (
+                      <input
+                        type="text"
+                        value={editTableData[issuedDate].rows[rowIndex].remarks}
+                        onChange={(e) =>
+                          handleChange(
+                            issuedDate,
+                            rowIndex,
+                            "remarks",
+                            e.target.value
+                          )
+                        }
+                      />
+                    ) : (
+                      row.remarks
+                    )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="button-container">
+              {editMode[issuedDate] ? (
+                <>
+                  <button
+                    className="save-btn"
+                    onClick={() => handleSaveClick(issuedDate)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="add-row-btn"
+                    onClick={() => handleAddRowClick(issuedDate)}
+                  >
+                    Add Row
+                  </button>
+                  <button
+                    className="add-column-btn"
+                    onClick={() => handleAddColumnClick(issuedDate)}
+                  >
+                    Add Column
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="edit-btn"
+                  onClick={() => handleEditClick(issuedDate)}
+                >
+                  Edit Data
+                </button>
+              )}
+              <button
+                className="delete-btn"
+                onClick={() => handleDeleteAllData(issuedDate)}
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        ))}
+
+      {Object.entries(comparisonData).map(([comparisonKey, comparisonTable]) => (
+        <div key={comparisonKey} className="table-container">
+          <table className="dropdowns-safety-sum">
+            <caption>Comparison Table {comparisonKey}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Item Category Project</th>
+                {comparisonTable.columns.map((col, index) => (
+                  <th colSpan="2" key={index}>{col}</th>
+                ))}
+                <th rowSpan="2">Remarks</th>
+              </tr>
+              <tr>
+                {comparisonTable.columns.map((col, index) => (
+                  <React.Fragment key={index}>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                  </React.Fragment>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonTable.rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  <td>{row.projectName}</td>
+                  {row.status1.map((stat1, statIndex) => (
+                    <React.Fragment key={statIndex}>
+                      <td>{stat1.name}</td>
+                      <td>{row.status2[statIndex].name}</td>
+                    </React.Fragment>
+                  ))}
+                  <td>{row.remarks1} / {row.remarks2}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
+      <div className="chart-container">
+        {projectCharts.map((chartData, chartIndex) => (
+          <div key={chartIndex}>
+            <h3>Chart for {chartData.title}</h3>
+            <Bar data={chartData.data} />
+          </div>
+        ))}
+      </div>
+
+      <div className="file-upload-container">
+        <label htmlFor="file-upload">Upload new file:</label>
+        <input
+          type="file"
+          id="file-upload"
+          name="file"
+          onChange={handleFileUpload}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default SavedSummaryTable;

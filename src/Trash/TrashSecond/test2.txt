@@ -1,0 +1,487 @@
+import React, { useState } from "react";
+import { months } from "./months.jsx"; // Import months
+
+const SafetyTable = () => {
+  const [kpiResults, setKpiResults] = useState([
+    {
+      id: 1,
+      kpiFactorsCount: 0,
+      statusCount: 0,
+      kpiFactors: [], // Tambah properti kpiFactors untuk menyimpan faktor-faktor KPI
+    },
+  ]);
+
+  const handleAddKpiResult = () => {
+    const newId = kpiResults[kpiResults.length - 1].id + 1;
+    setKpiResults([
+      ...kpiResults,
+      { id: newId, kpiFactorsCount: 0, kpiFactors: [] },
+    ]);
+  };
+
+  const handleRemoveKpiResult = (resultId) => {
+    if (kpiResults.length === 1) {
+      alert("Must have at least one KPI result.");
+    } else {
+      setKpiResults(kpiResults.filter(result => result.id !== resultId));
+    }
+  };
+  
+  
+  
+
+  const handleAddKpiFactor = (resultId) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          const newFactor = {
+            id: result.kpiFactorsCount + 1, // Update ID faktor
+            statusCount: 0,
+            statusRows: [], // Tambah properti statusRows pada setiap faktor KPI baru
+          };
+          return {
+            ...result,
+            kpiFactors: [...result.kpiFactors, newFactor],
+            kpiFactorsCount: result.kpiFactorsCount + 1,
+          };
+        }
+        return result;
+      }),
+    );
+  };
+  
+
+  const handleRemoveKpiFactor = (resultId, factorId) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          const updatedFactors = result.kpiFactors.filter(factor => factor.id !== factorId);
+          return {
+            ...result,
+            kpiFactors: updatedFactors,
+            kpiFactorsCount: updatedFactors.length // Perbarui jumlah faktor KPI
+          };
+        }
+        return result;
+      })
+    );
+  };
+  
+
+  const handleAddStatusForFactor = (resultId, factorIndex) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            kpiFactors: result.kpiFactors.map((factor, index) => {
+              if (index === factorIndex) {
+                const newStatusCount = (factor.statusCount || 0) + 1;
+                const newFactor = {
+                  ...factor,
+                  statusCount: newStatusCount,
+                };
+                // Buat array baru dengan menambahkan baris baru untuk "New Status"
+                const newStatusRows = Array.from(
+                  { length: newStatusCount },
+                  (_, i) => ({
+                    id: i + 1, // id unik untuk setiap status
+                  }),
+                );
+                return {
+                  ...newFactor,
+                  statusRows: newStatusRows,
+                };
+              }
+              return factor;
+            }),
+          };
+        }
+        return result;
+      }),
+    );
+  };
+
+
+  const handleRemoveStatusForFactor = (resultId, factorIndex) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            kpiFactors: result.kpiFactors.map((factor, index) => {
+              if (index === factorIndex && factor.statusCount > 0) {
+                const newStatusCount = factor.statusCount - 1;
+                const newFactor = {
+                  ...factor,
+                  statusCount: newStatusCount,
+                };
+                // Buat array baru dengan menghapus baris terakhir untuk "Remove Status"
+                const newStatusRows = newFactor.statusRows.slice(0, newStatusCount);
+                return {
+                  ...newFactor,
+                  statusRows: newStatusRows,
+                };
+              }
+              return factor;
+            }),
+          };
+        }
+        return result;
+      })
+    );
+  };
+  
+
+  const handleAddStatus = (resultId) => {
+    setKpiResults(
+      kpiResults.map((result) => {
+        if (result.id === resultId) {
+          return {
+            ...result,
+            statusCount: (result.statusCount || 0) + 1,
+          };
+        }
+        return result;
+      }),
+    );
+  };
+
+  const handleRemoveStatus = (resultId) => {
+    setKpiResults(kpiResults.map((result) => {
+      if (result.id === resultId && result.statusCount > 0) {
+        return {
+          ...result,
+          statusCount: result.statusCount - 1,
+        };
+      }
+      return result;
+    }));
+  };
+  
+
+  // Hitung total baris termasuk baris baru yang ditambahkan
+  const totalRows =
+    2 +
+    kpiResults.reduce(
+      (total, result) =>
+        total +
+        2 +
+        result.kpiFactorsCount * 2 +
+        (result.statusCount || 0) +
+        result.kpiFactors.reduce(
+          (acc, factor) => acc + (factor.statusCount || 0),
+          0,
+        ),
+      0,
+    );
+    
+
+  return (
+    <table className="input-table">
+      <thead>
+        <h2>Safety</h2>
+        <tr>
+          <th rowSpan={totalRows}>Item</th>
+          <th rowSpan={totalRows}>
+            KPI Result{" "}
+            <div className="result">
+            <button className="add-result-button" onClick={handleAddKpiResult}>
+              +
+            </button>
+            </div>
+          </th>
+          <th colSpan="2">KPI Factor</th>
+          <th rowSpan="2">Unit</th>
+          <th rowSpan="2">Target</th>
+          <th colSpan={months.length}>Tahun 2024</th>
+        </tr>
+        <tr>
+          <th>KPI Factor Name</th>
+          <th>Status</th>
+          {months.map((month, index) => (
+            <th key={index}>{month}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {/* STRUKTUR TABEL */}
+        {kpiResults.map((result, index) => (
+          <React.Fragment key={result.id}>
+            <tr>
+              {index === 0 && <td rowSpan={totalRows}>Safety</td>}
+
+              <td
+                rowSpan={
+                  2 +
+                  result.kpiFactorsCount * 2 +
+                  (result.statusCount || 0) +
+                  result.kpiFactors.reduce(
+                    (acc, curr) => acc + (curr.statusRows?.length || 0),
+                    0,
+                  )
+                }
+              >
+                New KPI Result {result.id}
+                <div className="factor">
+                <button
+                  className="add-factor-button"
+                  onClick={() => handleAddKpiFactor(result.id)}
+                >
+                  + Factor
+                </button>
+ 
+                </div>
+                <button className="remove-result-button" onClick={() => handleRemoveKpiResult(result.id)}>
+                 Delete KPI result
+                </button>
+              </td>
+              
+
+              {/* Logika New KPi Factor Secara Default atau Hardcode */}
+              <td rowSpan={2 + (result.statusCount || 0)}>
+              New KPI Factor
+                <div className="status"> 
+                <button
+                  className="add-status-button"
+                  onClick={() => handleAddStatus(result.id)}
+                >
+                  + Status
+                </button>
+                <button
+                  className="remove-status-button"
+                  onClick={() => handleRemoveStatus(result.id)}
+                >
+                  - Status
+                </button>
+                </div>
+                <button
+                  className="remove-factor-button"
+                  onClick={() => handleRemoveKpiFactor(result.id, null)}
+                >
+                  Delete KPI Factor
+                </button>
+              </td>
+
+              <td>
+                <div className="kpi-factor-status">
+                <input type="text" />
+                </div>
+              </td>
+              <td rowSpan={2 + (result.statusCount || 0)}>
+                <input type="text" />
+              </td>
+              <td rowSpan={2 + (result.statusCount || 0)}>
+                <input type="text" />
+              </td>
+
+              {months.map((_, index) => (
+                <td key={index}>
+                  <input type="number" />
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td>
+                <div className="kpi-factor-status"><input type="text" /></div>
+              </td>
+              {months.map((_, index) => (
+                <td key={index}>
+                  <input type="number" />
+                </td>
+              ))}
+            </tr>
+
+            {/* DILUAR STRUKTUR TABEL */}
+            {/* Logika tambah KPI Status */}
+            {Array.from({ length: result.statusCount || 0 }, (_, i) => (
+              <React.Fragment key={i}>
+                <tr>
+                  <td>New Status</td>
+
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+              </React.Fragment>
+            ))}
+
+           {/* Logika tambah KPI Factor Looping */}
+          {Array.from({ length: result.kpiFactorsCount }, (_, i) => (
+              <React.Fragment key={`${result.id}-${result.kpiFactors[i].id}`}>
+                <tr>
+                  <td
+                    rowSpan={
+                      2 +
+                      (result.kpiFactors[i].statusRows
+                        ? result.kpiFactors[i].statusRows.length
+                        : 0)
+                    }
+                  >
+                    New KPI Factor {result.kpiFactors[i].id}
+                    <div className="status">
+                      <button
+                        className="add-status-button"
+                        onClick={() => handleAddStatusForFactor(result.id, i)}
+                      >
+                        + Status
+                      </button>
+                      <button
+                        className="remove-status-button"
+                        onClick={() => handleRemoveStatusForFactor(result.id, i)}
+                      >
+                        - Status
+                      </button>
+                    </div>
+                    <button
+                      className="remove-factor-button"
+                      onClick={() => handleRemoveKpiFactor(result.id, result.kpiFactors[i].id)}
+                    >
+                      Delete KPI Factor
+                    </button>
+                </td>
+                  <td>
+                    <div className="kpi-factor-status"><input type="text" /></div>
+                  </td>
+                  <td
+                    rowSpan={
+                      2 +
+                      (result.kpiFactors[i].statusRows
+                        ? result.kpiFactors[i].statusRows.length
+                        : 0)
+                    }
+                  >
+                    <input type="text" />
+                  </td>
+                  <td
+                    rowSpan={
+                      2 +
+                      (result.kpiFactors[i].statusRows
+                        ? result.kpiFactors[i].statusRows.length
+                        : 0)
+                    }
+                  >
+                    <input type="text" />
+                  </td>
+
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <td>
+                    <div className="kpi-factor-status"><input type="text" /></div>
+                  </td>
+                  {months.map((_, index) => (
+                    <td key={index}>
+                      <input type="number" />
+                    </td>
+                  ))}
+                </tr>
+                {/* Tambahkan baris baru untuk "New Status" */}
+                {result.kpiFactors[i].statusRows.map((statusRow) => (
+                  <tr key={statusRow.id}>
+                    <td>New Status</td>
+                    {months.map((_, index) => (
+                      <td key={index}>
+                        <input type="number" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+
+          </React.Fragment>
+        ))}
+      </tbody>
+      <button className="save-table-data-button">
+        Save Table Data
+      </button>
+    </table>
+  );
+};
+
+export default SafetyTable;
+
+
+
+const SummaryTable = () => {
+  // State definitions (columns and rows as previously defined)
+
+  const handleAddColumnClick = () => {
+    const newColumnId = columns.length + 1;
+    setColumns([...columns, { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }]);
+
+    const updatedRows = rows.map(row => ({
+      ...row,
+      status: [
+        ...row.status,
+        {
+          name: <input type="text" placeholder={`Status Item ${newColumnId}`} />,
+          id: newColumnId,
+          statuses: [{ name: <input type="text" placeholder={`Quantity ${newColumnId}`} />, id: newColumnId }]
+        }
+      ]
+    }));
+
+    setRows(updatedRows);
+  };
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Summary Table</caption>
+        <thead>
+          <tr>
+          <th rowSpan="2">
+            Item Category Project
+            <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+              </div>
+              </th>
+            {columns.map(col => (
+              <th colSpan="2" key={col.id}><input type="text" placeholder={`Status Item ${col.id}`} /></th>
+            ))}
+            <th>Remarks</th>
+          </tr>
+          <tr>
+            {columns.map(col => (
+              <>
+                <th key={`item-${col.id}`}>{col.item}</th>
+                <th key={`quantity-${col.id}`}>{col.quantity}</th>
+              </>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <td>{row.item}</td>
+              {row.status.map((stat, statIndex) => (
+                <>
+                  <td key={`status-name-${stat.id}`}>{stat.name}</td>
+                  <td key={`status-quantity-${stat.id}`}>{stat.statuses[0].name}</td>
+                </>
+              ))}
+              <td>{row.remarks}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+        <div className="buttonsum" style={{ display: 'inline-block'}}>
+        <div className="save">
+          <button onClick={handleSaveData}>Save Table Data</button>
+        </div>
+        <div className="additem">
+          <button onClick={handleAddColumnClick} style={{ marginLeft:'5px'}} >Add Status Item</button> 
+        </div>
+      </div>
+  );
+};
+
+export default SummaryTable;

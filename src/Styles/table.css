@@ -1,4 +1,35 @@
-/* table.css */
+/* CSS untuk style judul h2 */
+h2.comparison-table {
+  background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+  border: 2px solid #fff; /* Tambahkan border putih 2px */
+  border-radius: 10px; /* Berikan radius 10px */
+  color: #fff; /* Warna teks putih */
+  padding: 10px 20px; /* Padding 10px atas/bawah, 20px kiri/kanan */
+  margin-bottom: 20px; /* Jarak bawah 20px */
+  text-align: center;
+}
+
+/* CSS untuk style tabel */
+table.comparison-table {
+  width: 100%;
+  border-collapse: collapse; /* Gabungkan border */
+  text-align: center;
+}
+
+th.comparison-table  {
+  background: #b90c0c; /* Gradien dari merah gelap ke merah terang */
+   padding: 8px; /* Padding 8px */
+   color: white;
+   text-align: center;
+   border: 2px solid #ffffff; /* Tambahkan border 1px dengan warna abu-abu */
+
+}
+
+ 
+
+
+ 
+/* default style */
 
 .result {
   display: flex;
@@ -21,7 +52,7 @@
   margin-top: 5px; /* Atur margin atas sesuai kebutuhan */
 }
 
-.add-result-button {
+.add-result-button, .remove-column-button {
   padding: 5px 10px;
   background: rgba(255, 255, 255, 0.5); /* Transparan putih */
   color: white;
@@ -29,10 +60,41 @@
   border-radius: 5px;
   cursor: pointer;
    margin-right: 5px;
+   margin-top: 5px;
+
 }
 
-.add-factor-button,
-.remove-factor-button {
+.add-item-button {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+   margin-right: 5px;
+   margin-top: 5px;
+}
+
+.add-cause-button {
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.5); /* Transparan putih */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+    margin-left: 5px;
+}
+
+input[type="text"].custominput {
+  width: 200px;
+  height: 150px; /* Atau nilai spesifik seperti 300px, 50em, dll */
+}
+
+
+
+
+.add-factor-button, 
+.remove-factor-button,.add-cause-button {
   margin-top: 5px;
   padding: 5px 10px;
   background: rgba(255, 0, 0, 0.651); /* Transparan merah */
@@ -137,6 +199,7 @@
   overflow-x: auto; /* Tambahkan scrollbar jika konten melebihi lebar */
   margin-left: 100px;
   color: #808080; /* Warna abu-abu */
+  margin-bottom: 20px;
 }
 
 .input-table-container button.editing {
@@ -183,6 +246,11 @@
     font-weight: bold;
   }
   
+  .chart-divider {
+    border-top: 2px   rgba(139, 0, 0, 0.7); /* Garis putus-putus merah gelap */
+    margin-top: 30px; /* Atur jarak antara grafik dan garis pembatas */
+  }
+
   .safety-table tbody tr:nth-child(even) {
     background-color: #f2f2f2;
   }
@@ -215,14 +283,61 @@
     color: #ff0000;
   }
 
+  .year-selector {
+    display: block; /* Mengubah display agar bisa menerapkan margin-top: auto */
+    margin-top: 62px; /* Memungkinkan jarak atas otomatis, tetapi biasanya digunakan dalam flexbox atau grid container */
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    padding: 10px; /* Menambahkan sedikit padding */
+    color: white; /* Mengubah warna teks menjadi putih */
+    border-radius: 5px; /* Memberikan border bulat */
+  }
+  
+
   .safety-table caption {
     background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
     color: white; /* Warna teks putih */
     font-size: 1.5rem; /* Ukuran font */
     padding: 10px; /* Padding */
     border-radius: 8px; /* Sudut melengkung */
-    margin-top: 40px;
+    margin-top: 46px;
   }
+
+  .styled-select {
+    margin-top: 7px;
+    width: 100%; /* Mengambil lebar penuh dari kontainer */
+    padding: 10px 15px; /* Padding untuk kenyamanan pengguna */
+    border: 1px solid #c65252; /* Batas sederhana */
+    border-radius: 5px; /* Border bulat */
+    background: white; /* Latar belakang putih */
+    color: #333; /* Warna teks */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Bayangan kotak untuk tampilan 3D ringan */
+    cursor: pointer; /* Mengubah cursor saat mengarahkan mouse */
+    appearance: none; /* Menghilangkan gaya bawaan browser */
+    -webkit-appearance: none; /* Menghilangkan gaya bawaan untuk Safari */
+    -moz-appearance: none; /* Menghilangkan gaya bawaan untuk Firefox */
+  }
+
+   
+  .filter-containerss {
+    display: flex;
+    margin-left: 1px;
+    margin-top: 70px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    border-radius: 5px;
+    width: calc(100% - 23px);
+    flex-direction: column;
+  }
+  
+  .styled-select:focus {
+    border-color: #80bdff; /* Warna border saat fokus */
+    outline: none; /* Menghilangkan outline bawaan */
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Menambahkan bayangan fokus */
+  }
+  
 
   /* table.css */
 
@@ -239,22 +354,85 @@
 }
 
  
-.save button {
-    background: linear-gradient(to right, #4CAF50, #008000); /* Gradien dari hijau ke hijau gelap */
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 10px;
-    width: 150px;
-
+.buttonsum {
+  display: inline-block;
+  width: 100%; /* Atur lebar kontainer menjadi 100% */
 }
+
+.save, .additem  {
+  display: inline-block;
+ }
+
+.save button, .additem button {
+  background: linear-gradient(to right, #4CAF50, #008000);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+  width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+}
+
+.comparison-chart-button {
+  background: linear-gradient(to right, #8b0000, #ff2e2e);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+  width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+}
+
+.comparison-chart-button:hover {
+  background: linear-gradient(to right, #6e0d0d, #cc1f1f);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+  width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+}
+
+.chart-button-second {
+  margin-left: 5px; /* Tambahkan margin kiri hanya pada tombol kedua */
+}
+
+.compare button {
+  background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradient dari merah tua ke merah terang */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+  width: 150px; /* Pastikan lebar ini sesuai dan tidak terlalu lebar */
+}
+
+.compare button:hover {
+  background: linear-gradient(to right, #a50000, #ff5c5c); /* Gradient merah tua hover ke merah terang hover */
+}
+
 
 .save button:hover {
-    background: linear-gradient(to right, #45a049, #007a29); /* Gradien hover dari hijau ke hijau gelap */
+  background: linear-gradient(to right, #45a049, #007a29);
 }
+
+.additem button {
+  background: linear-gradient(to right, #8b0000, #ff2e2e); /* Gradient dari merah tua ke merah terang */
+}
+
+.additem button:hover {
+  background: linear-gradient(to right, #a50000, #ff5c5c); /* Gradient merah tua hover ke merah terang hover */
+}
+
+
 
 
   

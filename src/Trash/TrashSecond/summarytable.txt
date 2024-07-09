@@ -1,0 +1,232 @@
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+
+const SummaryTable = () => {
+  const [columns, setColumns] = useState([
+    { id: 1, item: "Item 1", quantity: "Quantity 1" }
+  ]);
+
+  const [rows, setRows] = useState([
+    {
+      category: <input type="number" placeholder="Category 1" id={1} />,
+      status: [
+        {
+          name: <input type="number" placeholder="Item 1" />,
+          id: 1,
+          statuses: [{ name: <input type="number" placeholder="Quantity 1" />, id: 1 }],
+        },
+      ],
+      remarks:  <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>,
+    },
+  ]);
+
+
+
+  const handleDeleteClick = (index) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+        const newRows = [...rows];
+        newRows.splice(index, 1);
+        setRows(newRows);
+    }
+  };
+  
+
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (year) {
+      alert(`Data tabel disimpan untuk tahun ${year}`);
+    }
+  };
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      category: <input type="number" placeholder={`Category ${rows.length + 1}`} id={rows.length + 1} />,
+      status: columns.map(col => ({
+        name: <input type="number" placeholder={`Item ${col.id}`} />,
+        id: col.id,
+        statuses: [{ name: <input type="number" placeholder={`Quantity ${col.id}`} />, id: col.id }],
+      })),
+      remarks: <textarea className="custominput" rows="8" cols="30" placeholder="Remarks"></textarea>,
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleAddColumnClick = () => {
+    // Dapatkan ID terbesar dari kolom yang sudah ada
+    const maxColumnId = Math.max(...columns.map(col => col.id));
+    // Hitung ID baru dengan menambahkan 1 dari ID terbesar
+    const newColumnId = maxColumnId + 1;
+  
+    // Tambahkan kolom baru dengan ID yang sesuai
+    setColumns([...columns, { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }]);
+  
+    // Tambahkan status baru ke setiap baris dengan ID kolom yang sesuai
+    const updatedRows = rows.map(row => ({
+      ...row,
+      status: [
+        ...row.status,
+        {
+          name: <input type="number" placeholder={`Item ${newColumnId}`} />,
+          id: newColumnId,
+          statuses: [{ name: <input type="number" placeholder={`Quantity ${newColumnId}`} />, id: newColumnId }]
+        }
+      ]
+    }));
+  
+    setRows(updatedRows);
+  };
+  
+  const handleRemoveColumnClick = (colId) => {
+    // Temukan status category dengan ID yang akan dihapus
+    const statusItemCount = rows[0].status.length;
+    if (statusItemCount === 1) {
+      alert("At least you should have 1 Status Item and no less!");
+      return;
+    }
+  
+    // Hapus kolom dengan ID yang sesuai
+    const updatedColumns = columns.filter(col => col.id !== colId);
+    setColumns(updatedColumns);
+    
+    // Loop melalui setiap baris dan hapus sel <td> yang sesuai dengan ID kolom yang dihapus
+    const updatedRows = rows.map(row => {
+      const updatedStatus = row.status.filter(stat => stat.id !== colId);
+      return { ...row, status: updatedStatus };
+    });
+    setRows(updatedRows);
+  };
+
+  const handleCompareData = () => {
+    if (columns.length < 2) {
+      alert("You need at least 2 Status Items to compare!");
+      return;
+    }
+
+    // Buat header untuk tabel baru
+    const comparisonHeader = [];
+    const comparisonSubheader = [];
+  
+    // Status Item pertama untuk dibandingkan dengan yang lainnya
+    const firstColumn = columns[0];
+  
+    // Loop untuk membuat header berdasarkan kombinasi kolom status dengan Status Item pertama
+    columns.slice(1).forEach(col => {
+      comparisonHeader.push(`Status Item ${firstColumn.id} vs Status Item ${col.id}`);
+      comparisonSubheader.push(`Item ${firstColumn.id} vs Item ${col.id}`, `Quantity ${firstColumn.id} vs Quantity ${col.id}`);
+    });
+  
+    // Buat baris untuk tabel baru
+    const comparisonRows = rows.map(row => {
+      const resultRow = [];
+      const firstItem = row.status.find(status => status.id === firstColumn.id);
+  
+      columns.slice(1).forEach(col => {
+        const otherItem = row.status.find(status => status.id === col.id);
+        const itemComparison = `${firstItem.name.props.placeholder} vs ${otherItem.name.props.placeholder}`;
+        const quantityComparison = `${firstItem.statuses[0].name.props.placeholder} vs ${otherItem.statuses[0].name.props.placeholder}`;
+        resultRow.push(itemComparison, quantityComparison);
+      });
+      return { category: row.category.props.placeholder, data: resultRow };
+    });
+  
+    // Buat tabel perbandingan menggunakan HTML
+    let comparisonTableHTML = "<h2 class='comparison-table'>Comparison Table</h2><table class='comparison-table' border='1'><thead><tr>";
+    comparisonTableHTML += `<th rowspan="2" class='comparison-table'>Item Category Project</th>`;
+    comparisonHeader.forEach(header => {
+      comparisonTableHTML += `<th colspan="2" class='comparison-table'>${header}</th>`;
+    });
+    comparisonTableHTML += "</tr><tr>";
+    comparisonSubheader.forEach(subheader => {
+      comparisonTableHTML += `<th class='comparison-table'>${subheader}</th>`;
+    });
+    comparisonTableHTML += "</tr></thead><tbody>";
+  
+    comparisonRows.forEach((row, index, array) => {
+      comparisonTableHTML += "<tr>";
+      if (index === 0 || array[index - 1].category !== row.category) { // Check if new category
+        const rowspan = array.filter(r => r.category === row.category).length;
+        comparisonTableHTML += `<td rowspan="${rowspan}" class='comparison-table'>${row.category}</td>`;
+      }
+      row.data.forEach(cell => {
+        comparisonTableHTML += `<td class='comparison-table'>${cell}</td>`;
+      });
+      comparisonTableHTML += "</tr>";
+    });
+  
+    comparisonTableHTML += "</tbody></table>";
+
+    // Sisipkan tabel perbandingan di bawah button "Compare Data"
+    const buttonContainer = document.querySelector('.buttonsum');
+    buttonContainer.insertAdjacentHTML('afterend', comparisonTableHTML);
+};
+
+
+  
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Summary Table</caption>
+        <thead>
+          <tr>
+          <th rowSpan="2">
+            Item Category Project
+            <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+              </div>
+              </th>
+            {columns.map(col => (
+              <th colSpan="2" key={col.id}><input type="text" placeholder={`Status Item ${col.id}`} />
+               <div className="removecol">
+               <button className="remove-column-button" onClick={() => handleRemoveColumnClick(col.id)}>-</button>
+              </div>
+              </th>
+            ))}
+            <th rowSpan="2">Remarks</th>
+          </tr>
+          <tr>
+            {columns.map(col => (
+              <>
+                <th key={`item-${col.id}`}>{col.item}</th>
+                <th key={`quantity-${col.id}`}>{col.quantity}</th>
+              </>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <td>{row.category}
+                <div className="add">
+                  <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>- category</button>
+                  </div>
+                          </td>
+              {row.status.map((stat, statIndex) => (
+                <>
+                  <td key={`status-name-${stat.id}`}>{stat.name}</td>
+                  <td key={`status-quantity-${stat.id}`}>{stat.statuses[0].name}</td>
+                </>
+              ))}
+              <td>{row.remarks}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+        <div className="buttonsum" style={{ display: 'inline-block'}}>
+        <div className="save">
+          <button onClick={handleSaveData} style={{ marginRight:'5px'}} >Save Data</button>
+        </div>
+        <div className="compare">
+          <button onClick={handleCompareData}>Compare Data</button>
+        </div>
+        <div className="additem">
+          <button onClick={handleAddColumnClick} style={{ marginLeft:'5px'}} >Add Status Item</button> 
+        </div>
+      </div>
+      </div>
+  );
+};
+
+export default SummaryTable;

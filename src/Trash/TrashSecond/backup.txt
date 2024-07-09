@@ -1,0 +1,392 @@
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+const SafetyTable = () => {
+  const [lastRowId, setLastRowId] = useState(1);
+  const [lastFactorId, setLastFactorId] = useState(1);
+  const [rows, setRows] = useState([
+    {
+      id: 1,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+          unit: "", // Nilai unit default
+          target: "", // Nilai target default
+          Plan: {
+            January: 0,
+            February: 0,
+            March: 0,
+            April: 0,
+            May: 0,
+            June: 0,
+            July: 0,
+            August: 0,
+            September: 0,
+            October: 0,
+            November: 0,
+            December: 0,
+          },
+          Actual: {
+            January: 0,
+            February: 0,
+            March: 0,
+            April: 0,
+            May: 0,
+            June: 0,
+            July: 0,
+            August: 0,
+            September: 0,
+            October: 0,
+            November: 0,
+            December: 0,
+          },
+        },
+      ],
+    },
+  ]);
+
+  const handleDeleteClick = (rowIndex) => {
+    if (rows.length === 1) {
+      alert("Anda harus memiliki setidaknya satu baris!");
+      return;
+    }
+
+    const newRows = rows.filter((_, index) => index !== rowIndex);
+    setRows(newRows);
+  };
+
+  const handleDeleteFactorClick = (rowIndex, factorIndex) => {
+    if (rows[rowIndex].factors.length === 1) {
+      alert("Setiap baris harus memiliki setidaknya satu faktor!");
+      return;
+    }
+
+    const newRows = [...rows];
+    newRows[rowIndex].factors = newRows[rowIndex].factors.filter(
+      (_, index) => index !== factorIndex
+    );
+    setRows(newRows);
+  };
+
+  const handleAddRowClick = () => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+
+    const newRow = {
+      id: newRowId,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+          unit: "", // Nilai unit default
+          target: "", // Nilai target default
+          Plan: {
+            January: 0,
+            February: 0,
+            March: 0,
+            April: 0,
+            May: 0,
+            June: 0,
+            July: 0,
+            August: 0,
+            September: 0,
+            October: 0,
+            November: 0,
+            December: 0,
+          },
+          Actual: {
+            January: 0,
+            February: 0,
+            March: 0,
+            April: 0,
+            May: 0,
+            June: 0,
+            July: 0,
+            August: 0,
+            September: 0,
+            October: 0,
+            November: 0,
+            December: 0,
+          },
+        },
+      ],
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleAddFactorClick = (rowIndex) => {
+    const newFactorId = lastFactorId + 1;
+    setLastFactorId(newFactorId);
+
+    const newFactor = {
+      id: newFactorId,
+      name: "",
+      statuses: [{ plan: "", actual: "", id: 1 }],
+      unit: "", // Nilai unit default
+      target: "", // Nilai target default
+      Plan: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+      Actual: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+    };
+
+    const newRows = [...rows];
+    newRows[rowIndex].factors.push(newFactor); // Tambahkan faktor baru ke baris yang sesuai
+
+    // Setel nilai unit dan target faktor baru menjadi string kosong
+    newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].unit = "";
+    newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].target = "";
+
+    setRows(newRows);
+  };
+
+  const handleInputChange = (rowIndex, field, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex][field] = value;
+    setRows(newRows);
+  };
+
+  const handleFactorInputChange = (rowIndex, factorIndex, field, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex][field] = value;
+    setRows(newRows);
+  };
+
+  const handleFactorChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].name = value;
+    setRows(newRows);
+  };
+  
+  const handleUnitChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].unit = value;
+    setRows(newRows);
+  };
+  
+  const handleTargetChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].target = value;
+    setRows(newRows);
+  };
+  
+  const handlePlanChange = (rowIndex, factorIndex, statusIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].statuses[statusIndex].plan = value;
+    setRows(newRows);
+  };
+  
+  const handleActualChange = (rowIndex, factorIndex, statusIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].statuses[statusIndex].actual = value;
+    setRows(newRows);
+  };
+  
+
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    const itemName = prompt("Simpan data untuk item apa? Pilih antara 'S', 'E', 'Q', 'C', atau 'D'.", "S");
+    const validItems = ["S", "E", "Q", "C", "D"];
+
+    if (!validItems.includes(itemName)) {
+      alert("Pilihan item tidak valid. Harus salah satu dari 'S', 'E', 'Q', 'C', atau 'D'.");
+      return;
+    }
+
+    if (year && itemName) {
+      const yearlyData = {
+        Year: parseInt(year, 10),
+        items: [
+          {
+            Name: itemName,
+            results: rows.map(row => ({
+              Name: row.result,
+              factors: row.factors.map(factor => ({
+                Title: factor.name,
+                Unit: factor.unit, // Mengambil nilai unit dari faktor
+                Target: factor.target, // Mengambil nilai target dari faktor
+                planned: {
+                  Monthly: [row.Plan],
+                },
+                actual: {
+                  Monthly: [row.Actual],
+                },
+              })),
+            })),
+          },
+        ],
+      };
+
+      // Simpan data ke database atau lakukan operasi lainnya
+      console.log(yearlyData);
+    }
+  };
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Input All Data Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="3">
+              KPI Result
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>
+                  +
+                </button>
+              </div>
+            </th>
+            <th colSpan="1">KPI Factor</th>
+            <th colSpan="2" rowSpan="2">Status</th>
+            <th rowSpan="3">Unit</th>
+            <th rowSpan="3">Target</th>
+            <th colSpan="12">Bulan</th>
+          </tr>
+          <tr>
+            <th>KPI Factor Name</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Mar</th>
+            <th>Apr</th>
+            <th>Mei</th>
+            <th>Jun</th>
+            <th>Jul</th>
+            <th>Ags</th>
+            <th>Sept</th>
+            <th>Oct</th>
+            <th>Nov</th>
+            <th>Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <React.Fragment key={row.id}>
+              {row.factors.map((factor, factorIndex) => (
+                <React.Fragment key={`${row.id}-${factor.id}`}>
+                  {factor.statuses.map((status, statusIndex) => (
+                    <React.Fragment key={`${row.id}-${factor.id}-${status.id}`}>
+                      <tr>
+                        {factorIndex === 0 && statusIndex === 0 && (
+                          <td rowSpan={row.factors.reduce((total, current) => total + current.statuses.length * 2, 0)}>
+                            <textarea
+                              id={`result${row.id}`}
+                              name={`result${row.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Result ${rowIndex + 1}`}
+                              value={row.result} // Menyesuaikan dengan struktur data
+                              onChange={(e) => handleInputChange(rowIndex, e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>
+                                - Result
+                              </button>
+                            </div>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleAddFactorClick(rowIndex)}>
+                                + Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        {statusIndex === 0 && (
+                          <td rowSpan={factor.statuses.length * 2}>
+                            <textarea
+                              id={`factor${factor.id}`}
+                              name={`factor${factor.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Factor ${factorIndex + 1}`}
+                              value={factor.name} // Menyesuaikan dengan struktur data
+                              onChange={(e) => handleFactorChange(rowIndex, factorIndex, e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteFactorClick(rowIndex, factorIndex)}>
+                                - Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        <td colSpan={2}>Plan</td>
+                        <td>
+                          <input
+                            type="text"
+                            value={factor.unit} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleUnitChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleUnitChange dengan index faktor yang sesuai
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            value={factor.target} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleTargetChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleTargetChange dengan index faktor yang sesuai
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={status.plan} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handlePlanChange(rowIndex, factorIndex, statusIndex, e.target.value)}
+                          />
+                        </td>
+                        {/* Menambahkan input untuk bulan-bulan lainnya */}
+                      </tr>
+                      <tr>
+                        <td colSpan={2}>Actual</td>
+                        <td>
+                          <input
+                            type="number"
+                            value={status.actual} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, statusIndex, e.target.value)}
+                          />
+                        </td>
+                        {/* Menambahkan input untuk bulan-bulan lainnya */}
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      <div className="save">
+        <button onClick={handleSaveData}>Save Table Data</button>
+      </div>
+    </div>
+  );
+  
+};
+
+export default SafetyTable;

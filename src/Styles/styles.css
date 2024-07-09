@@ -53,11 +53,14 @@ html {
   transition-delay: 0.3s; /* Transition delay 0.5 detik */
 }
 
+.logo-container:hover{
+  cursor: pointer;
+}
+
 .logo-text {
   color: white;
   margin: 0; /* Menghapus margin dari H2 */
-  font-size: 15px; /* Atur ukuran font */
-  opacity: 0; /* Mulai dengan opacity 0 */
+   opacity: 0; /* Mulai dengan opacity 0 */
   transition: opacity 0.3s ease; /* Transisi opacity dengan durasi 0.5 detik */
 }
 
@@ -68,14 +71,15 @@ html {
 
 .logosidebar {
   position: absolute; /* Tetapkan posisi absolut */
-  top: 450px; /* Atur jarak dari atas */
-  left: 25px; /* Atur agar posisinya tetap di kiri */
+  top: 580px; /* Atur jarak dari atas */
+  bottom: auto;
+  left: 55px; /* Atur agar posisinya tetap di kiri */
 }
 
 .logo-text {
   color: white;
   margin: 0; /* Menghapus margin dari H2 */
-  font-size: 15px; /* Atur ukuran font */
+  font-size: 20px; /* Atur ukuran font */
   opacity: 0; /* Mulai dengan opacity 0 */
   transition: opacity 0.2s ease; /* Transisi opacity dengan durasi 0.5 detik */
 }
@@ -121,7 +125,7 @@ html {
 .nav .main-menu .menu-item {
   padding: 10px;
   cursor: pointer;
-  font-size: 17px;
+  font-size: 18px;
   color: #fff;
 
 }
@@ -144,7 +148,7 @@ html {
   color: #ffffffc2;
   text-decoration: none;
   display: block;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 .nav .main-menu .menu-item a.active {
@@ -284,14 +288,13 @@ html {
 }
 
 .logo-container img {
-  width: 45px;
+  width: 50px;
   margin-bottom: 5px; /* Tambahkan jarak antara gambar dan teks */
 }
 
  .logosidebar img {
-  width: 230px;
-  
- }
+  width: 170px;
+  }
 
 
 
@@ -383,8 +386,7 @@ input{
   justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
-  padding-top: 11px;
-  padding-left: 90px;
+   padding-left: 90px;
   font-size: 16px;
   transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
 
@@ -395,9 +397,7 @@ input{
   justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
-  padding-top: 10px;
-  padding-right: 40px;
-
+   padding-right: 40px;
   padding-left: 90px;
   font-size: 16px;
   transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
@@ -408,11 +408,10 @@ input{
   justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
-  padding-top: 10px;
+   padding-right: 40px;
   padding-left: 90px;
   font-size: 16px;
   transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
-  padding-right: 40px;
 
 }
 
@@ -421,11 +420,10 @@ input{
   justify-content: flex-end; /* Menjaga semua item di bagian akhir top bar (kanan) */
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
-  padding-top: 10px;
-  padding-left: 100px;
-  padding-right: 40px;
-
+   padding-right: 40px;
+  padding-left: 90px;
   font-size: 16px;
+  transition: left 0.5s ease; /* Transisi delay untuk perubahan left saat sidebar di-pinned */
 }
 
 .top-bar-content3 {
@@ -434,8 +432,7 @@ input{
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
   padding-left: 100px;
-  padding-top: 10px;
-  padding-right: 40px;
+   padding-right: 40px;
 
   font-size: 16px;
 }
@@ -446,8 +443,7 @@ input{
   align-items: center; /* Menjaga item tetap berada di tengah secara vertikal */
   gap: 40px; /* Memberikan jarak antar item */
   padding-left: 100px;
-  padding-top: 10px;
-  font-size: 16px;
+   font-size: 16px;
   padding-right: 40px;
 
 }
@@ -460,8 +456,7 @@ input{
   padding-right: 40px;
 
   padding-left: 100px;
-  padding-top: 10px;
-  font-size: 16px;
+   font-size: 16px;
 }
 
 .top-bar-content6 {
@@ -471,8 +466,7 @@ input{
   gap: 40px; /* Memberikan jarak antar item */
   padding-left: 100px;
   padding-right: 40px;
-  padding-top: 10px;
-  font-size: 16px;
+   font-size: 16px;
 }
 
 .active-mode {

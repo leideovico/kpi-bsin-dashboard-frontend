@@ -1,0 +1,226 @@
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+const EditUploadTableSummary = () => {
+  const [projectName, setProjectName] = useState(""); // State untuk menyimpan nilai dari input field nama proyek
+  const [columns, setColumns] = useState([{ id: 1, item: "Item 1", quantity: "Quantity 1" }]);
+  const [rows, setRows] = useState([
+    {
+      category: "",
+      status: [{ name: "", quantity: "", id: 1, statuses: [{ name: "", id: 1 }] }],
+      remarks: ""
+    }
+  ]);
+
+  const handleDeleteClick = (index) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+      const newRows = [...rows];
+      newRows.splice(index, 1);
+      setRows(newRows);
+    }
+  };
+
+  const handleChangeCategory = (e, rowIndex) => {
+    const { value } = e.target;
+    const updatedRows = [...rows];
+    updatedRows[rowIndex].category = value;
+    setRows(updatedRows);
+  };
+
+  const handleInputChange = (e, rowIndex, statIndex, type) => {
+    const { value } = e.target;
+    const updatedRows = [...rows];
+    if (type === "name") {
+      updatedRows[rowIndex].status[statIndex].name = value || ""; // Set nilai default ke string kosong jika tidak terdefinisi
+    } else if (type === "quantity") {
+      updatedRows[rowIndex].status[statIndex].statuses[0].name = value || ""; // Set nilai default ke string kosong jika tidak terdefinisi
+    }
+    setRows(updatedRows);
+  };
+  
+  
+  
+  
+  
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      category: "",
+      status: columns.map((col) => ({ name: "", quantity: "", id: col.id, statuses: [{ name: "", id: col.id }] })),
+      remarks: ""
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleAddColumnClick = () => {
+    const maxColumnId = Math.max(...columns.map((col) => col.id));
+    const newColumnId = maxColumnId + 1;
+    setColumns([...columns, { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }]);
+    const updatedRows = rows.map((row) => ({
+      ...row,
+      status: [...row.status, { name: "", quantity: "", id: newColumnId, statuses: [{ name: "", id: newColumnId }] }]
+    }));
+    setRows(updatedRows);
+  };
+
+  const handleRemoveColumnClick = (colId) => {
+    const statusItemCount = rows[0].status.length;
+    if (statusItemCount === 1) {
+      alert("At least you should have 1 Status Item and no less!");
+      return;
+    }
+    const updatedColumns = columns.filter((col) => col.id !== colId);
+    setColumns(updatedColumns);
+    const updatedRows = rows.map((row) => {
+      const updatedStatus = row.status.filter((stat) => stat.id !== colId);
+      return { ...row, status: updatedStatus };
+    });
+    setRows(updatedRows);
+  };
+
+  const handlePostProject = () => {
+    const projectData = {
+      Name: projectName,
+      Item: rows.map(row => {
+        const itemName = row.status[0]?.name; // Menggunakan row.status[0]?.name langsung tanpa props.value karena input type="number" tidak memiliki props.value
+        return itemName ? parseInt(itemName) : 0;
+      }),
+      Quantity: rows.map(row => {
+        const quantityName = row.status[0]?.statuses[0]?.name; // Menggunakan row.status[0]?.statuses[0]?.name langsung tanpa props.value karena input type="number" tidak memiliki props.value
+        return quantityName ? parseInt(quantityName) : 0;
+      })
+    };
+  
+    console.log(projectData);
+  
+    const authToken = localStorage.getItem("authToken");
+  
+    console.log("Posting project data:", JSON.stringify(projectData)); // Log JSON message before posting
+  
+    fetch("http://localhost:8080/kpi/project", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify(projectData)
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error("Failed to post project data");
+        }
+      })
+      .then((data) => {
+        console.log("Project data posted successfully:", data); // Log posted data after successful response
+        // Optionally, perform any other actions after successfully posting project data
+        alert("Data berhasil disimpan!"); // Prompt untuk memberitahu pengguna bahwa data berhasil disimpan
+      })
+      .catch((error) => {
+        console.error("Error posting project data:", error.message);
+        // Optionally, handle the error in UI or perform any other actions
+      });
+  };
+  
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Summary Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="2">
+              Item Category Project
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>
+                  +
+                </button>
+              </div>
+            </th>
+            {columns.map((col) => (
+              <th colSpan="2" key={col.id}>
+                <input type="text" placeholder={`Status Item ${col.id}`} />
+                <div className="removecol">
+                  <button className="remove-column-button" onClick={() => handleRemoveColumnClick(col.id)}>
+                    -
+                  </button>
+                </div>
+              </th>
+            ))}
+            <th rowSpan="2">Remarks</th>
+          </tr>
+          <tr>
+            {columns.map((col) => (
+              <>
+                <th key={`item-${col.id}`}>{col.item}</th>
+                <th key={`quantity-${col.id}`}>{col.quantity}</th>
+              </>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <td>
+              <input
+                  type="text"
+                  placeholder="Project Name"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                />
+                <div className="add">
+                  <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>
+                    - category
+                  </button>
+                </div>
+              </td>
+              {row.status.map((stat, statIndex) => (
+                <>
+                  <td key={`status-name-${stat.id}`}>
+                    <input
+                      type="number"
+                      placeholder={`Item ${stat.id}`}
+                      value={stat.name}
+                      onChange={(e) => handleInputChange(e, rowIndex, statIndex, "name")}
+                    />
+                  </td>
+                  <td key={`status-quantity-${stat.id}`}>
+                    <input
+                      type="number"
+                      placeholder={`Quantity ${stat.id}`}
+                      value={stat.statuses[0].name}
+                      onChange={(e) => handleInputChange(e, rowIndex, statIndex, "quantity")}
+                    />
+                  </td>
+                </>
+              ))}
+              <td>
+                <textarea
+                  className="custominput"
+                  rows="8"
+                  cols="30"
+                  placeholder="Remarks"
+                  value={row.remarks}
+                  onChange={(e) => {
+                    const updatedRows = [...rows];
+                    updatedRows[rowIndex].remarks = e.target.value;
+                    setRows(updatedRows);
+                  }}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="additem">
+        <button onClick={handleAddColumnClick} style={{ marginLeft: "5px" }}>
+          Add Status Item
+        </button>
+        <button onClick={handlePostProject}>Save Project Data</button>
+      </div>
+    </div>
+  );
+};
+
+export default EditUploadTableSummary;

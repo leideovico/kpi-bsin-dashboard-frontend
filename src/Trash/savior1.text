@@ -1,0 +1,3382 @@
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+const SafetyTable = () => {
+  const [lastRowId, setLastRowId] = useState(1);
+  const [lastFactorId, setLastFactorId] = useState(1);
+
+  const handleDeleteClick = (rowIndex) => {
+    if (rows.length === 1) {
+      alert('Anda harus memiliki setidaknya satu baris!');
+      return;
+    }
+  
+    const newRows = rows.filter((_, index) => index !== rowIndex);
+    setRows(newRows);
+  };
+  
+
+  const handleDeleteFactorClick = (rowIndex, factorIndex) => {
+    if (rows[rowIndex].factors.length === 1) {
+      alert('Setiap baris harus memiliki setidaknya satu faktor!');
+      return;
+    }
+  
+    const newRows = [...rows];
+    newRows[rowIndex].factors = newRows[rowIndex].factors.filter((_, index) => index !== factorIndex);
+    setRows(newRows);
+  };
+  
+  const [rows, setRows] = useState([
+    {
+      id: 1,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+        },
+      ],
+      unit: "",
+      target: "",
+      Plan: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+      Actual: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+    },
+  ]);
+
+  const handleAddRowClick = () => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+
+    const newRow = {
+      id: newRowId,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+        },
+      ],
+      unit: "",
+      target: "",
+      Plan: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+      Actual: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleInputChange = (rowIndex, field, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex][field] = value;
+    setRows(newRows);
+  };
+
+  const handleUnitChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].unit = value;
+    setRows(newRows);
+  };
+  
+  const handleTargetChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].target = value;
+    setRows(newRows);
+  };
+  
+
+  const handleFactorChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].name = value;
+    setRows(newRows);
+  };
+
+  const handlePlanChange = (rowIndex, factorIndex, month, value) => {
+    const newRows = [...rows];
+    if (!newRows[rowIndex].factors[factorIndex].Plan) {
+      newRows[rowIndex].factors[factorIndex].Plan = {}; // Inisialisasi objek Plan jika belum ada
+    }
+    newRows[rowIndex].factors[factorIndex].Plan[month] = parseInt(value, 10);
+    setRows(newRows);
+  };
+  
+  const handleActualChange = (rowIndex, factorIndex, month, value) => {
+    const newRows = [...rows];
+    if (!newRows[rowIndex].factors[factorIndex].Actual) {
+      newRows[rowIndex].factors[factorIndex].Actual = {}; // Inisialisasi objek Actual jika belum ada
+    }
+    newRows[rowIndex].factors[factorIndex].Actual[month] = parseInt(value, 10);
+    setRows(newRows);
+  };
+  
+  
+  
+
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    const itemName = prompt("Simpan data untuk item apa? Pilih antara 'S', 'E', 'Q', 'C', atau 'D'.", "S");
+    const validItems = ["S", "E", "Q", "C", "D"];
+  
+    if (!validItems.includes(itemName)) {
+      alert("Pilihan item tidak valid. Harus salah satu dari 'S', 'E', 'Q', 'C', atau 'D'.");
+      return;
+    }
+  
+    if (year && itemName) {
+      const yearlyData = {
+        Year: parseInt(year, 10),
+        items: [
+          {
+            Name: itemName,
+            results: rows.map((row, rowIndex) => ({
+              Name: row.result,
+              factors: row.factors.map((factor, factorIndex) => ({
+                Title: factor.name,
+                Unit: factor.unit,
+                Target: factor.target,
+                planned: {
+                  Monthly: [
+                    {
+                      January: parseInt(row.factors[factorIndex]?.Plan?.January || 0, 10),
+                      February: parseInt(row.factors[factorIndex]?.Plan?.February || 0, 10),
+                      March: parseInt(row.factors[factorIndex]?.Plan?.March || 0, 10),
+                      April: parseInt(row.factors[factorIndex]?.Plan?.April || 0, 10),
+                      May: parseInt(row.factors[factorIndex]?.Plan?.May || 0, 10),
+                      June: parseInt(row.factors[factorIndex]?.Plan?.June || 0, 10),
+                      July: parseInt(row.factors[factorIndex]?.Plan?.July || 0, 10),
+                      August: parseInt(row.factors[factorIndex]?.Plan?.August || 0, 10),
+                      September: parseInt(row.factors[factorIndex]?.Plan?.September || 0, 10),
+                      October: parseInt(row.factors[factorIndex]?.Plan?.October || 0, 10),
+                      November: parseInt(row.factors[factorIndex]?.Plan?.November || 0, 10),
+                      December: parseInt(row.factors[factorIndex]?.Plan?.December || 0, 10),
+                    }
+                  ]
+                },
+                actual: {
+                  Monthly: [
+                    {
+                      January: parseInt(row.factors[factorIndex]?.Actual?.January || 0, 10),
+                      February: parseInt(row.factors[factorIndex]?.Actual?.February || 0, 10),
+                      March: parseInt(row.factors[factorIndex]?.Actual?.March || 0, 10),
+                      April: parseInt(row.factors[factorIndex]?.Actual?.April || 0, 10),
+                      May: parseInt(row.factors[factorIndex]?.Actual?.May || 0, 10),
+                      June: parseInt(row.factors[factorIndex]?.Actual?.June || 0, 10),
+                      July: parseInt(row.factors[factorIndex]?.Actual?.July || 0, 10),
+                      August: parseInt(row.factors[factorIndex]?.Actual?.August || 0, 10),
+                      September: parseInt(row.factors[factorIndex]?.Actual?.September || 0, 10),
+                      October: parseInt(row.factors[factorIndex]?.Actual?.October || 0, 10),
+                      November: parseInt(row.factors[factorIndex]?.Actual?.November || 0, 10),
+                      December: parseInt(row.factors[factorIndex]?.Actual?.December || 0, 10),
+                    }
+                  ]
+                },
+                
+              })),
+            })),
+          },
+        ],
+      };
+
+
+
+    console.log("Data tabel pada tahun yang diinput secara keseluruhan:", yearlyData);
+
+    const authToken = localStorage.getItem("authToken");
+
+    fetch("http://localhost:8080/kpi/yearly/entire", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify(yearlyData),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed to save yearly data");
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Yearly data saved successfully:", data);
+        alert(`Data tabel disimpan untuk item ${itemName} tahun ${year}`);
+      })
+      .catch(error => {
+        console.error("Error saving yearly data:", error);
+        alert("Anda sudah menginput data pada tahun tersebut. Anda bisa mengedit data pada tabel yang sudah disimpan.");
+      });
+  }
+};
+
+const handleAddFactorClick = (rowIndex) => {
+  const newFactorId = lastFactorId + 1;
+  setLastFactorId(newFactorId);
+
+  const newFactor = {
+    id: newFactorId,
+    name: "",
+    statuses: [{ plan: "", actual: "", id: 1 }],
+    unit: "", // Nilai unit default
+    target: "", // Nilai target default
+    Plan: {
+      January: 0,
+      February: 0,
+      March: 0,
+      April: 0,
+      May: 0,
+      June: 0,
+      July: 0,
+      August: 0,
+      September: 0,
+      October: 0,
+      November: 0,
+      December: 0,
+    },
+    Actual: {
+      January: 0,
+      February: 0,
+      March: 0,
+      April: 0,
+      May: 0,
+      June: 0,
+      July: 0,
+      August: 0,
+      September: 0,
+      October: 0,
+      November: 0,
+      December: 0,
+    },
+  };
+
+  const newRows = [...rows];
+  newRows[rowIndex].factors.push(newFactor); // Tambahkan faktor baru ke baris yang sesuai
+
+  // Setel nilai unit dan target faktor baru menjadi string kosong
+  newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].unit = "";
+  newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].target = "";
+
+  setRows(newRows);
+};
+  
+  
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Input All Data Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="3">
+              KPI Result
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>
+                  +
+                </button>
+              </div>
+            </th>
+            <th colSpan="1">KPI Factor</th>
+            <th colSpan="2" rowSpan="2">Status</th>
+            <th rowSpan="3">Unit</th>
+            <th rowSpan="3">Target</th>
+            <th colSpan="12">Bulan</th>
+          </tr>
+          <tr>
+            <th>KPI Factor Name</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Mar</th>
+            <th>Apr</th>
+            <th>Mei</th>
+            <th>Jun</th>
+            <th>Jul</th>
+            <th>Ags</th>
+            <th>Sept</th>
+            <th>Oct</th>
+            <th>Nov</th>
+            <th>Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <React.Fragment key={row.id}>
+              {row.factors.map((factor, factorIndex) => (
+                <React.Fragment key={`${row.id}-${factor.id}`}>
+                  {factor.statuses.map((status, statusIndex) => (
+                    <React.Fragment key={`${row.id}-${factor.id}-${status.id}`}>
+                      <tr>
+                        {factorIndex === 0 && statusIndex === 0 && (
+                          <td rowSpan={row.factors.reduce((total, current) => total + current.statuses.length * 2, 0)}>
+                            <textarea
+                              id={`result${row.id}`}
+                              name={`result${row.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Result ${rowIndex + 1}`}
+                              onChange={(e) => handleInputChange(rowIndex, "result", e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>
+                                - Result
+                              </button>
+                            </div>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleAddFactorClick(rowIndex)}>
+                                + Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        {statusIndex === 0 && (
+                          <td rowSpan={factor.statuses.length * 2}>
+                            <textarea
+                              id={`factor${factor.id}`}
+                              name={`factor${factor.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Factor ${factorIndex + 1}`}
+                              onChange={(e) => handleFactorChange(rowIndex, factorIndex, e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteFactorClick(rowIndex, factorIndex)}>
+                                - Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        <td colSpan={2}>Plan</td>
+                        <td rowSpan={2}>
+                        <input
+                            type="text"
+                            value={factor.unit} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleUnitChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleUnitChange dengan index faktor yang sesuai
+                          />
+                    </td>
+                    <td rowSpan={2}>
+                    <input
+                            type="text"
+                            value={factor.target} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleTargetChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleTargetChange dengan index faktor yang sesuai
+                          />
+                    </td>
+                     <td>
+                     <input
+                        type="number"
+                        value={row.factors[factorIndex]?.Plan?.January || ''}
+                        onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'January', e.target.value)}
+                      />
+                    </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.February || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'February', e.target.value)}
+                          />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.March || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'March', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.April || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'April', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.May || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'May', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.June || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'June', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.July || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'July', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.August || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'August', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.September || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'September', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.October || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'October', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.November || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'November', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.December || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'December', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>Actual</td>
+                      <td>
+                      <input
+                        type="number"
+                        value={row.factors[factorIndex]?.Actual?.January || ''}
+                        onChange={(e) => handleActualChange(rowIndex, factorIndex, 'January', e.target.value)}
+                      />
+                      </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.February || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'February', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.March || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'March', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.April || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'April', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.May || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'May', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.June || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'June', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.July || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'July', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.August || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'August', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.September || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'September', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.October || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'October', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.November || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'November', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.December || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'December', e.target.value)}
+                            />
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      <div className="save">
+        <button onClick={handleSaveData}>Save Table Data</button>
+      </div>
+    </div>
+  );
+};
+
+export default SafetyTable;
+
+=====
+
+SavedSafetTableLast.jsx
+
+
+import React, { useState, useEffect } from 'react';
+import "../Styles/saved-table.css";
+
+const SavedSafetyTable = () => {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState('S');
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchName, setSearchName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedData, setEditedData] = useState({});
+  const [lastRowId, setLastRowId] = useState(0);
+  const [isEditingRows, setIsEditingRows] = useState([]);
+  const [editingTableIndex, setEditingTableIndex] = useState(null); // State baru untuk menyimpan indeks tabel yang sedang dalam mode pengeditan
+
+
+  useEffect(() => {
+    // Initialize isEditingRows state based on the number of items
+    setIsEditingRows(new Array(items.length).fill(false));
+  }, [items]);
+
+  const handleSaveData = async (item_id) => {
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const formattedData = {
+        Item_ID: item_id,
+        Name: editedData.Name,
+        Results: editedData.Results.map(result => ({
+          Name: result.Name,
+          Result_ID: result.Result_ID,
+          Factors: result.Factors.map(factor => ({
+            Factor_ID: factor.Factor_ID,
+            Title: factor.Title,
+            Unit: factor.Unit,
+            Target: factor.Target,
+            Planned: factor.Planned,
+            Actual: factor.Actual
+          }))
+        })),
+        Year: editedData.Year
+      };
+  
+      const isNewData = !items.some(item => item.Item_ID === item_id);
+      const method = isNewData ? 'POST' : 'PUT';
+      const url = isNewData
+        ? `http://localhost:8080/kpi/item`
+        : `http://localhost:8080/kpi/item/entire/${item_id}`;
+  
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${authToken}`
+        },
+       
+        body: JSON.stringify(formattedData)
+      });
+  
+      if (response.ok) {
+        alert('Data updated successfully');
+        setIsEditing(false);
+        const updatedItems = isNewData
+          ? [...items, formattedData]
+          : items.map(item => item.Item_ID === item_id ? formattedData : item);
+        setItems(updatedItems);
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to update data:', errorText);
+        alert(`Failed to update data: ${errorText}`);
+      }
+  
+    } catch (error) {
+      console.error('Error updating data:', error);
+    }
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+  
+    // Membuat baris baru dengan data default
+    const newRow = {
+      Result_ID: newRowId,
+      Name: "",
+      Factors: [
+        {
+          Title: "",
+          Unit: "",
+          Target: "",
+          Planned: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          },
+          Actual: {
+            Monthly: [{ January: 0, February: 0, March: 0, April: 0, May: 0, June: 0, July: 0, August: 0, September: 0, October: 0, November: 0, December: 0 }]
+          }
+        }
+      ],
+      Year: year
+    };
+  
+    // Menambahkan baris baru ke data yang sedang diedit, hanya jika tahunnya cocok
+    setEditedData(prevData => {
+      // Mengecek apakah tahun pada data yang sedang diedit sama dengan tahun yang dipilih
+      if (prevData.Year === year) {
+        return {
+          ...prevData,
+          Results: [...prevData.Results, newRow]
+        };
+      } else {
+        // Jika tahunnya tidak cocok, tidak ada perubahan yang dibuat
+        return prevData;
+      }
+    });
+  
+    // Juga tambahkan baris baru ke filteredItems
+    setFilteredItems(prevFilteredItems => {
+      return prevFilteredItems.map(item => {
+        if (item.Year === year) {
+          return {
+            ...item,
+            Results: [...item.Results, newRow]
+          };
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleChange = (e, resultIndex, factorIndex, type, month) => {
+    const { value } = e.target;
+    const numericValue = parseFloat(value);
+  
+    if (!isNaN(numericValue)) {
+      setEditedData(prevData => {
+        const newData = JSON.parse(JSON.stringify(prevData));
+        if (!newData.Results[resultIndex].Factors[factorIndex][type]) {
+          newData.Results[resultIndex].Factors[factorIndex][type] = { Monthly: [{}] };
+        } else if (!newData.Results[resultIndex].Factors[factorIndex][type].Monthly) {
+          newData.Results[resultIndex].Factors[factorIndex][type].Monthly = [{}];
+        }
+        newData.Results[resultIndex].Factors[factorIndex][type].Monthly[0][month] = numericValue;
+        return newData;
+      });
+    }
+  };
+  
+  const handleNameChange = (e) => {
+    setSearchName(e.target.value);
+  };
+
+  useEffect(() => {
+    fetch('http://localhost:8080/kpi/item')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Response JSON (item):', data);
+        setItems(data.data); 
+        if (data.data.length > 0) {
+          setSelectedItem(data.data[0].Name);
+          const years = Array.from(new Set(data.data.map(item => item.Year)));
+          setAvailableYears(years);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching item data:', error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.Name === selectedItem &&
+      (isEditing ? item.Year === editedData.Year : selectedYears.length === 0 || selectedYears.includes(item.Year)) &&
+      (item.Results.some(result => result.Name.toLowerCase().includes(searchName.toLowerCase())))
+    );
+    setFilteredItems(filtered);
+  }, [selectedItem, selectedYears, items, searchName, isEditing, editedData.Year]);
+  
+
+  // Fungsi untuk menentukan apakah tahun tertentu terpilih atau tidak
+  const isYearSelected = (year) => {
+    return selectedYears.includes(year);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYears(prevSelectedYears =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter(y => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYears([]);
+    setSearchName('');
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleUpdateData = (itemIndex) => {
+    // Cek apakah ada tabel lain yang sedang dalam mode pengeditan
+    const isAnyTableEditing = isEditingRows.some((editingStatus, index) => editingStatus && index !== itemIndex);
+  
+    // Jika ada tabel lain yang sedang dalam mode pengeditan, munculkan prompt
+    if (isAnyTableEditing) {
+      alert("Anda hanya bisa mengedit 1 tabel!");
+    } else {
+      // Set isEditing status for the clicked row
+      setIsEditingRows(prevIsEditingRows => {
+        const updatedIsEditingRows = [...prevIsEditingRows];
+        updatedIsEditingRows[itemIndex] = true;
+        return updatedIsEditingRows;
+      });
+  
+      // Set edited data for the clicked row
+      const dataToEdit = filteredItems[itemIndex];
+      console.log('Data to be updated:', dataToEdit);
+      if (dataToEdit) {
+        setEditedData({ ...dataToEdit });
+        setEditingTableIndex(itemIndex); // Set indeks tabel yang sedang dalam mode pengeditan
+      } else {
+        console.error('No data available for the selected item');
+      }
+    }
+  };
+  
+
+  
+// Dalam komponen SavedSafetyTable
+const handleDeleteRowClick = async (item_id) => {
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/item/entire/${item_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Row deleted successfully');
+      // Hapus baris dari state filteredItems
+      setFilteredItems(prevFilteredItems => prevFilteredItems.filter(item => item.Item_ID !== item_id));
+      // Hapus baris dari state items
+      setItems(prevItems => prevItems.filter(item => item.Item_ID !== item_id));
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete row:', errorText);
+      alert(`Failed to delete row: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting row:', error);
+  }
+};
+
+const handleDeletePerResult = async (result_id) => {
+  const authToken = localStorage.getItem('authToken');
+
+  try {
+    const response = await fetch(`http://localhost:8080/kpi/result/entire/${result_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${authToken}`
+      }
+    });
+
+    if (response.ok) {
+      alert('Result deleted successfully');
+      setFilteredItems(prevFilteredItems => {
+        return prevFilteredItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+      setItems(prevItems => {
+        return prevItems.map(item => ({
+          ...item,
+          Results: item.Results.filter(result => result.Result_ID !== result_id)
+        }));
+      });
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to delete result:', errorText);
+      alert(`Failed to delete result: ${errorText}`);
+    }
+  } catch (error) {
+    console.error('Error deleting result:', error);
+  }
+};
+  
+
+  return (
+    <div className="table-container">
+      <div className="filter-container">
+        <label htmlFor="item-select"></label>
+        <select
+          id="item-select"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+        >
+          <option value="S">Safety</option>
+          <option value="E">Environment</option>
+          <option value="Q">Quality</option>
+          <option value="C">Cost</option>
+          <option value="D">Delivery</option>
+        </select>
+
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="dropdown-button">
+            Pilih Tahun
+          </button>
+          {dropdownOpen && (
+            <div className="dropdown-content">
+              {availableYears.map((year, index) => (
+                <label key={index} className="dropdown-item">
+                  <input
+                    type="checkbox"
+                    value={year}
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button onClick={handleResetFilters} style={{ float: 'right', marginRight: '10px' }}>Hapus Semua Filter</button>
+        <div style={{ float: 'right', marginRight: '10px'  }}>
+          <input
+            type="text"
+            placeholder="Filter Result..."
+            value={searchName}
+            onChange={handleNameChange}
+            style={{ width: '150px' }}
+          />
+        </div>
+      </div>
+
+      {filteredItems.length > 0 ? (
+        filteredItems.map((item, itemIndex) => (
+          <div key={itemIndex}>
+            {item.Results.length > 0 ? (
+              <table key={`${itemIndex}-${item.Year}`} className="saved-safety-table">
+                <caption>{`Tahun ${item.Year}`}</caption>
+                <thead>
+                  <tr>
+                    <th rowSpan="2">KPI Result</th>
+                    <th colSpan="1">KPI Factor</th>
+                    <th colSpan="2" rowSpan="2">Status</th>
+                    <th rowSpan="3">Unit</th>
+                    <th rowSpan="3">Target</th>
+                    <th colSpan="12">Bulan</th>
+                   </tr>
+                  <tr>
+                    <th>KPI Factor Name</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>May</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Aug</th>
+                    <th>Sep</th>
+                    <th>Oct</th>
+                    <th>Nov</th>
+                    <th>Dec</th>
+              </tr>
+            </thead>
+            <tbody>
+              {item.Results.map((result, resultIndex) => (
+                result.Factors.length > 0 ? (
+                  result.Factors.map((factor, factorIndex) => (
+                    <React.Fragment key={`${itemIndex}-${resultIndex}-${factorIndex}`}>
+                      {/* Render baris dengan kolom Name, Title, Unit, Target */}
+                      <tr>
+                      <td rowSpan={2}>
+                      {isEditingRows[itemIndex] ? (
+                        <>
+                          <textarea
+                            value={editedData.Results[resultIndex].Name}
+                            onChange={(e) => {
+                              const updatedData = { ...editedData };
+                              updatedData.Results[resultIndex].Name = e.target.value;
+                              setEditedData(updatedData);
+                            }}
+                            style={{ width: '100px', height: '50px' }} // Sesuaikan nilai width dan height sesuai kebutuhan
+                          />
+                          <button onClick={() => handleDeletePerResult(result.Result_ID)}>Delete Result</button>
+                        </>
+                      ) : (
+                        result.Name
+                      )}
+                    </td>
+
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Title}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Title = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Title
+                          )}
+                        </td>
+                        <td colSpan={2}>Plan</td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Unit}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Unit = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Unit
+                          )}
+                        </td>
+                        <td rowSpan={2}>
+                        {isEditingRows[itemIndex] ? (
+                            <textarea
+                              value={editedData.Results[resultIndex].Factors[factorIndex].Target}
+                              onChange={(e) => {
+                                const updatedData = { ...editedData };
+                                updatedData.Results[resultIndex].Factors[factorIndex].Target = e.target.value;
+                                setEditedData(updatedData);
+                              }}
+                              style={{ width: '100px', height: '50px' }} // Anda dapat menyesuaikan nilai width dan height sesuai kebutuhan
+
+                            />
+                          ) : (
+                            factor.Target
+                          )}
+                        </td>
+                        {/* Render kolom bulan untuk Planned */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Planned']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Planned', month)}
+                              />
+                            ) : (
+                              (factor['Planned'] && factor['Planned'].Monthly[0][month]) || '-'
+                            )}
+                          </td>
+                        ))}
+               
+                      </tr>
+                      {/* Render baris untuk Actual */}
+                      <tr>
+                        <td colSpan={2}>Actual</td>
+                        {/* Render kolom bulan untuk Actual */}
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, monthIndex) => (
+                          <td key={monthIndex}>
+  {isEditingRows[itemIndex] ? (
+                              <input
+                                type="number"
+                                value={(editedData.Results[resultIndex].Factors[factorIndex]['Actual']?.Monthly[0]?.[month]) || ''}
+                                onChange={(e) => handleChange(e, resultIndex, factorIndex, 'Actual', month)}
+                              />
+                            ) : (
+                              (factor['Actual'] && factor['Actual'].Monthly[0][month]) || '-'
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr key={`${itemIndex}-${resultIndex}-no-factors`}>
+                    <td colSpan="18">Data factors tidak tersedia</td>
+                  </tr>
+                )
+              ))}
+
+            </tbody>
+
+            <div className="buttonsum" style={{ display: 'inline-block' }}>
+  <div style={{ display: 'inline-block' }}>
+  {isEditingRows[itemIndex] ? (
+      <>
+        <button
+          onClick={() => handleDeleteRowClick(item.Item_ID)}
+          style={{
+            marginRight: '5px',
+            backgroundColor: 'red',
+            color: 'white',
+            display: 'inline-block',
+            marginBottom: '5px',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            padding: '10px 20px'
+,
+            marginTop: '10px'
+
+          }}
+        >
+          Delete All Data
+        </button>
+        <button
+  onClick={() => handleSaveData(item.Item_ID)}
+  style={{
+    marginRight: '5px',
+    background: 'linear-gradient(to right, #4CAF50, #008000)',
+    color: 'white',
+    display: 'inline-block',
+    marginBottom: '5px',
+    padding: '5px 10px',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '10px 20px'
+,
+    cursor: 'pointer'
+  }}
+>
+  Save Data
+</button>
+
+        <button
+          onClick={() => handleAddRowClick(item.Year)}
+          style={{
+            marginRight: '5px',
+            background: 'linear-gradient(to right, #4CAF50, #008000)',
+            color: 'white',
+            display: 'inline-block',
+            padding: '5px 10px',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '10px 20px',
+            cursor: 'pointer',
+            marginBottom: '10px'
+          }}
+        >
+          Add Row
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+  onClick={() => handleUpdateData(itemIndex)}
+  style={{
+    marginRight: '5px',
+    background: 'linear-gradient(to right, #8b0000, #ff2e2e)',
+    color: 'white',
+    display: 'inline-block',
+    marginBottom: '5px',
+    padding: '5px 10px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    marginTop: '10px',
+    padding: '10px 20px'
+  }}
+>
+  Update Data
+</button>
+
+      </>
+    )}
+  </div>
+</div>
+
+          </table>
+        ) : (
+          <p key={`${itemIndex}-no-results`}>Data results tidak tersedia</p>
+        )}
+      </div>
+    ))
+  ) : (
+    <p>Data items tidak tersedia</p>
+  )}
+</div>
+);
+};
+
+export default SavedSafetyTable;
+
+======
+
+summarytablelast.jsx
+import React, { useState } from "react";
+import "../Styles/tablesummary.css";
+
+const SummaryTable = () => {
+  const [projectNameId, setProjectNameId] = useState(1);
+  const [columns, setColumns] = useState([{ id: 1, item: "Item 1", quantity: "Quantity 1" }]);
+  const [rows, setRows] = useState([
+    {
+      projectName: "", 
+      category: "",
+      status: [{ name: "", quantity: "", id: 1, statuses: [{ name: "", id: 1 }] }],
+      remarks: ""
+    }
+  ]);
+
+  const handleDeleteClick = (index) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+      const newRows = [...rows];
+      newRows.splice(index, 1);
+      setRows(newRows);
+    }
+  };
+
+  const handleInputChange = (e, rowIndex, statIndex, type) => {
+    const { value } = e.target;
+    const updatedRows = [...rows];
+    if (type === "name") {
+      updatedRows[rowIndex].status[statIndex].name = value || "";
+    } else if (type === "quantity") {
+      updatedRows[rowIndex].status[statIndex].statuses[0].name = value || "";
+    }
+    setRows(updatedRows);
+  };
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      projectName: "",
+      category: "",
+      status: columns.map((col) => ({
+        name: "",
+        quantity: "",
+        id: col.id,
+        statuses: [{ name: "", id: col.id }],
+      })),
+      remarks: "",
+    };
+  
+    const newProjectNameId = rows.length === 0 ? projectNameId : projectNameId + 1;
+  
+    setRows((prevRows) => {
+      const updatedRows = prevRows.map((row) => ({
+        ...row,
+        status: row.status.map((stat, statIndex) => ({
+          ...stat,
+          name: "",
+          statuses: [{ ...stat.statuses[0], name: "" }],
+          id: columns[statIndex].id, // Set id kolom sesuai dengan urutan kolom
+        })),
+      }));
+      return [...updatedRows, newRow];
+    });
+    setProjectNameId(newProjectNameId);
+  };
+  
+  
+  const handleAddColumnClick = () => {
+    const maxColumnId = Math.max(...columns.map((col) => col.id));
+    const newColumnId = maxColumnId + 1;
+    
+    // Menambahkan kolom baru ke state columns
+    setColumns((prevColumns) => [
+      ...prevColumns,
+      { id: newColumnId, item: `Item ${newColumnId}`, quantity: `Quantity ${newColumnId}` }
+    ]);
+  
+    // Menambahkan status baru untuk kolom baru ke setiap baris dalam state rows
+    setRows((prevRows) =>
+      prevRows.map((row) => ({
+        ...row,
+        status: [
+          ...row.status,
+          { name: "", quantity: "", id: newColumnId, statuses: [{ name: "", id: newColumnId }] }
+        ]
+      }))
+    );
+  };
+  
+   // Fungsi untuk menghandle perubahan input item number pada kolom status
+const handleInputItemNumberChange = (e, rowIndex, columnIndex) => {
+  const { value } = e.target;
+  const updatedRows = rows.map((row, index) => {
+    if (index === rowIndex) {
+      return {
+        ...row,
+        status: row.status.map((stat) => {
+          if (stat.id === columnIndex) {
+            return { ...stat, name: value };
+          }
+          return stat;
+        })
+      };
+    }
+    return row;
+  });
+  setRows(updatedRows);
+};
+
+// Fungsi untuk menghandle perubahan input quantity number pada kolom status
+const handleInputQtyNumberChange = (e, rowIndex, columnIndex) => {
+  const { value } = e.target;
+  const updatedRows = rows.map((row, index) => {
+    if (index === rowIndex) {
+      return {
+        ...row,
+        status: row.status.map((stat) => {
+          if (stat.id === columnIndex) {
+            return { ...stat, statuses: [{ ...stat.statuses[0], name: value }] };
+          }
+          return stat;
+        })
+      };
+    }
+    return row;
+  });
+  setRows(updatedRows);
+};
+  
+
+const handlePostProject = () => {
+  
+  const authToken = localStorage.getItem("authToken");
+  const issuedDateInput = document.querySelector("#issuedDateInput");
+  const issuedDate = issuedDateInput ? issuedDateInput.value : null;
+
+  const summaryData = {
+    Status: rows.map((row) => row.projectName), // Ini benar, mengambil projectName dari setiap baris
+    Projects: columns.map((col) => ({
+      Name: document.querySelector(`#status-input-${col.id}`).value, // Mengambil dari input kolom
+      Item: rows.map((row) => parseInt(row.status.find(stat => stat.id === col.id).name)), // Item dari setiap baris untuk kolom tertentu
+      Quantity: rows.map((row) => parseInt(row.status.find(stat => stat.id === col.id).statuses[0].name)), // Quantity dari setiap baris untuk kolom tertentu
+    })),
+    IssuedDate: new Date(issuedDate).toISOString(),
+    Remarks: rows.map((row) => row.remarks)
+
+  };
+
+  console.log("Posting summary data:", JSON.stringify(summaryData));
+  fetch("http://localhost:8080/kpi/summary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(summaryData),
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error("Failed to post summary data");
+      }
+    })
+    .then((data) => {
+      console.log("Summary data posted successfully:", data);
+      alert("Data berhasil disimpan!");
+    })
+    .catch((error) => {
+      console.error("Error posting summary data:", error.message);
+    });
+};
+
+  const handleRemoveColumnClick = (colId) => {
+    // Temukan status category dengan ID yang akan dihapus
+    const statusItemCount = rows[0].status.length;
+    if (statusItemCount === 1) {
+      alert("At least you should have 1 Status Item and no less!");
+      return;
+    }
+  
+    // Hapus kolom dengan ID yang sesuai
+    const updatedColumns = columns.filter(col => col.id !== colId);
+    setColumns(updatedColumns);
+    
+    // Loop melalui setiap baris dan hapus sel <td> yang sesuai dengan ID kolom yang dihapus
+    const updatedRows = rows.map(row => {
+      const updatedStatus = row.status.filter(stat => stat.id !== colId);
+      return { ...row, status: updatedStatus };
+    });
+    setRows(updatedRows);
+  };
+  return (
+    <div className="table-container">
+      <div className="filter-containerss">
+        <h2 style={{color:"white"}}>Pilih tanggal penyimpanan project summary</h2>
+      <input id="issuedDateInput" type="datetime-local" />
+    </div>
+      <table className="safety-summaries">
+        <caption>Summary Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="2">
+              Item Category Project
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>
+                  +
+                </button>
+              </div>
+            </th>
+            {columns.map((col) => (
+              <th colSpan="2" key={col.id}>
+                <input id={`status-input-${col.id}`} type="text" placeholder={`Status Item ${col.id}`} />
+                <div className="removecol">
+                <button className="remove-column-button" onClick={() => handleRemoveColumnClick(col.id)}>-</button>
+              </div>
+              </th>
+            ))}
+            <th rowSpan="2">Remarks</th>
+          </tr>
+          <tr>
+            {columns.map((col) => (
+              <>
+                <th key={`item-${col.id}`}>{col.item}</th>
+                <th key={`quantity-${col.id}`}>{col.quantity}</th>
+              </>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              <td>
+                <input
+                  type="text"
+                  placeholder={`Project Name ${rowIndex + 1}`}
+                  value={row.projectName}
+                  onChange={(e) => {
+                    const updatedRows = [...rows];
+                    updatedRows[rowIndex].projectName = e.target.value;
+                    setRows(updatedRows);
+                  }}
+                />
+                <div className="add">
+                  <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>
+                    - category
+                  </button>
+                </div>
+              </td>
+              {row.status.map((stat, statIndex) => (
+  <>
+   <td key={`status-name-${stat.id}`}>
+  <input
+    type="number"
+    placeholder={`Item ${stat.id}`}
+    value={stat.name}
+    onChange={(e) => handleInputItemNumberChange(e, rowIndex, stat.id)}
+  />
+</td>
+<td key={`status-quantity-${stat.id}`}>
+  <input
+    type="number"
+    placeholder={`Quantity ${stat.id}`}
+    value={stat.statuses[0].name}
+    onChange={(e) => handleInputQtyNumberChange(e, rowIndex, stat.id)}
+  />
+</td>
+  </>
+))}
+
+              <td>
+                <textarea
+                  className="custominput"
+                  rows="8"
+                  cols="30"
+                  placeholder="Remarks"
+                  value={row.remarks}
+                  onChange={(e) => {
+                    const updatedRows = [...rows];
+                    updatedRows[rowIndex].remarks = e.target.value;
+                    setRows(updatedRows);
+                  }}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="buttonsum" style={{ display: 'inline-block'}}>
+        <div className="save">
+          <button onClick={handlePostProject} style={{ marginRight:'5px'}} >Save Data</button>
+        </div>
+        <div className="additem">
+          <button onClick={handleAddColumnClick} style={{ marginLeft:'5px'}} >Add Status Item</button> 
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SummaryTable;
+
+=====
+safetytable.jsx
+
+import React, { useState } from "react";
+import "../Styles/table.css";
+
+const SafetyTable = () => {
+  const [lastRowId, setLastRowId] = useState(1);
+  const [lastFactorId, setLastFactorId] = useState(1);
+
+  const handleDeleteClick = (rowIndex) => {
+    if (rows.length === 1) {
+      alert('Anda harus memiliki setidaknya satu baris!');
+      return;
+    }
+  
+    const newRows = rows.filter((_, index) => index !== rowIndex);
+    setRows(newRows);
+  };
+  
+
+  const handleDeleteFactorClick = (rowIndex, factorIndex) => {
+    if (rows[rowIndex].factors.length === 1) {
+      alert('Setiap baris harus memiliki setidaknya satu faktor!');
+      return;
+    }
+  
+    const newRows = [...rows];
+    newRows[rowIndex].factors = newRows[rowIndex].factors.filter((_, index) => index !== factorIndex);
+    setRows(newRows);
+  };
+  
+  const [rows, setRows] = useState([
+    {
+      id: 1,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+        },
+      ],
+      unit: "",
+      target: "",
+      Plan: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+      Actual: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+    },
+  ]);
+
+  const handleAddRowClick = () => {
+    const newRowId = lastRowId + 1;
+    setLastRowId(newRowId);
+
+    const newRow = {
+      id: newRowId,
+      result: "",
+      factors: [
+        {
+          id: 1,
+          name: "",
+          statuses: [{ plan: "", actual: "", id: 1 }],
+        },
+      ],
+      unit: "",
+      target: "",
+      Plan: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+      Actual: {
+        January: 0,
+        February: 0,
+        March: 0,
+        April: 0,
+        May: 0,
+        June: 0,
+        July: 0,
+        August: 0,
+        September: 0,
+        October: 0,
+        November: 0,
+        December: 0,
+      },
+    };
+    setRows([...rows, newRow]);
+  };
+
+  const handleInputChange = (rowIndex, field, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex][field] = value;
+    setRows(newRows);
+  };
+
+  const handleUnitChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].unit = value;
+    setRows(newRows);
+  };
+  
+  const handleTargetChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].target = value;
+    setRows(newRows);
+  };
+  
+
+  const handleFactorChange = (rowIndex, factorIndex, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex].factors[factorIndex].name = value;
+    setRows(newRows);
+  };
+
+  const handlePlanChange = (rowIndex, factorIndex, month, value) => {
+    const newRows = [...rows];
+    if (!newRows[rowIndex].factors[factorIndex].Plan) {
+      newRows[rowIndex].factors[factorIndex].Plan = {}; // Inisialisasi objek Plan jika belum ada
+    }
+    newRows[rowIndex].factors[factorIndex].Plan[month] = parseInt(value, 10);
+    setRows(newRows);
+  };
+  
+  const handleActualChange = (rowIndex, factorIndex, month, value) => {
+    const newRows = [...rows];
+    if (!newRows[rowIndex].factors[factorIndex].Actual) {
+      newRows[rowIndex].factors[factorIndex].Actual = {}; // Inisialisasi objek Actual jika belum ada
+    }
+    newRows[rowIndex].factors[factorIndex].Actual[month] = parseInt(value, 10);
+    setRows(newRows);
+  };
+  
+  
+  
+
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    const itemName = prompt("Simpan data untuk item apa? Pilih antara 'S', 'E', 'Q', 'C', atau 'D'.", "S");
+    const validItems = ["S", "E", "Q", "C", "D"];
+  
+    if (!validItems.includes(itemName)) {
+      alert("Pilihan item tidak valid. Harus salah satu dari 'S', 'E', 'Q', 'C', atau 'D'.");
+      return;
+    }
+  
+    if (year && itemName) {
+      const itemData = {
+        Name: itemName,
+        results: rows.map((row) => ({
+          Name: row.result,
+          factors: row.factors.map((factor) => ({
+            Title: factor.name,
+            Unit: factor.unit,
+            Target: factor.target,
+            planned: {
+              Monthly: [
+                {
+                  January: parseInt(factor.Plan?.January || 0, 10),
+                  February: parseInt(factor.Plan?.February || 0, 10),
+                  March: parseInt(factor.Plan?.March || 0, 10),
+                  April: parseInt(factor.Plan?.April || 0, 10),
+                  May: parseInt(factor.Plan?.May || 0, 10),
+                  June: parseInt(factor.Plan?.June || 0, 10),
+                  July: parseInt(factor.Plan?.July || 0, 10),
+                  August: parseInt(factor.Plan?.August || 0, 10),
+                  September: parseInt(factor.Plan?.September || 0, 10),
+                  October: parseInt(factor.Plan?.October || 0, 10),
+                  November: parseInt(factor.Plan?.November || 0, 10),
+                  December: parseInt(factor.Plan?.December || 0, 10),
+                }
+              ]
+            },
+            actual: {
+              Monthly: [
+                {
+                  January: parseInt(factor.Actual?.January || 0, 10),
+                  February: parseInt(factor.Actual?.February || 0, 10),
+                  March: parseInt(factor.Actual?.March || 0, 10),
+                  April: parseInt(factor.Actual?.April || 0, 10),
+                  May: parseInt(factor.Actual?.May || 0, 10),
+                  June: parseInt(factor.Actual?.June || 0, 10),
+                  July: parseInt(factor.Actual?.July || 0, 10),
+                  August: parseInt(factor.Actual?.August || 0, 10),
+                  September: parseInt(factor.Actual?.September || 0, 10),
+                  October: parseInt(factor.Actual?.October || 0, 10),
+                  November: parseInt(factor.Actual?.November || 0, 10),
+                  December: parseInt(factor.Actual?.December || 0, 10),
+                }
+              ]
+            },
+          })),
+        })),
+        Year: parseInt(year, 10),
+      };
+    
+    
+
+
+
+    console.log("Data tabel pada tahun yang diinput secara keseluruhan:", itemData);
+
+    const authToken = localStorage.getItem("authToken");
+
+    fetch("http://localhost:8080/kpi/item/entire", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify(itemData),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed to save yearly data");
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Yearly data saved successfully:", data);
+        alert(`Data tabel disimpan untuk item ${itemName} tahun ${year}`);
+      })
+      .catch(error => {
+        console.error("Error saving yearly data:", error);
+        alert("Anda sudah menginput data pada tahun tersebut. Anda bisa mengedit data pada tabel yang sudah disimpan.");
+      });
+  }
+};
+
+const handleAddFactorClick = (rowIndex) => {
+  const newFactorId = lastFactorId + 1;
+  setLastFactorId(newFactorId);
+
+  const newFactor = {
+    id: newFactorId,
+    name: "",
+    statuses: [{ plan: "", actual: "", id: 1 }],
+    unit: "", // Nilai unit default
+    target: "", // Nilai target default
+    Plan: {
+      January: 0,
+      February: 0,
+      March: 0,
+      April: 0,
+      May: 0,
+      June: 0,
+      July: 0,
+      August: 0,
+      September: 0,
+      October: 0,
+      November: 0,
+      December: 0,
+    },
+    Actual: {
+      January: 0,
+      February: 0,
+      March: 0,
+      April: 0,
+      May: 0,
+      June: 0,
+      July: 0,
+      August: 0,
+      September: 0,
+      October: 0,
+      November: 0,
+      December: 0,
+    },
+  };
+
+  const newRows = [...rows];
+  newRows[rowIndex].factors.push(newFactor); // Tambahkan faktor baru ke baris yang sesuai
+
+  // Setel nilai unit dan target faktor baru menjadi string kosong
+  newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].unit = "";
+  newRows[rowIndex].factors[newRows[rowIndex].factors.length - 1].target = "";
+
+  setRows(newRows);
+};
+  
+  
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Input All Data Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="3">
+              KPI Result
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>
+                  +
+                </button>
+              </div>
+            </th>
+            <th colSpan="1">KPI Factor</th>
+            <th colSpan="2" rowSpan="2">Status</th>
+            <th rowSpan="3">Unit</th>
+            <th rowSpan="3">Target</th>
+            <th colSpan="12">Bulan</th>
+          </tr>
+          <tr>
+            <th>KPI Factor Name</th>
+            <th>Jan</th>
+            <th>Feb</th>
+            <th>Mar</th>
+            <th>Apr</th>
+            <th>Mei</th>
+            <th>Jun</th>
+            <th>Jul</th>
+            <th>Ags</th>
+            <th>Sept</th>
+            <th>Oct</th>
+            <th>Nov</th>
+            <th>Dec</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <React.Fragment key={row.id}>
+              {row.factors.map((factor, factorIndex) => (
+                <React.Fragment key={`${row.id}-${factor.id}`}>
+                  {factor.statuses.map((status, statusIndex) => (
+                    <React.Fragment key={`${row.id}-${factor.id}-${status.id}`}>
+                      <tr>
+                        {factorIndex === 0 && statusIndex === 0 && (
+                          <td rowSpan={row.factors.reduce((total, current) => total + current.statuses.length * 2, 0)}>
+                            <textarea
+                              id={`result${row.id}`}
+                              name={`result${row.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Result ${rowIndex + 1}`}
+                              onChange={(e) => handleInputChange(rowIndex, "result", e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>
+                                - Result
+                              </button>
+                            </div>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleAddFactorClick(rowIndex)}>
+                                + Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        {statusIndex === 0 && (
+                          <td rowSpan={factor.statuses.length * 2}>
+                            <textarea
+                              id={`factor${factor.id}`}
+                              name={`factor${factor.id}`}
+                              className="custominput"
+                              rows="6"
+                              cols="20"
+                              placeholder={`Factor ${factorIndex + 1}`}
+                              onChange={(e) => handleFactorChange(rowIndex, factorIndex, e.target.value)}
+                            ></textarea>
+                            <div className="add">
+                              <button className="add-factor-button" onClick={() => handleDeleteFactorClick(rowIndex, factorIndex)}>
+                                - Factor
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        <td colSpan={2}>Plan</td>
+                        <td rowSpan={2}>
+                        <input
+                            type="text"
+                            value={factor.unit} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleUnitChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleUnitChange dengan index faktor yang sesuai
+                          />
+                    </td>
+                    <td rowSpan={2}>
+                    <input
+                            type="text"
+                            value={factor.target} // Menyesuaikan dengan struktur data
+                            onChange={(e) => handleTargetChange(rowIndex, factorIndex, e.target.value)} // Memanggil fungsi handleTargetChange dengan index faktor yang sesuai
+                          />
+                    </td>
+                     <td>
+                     <input
+                        type="number"
+                        value={row.factors[factorIndex]?.Plan?.January || ''}
+                        onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'January', e.target.value)}
+                      />
+                    </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.February || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'February', e.target.value)}
+                          />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.March || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'March', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.April || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'April', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.May || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'May', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.June || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'June', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.July || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'July', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.August || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'August', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.September || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'September', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.October || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'October', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.November || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'November', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.factors[factorIndex]?.Plan?.December || ''}
+                          onChange={(e) => handlePlanChange(rowIndex, factorIndex, 'December', e.target.value)}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>Actual</td>
+                      <td>
+                      <input
+                        type="number"
+                        value={row.factors[factorIndex]?.Actual?.January || ''}
+                        onChange={(e) => handleActualChange(rowIndex, factorIndex, 'January', e.target.value)}
+                      />
+                      </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.February || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'February', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.March || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'March', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.April || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'April', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.May || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'May', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.June || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'June', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.July || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'July', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.August || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'August', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.September || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'September', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.October || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'October', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.November || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'November', e.target.value)}
+                            />
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            value={row.factors[factorIndex]?.Actual?.December || ''}
+                            onChange={(e) => handleActualChange(rowIndex, factorIndex, 'December', e.target.value)}
+                            />
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  ))}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      <div className="save">
+        <button onClick={handleSaveData}>Save Table Data</button>
+      </div>
+    </div>
+  );
+};
+
+export default SafetyTable;
+
+
+        === analysistable.jsx
+
+        import React, { useState } from "react";
+import "../Styles/table.css";
+
+const AnalysisTable = () => {
+  const [rows, setRows] = useState([
+    {
+      problem: <textarea id="problem1" className="custominput" rows="6" cols="20" placeholder="Problem 1"></textarea>,
+      why1: <textarea id="why1-1" className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why2: <textarea id="why2-1" className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why3: <textarea id="why3-1" className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why4: <textarea id="why4-1" className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why5: <textarea id="why5-1" className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      correction: <textarea id="correction-1" className="custominput" rows="6" cols="20" placeholder="How to overcome it?"></textarea>,
+      pic: <textarea id="pic-1" className="custominput" rows="1" cols="5" placeholder="PIC"></textarea>,
+      target: <textarea id="target-1" className="custominput" rows="1" cols="5" placeholder="Target"></textarea>,
+      followup: [
+        {
+          name: <input id="followup-1" type="datetime-local" className="custominput" placeholder="Date" />,
+          statuses: [{ name: <textarea id="status-1" className="custominput" rows="1" cols="5" placeholder="Status"></textarea> }],
+        },
+      ],
+    },
+  ]);
+
+  const authToken = localStorage.getItem('authToken');
+
+  const handleDeleteClick = (index) => {
+    if (rows.length === 1) {
+      alert("You must have at least one problem!");
+      return;
+    }
+    const isConfirmed = window.confirm("Are you sure you want to delete this row?");
+    if (isConfirmed) {
+      const newRows = [...rows];
+      newRows.splice(index, 1);
+      setRows(newRows);
+    }
+  };
+
+  const handleSaveData = () => {
+    const year = prompt("Simpan Table Data Untuk Tahun Berapa?");
+    if (!year) {
+      return;
+    }
+  
+    const yearInt = parseInt(year, 10);
+    if (isNaN(yearInt)) {
+      alert("Tahun harus berupa angka!");
+      return;
+    }
+  
+    const problems = rows.map((row, index) => {
+      const problemText = document.getElementById(`problem${index + 1}`).value;
+      const whyArray = [
+        document.getElementById(`why1-${index + 1}`).value,
+        document.getElementById(`why2-${index + 1}`).value,
+        document.getElementById(`why3-${index + 1}`).value,
+        document.getElementById(`why4-${index + 1}`).value,
+        document.getElementById(`why5-${index + 1}`).value,
+      ];
+      return {
+        Masalah: problemText,
+        Why: whyArray,
+        tindakan: document.getElementById(`correction-${index + 1}`).value,
+        pic: document.getElementById(`pic-${index + 1}`).value,
+        target: document.getElementById(`target-${index + 1}`).value,
+        FolDate: new Date(document.getElementById(`followup-${index + 1}`).value).toISOString(), // Convert to ISO string format
+        status: document.getElementById(`status-${index + 1}`).value,
+        Year: yearInt, // Make sure year is sent as an integer
+      };
+    });
+  
+    console.log("Problems to be sent:", problems); // Log problems for debugging
+  
+    const problemPromises = problems.map(problem => {
+      return fetch("http://localhost:8080/kpi/masalah", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify(problem),
+      })
+        .then(response => {
+          return response.json().then(jsonResponse => {
+            console.log("Response JSON:", jsonResponse);
+  
+            if (!response.ok) {
+              throw new Error("Failed to save masalah data");
+            }
+            return jsonResponse;
+          });
+        })
+        .then(data => {
+          console.log("Masalah data saved successfully:", data);
+        })
+        .catch(error => {
+          console.error("Error saving masalah data:", error);
+          throw error; // Rethrow the error to catch it in Promise.all
+        });
+    });
+  
+    Promise.all(problemPromises)
+      .then(() => {
+        alert(`Data tabel disimpan untuk tahun ${year}`);
+      })
+      .catch(error => {
+        console.error("Error saving data:", error);
+        alert("Failed to save some of the data. Please try again.");
+      });
+  };
+
+  const handleAddRowClick = () => {
+    const newRow = {
+      problem: <textarea id={`problem${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder={`Problem ${rows.length + 1}`}></textarea>,
+      why1: <textarea id={`why1-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why2: <textarea id={`why2-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why3: <textarea id={`why3-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why4: <textarea id={`why4-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      why5: <textarea id={`why5-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="What causes the problem?"></textarea>,
+      correction: <textarea id={`correction-${rows.length + 1}`} className="custominput" rows="6" cols="20" placeholder="How to overcome it?"></textarea>,
+      pic: <textarea id={`pic-${rows.length + 1}`} className="custominput" rows="1" cols="5" placeholder="PIC"></textarea>,
+      target: <textarea id={`target-${rows.length + 1}`} className="custominput" rows="1" cols="5" placeholder="Target"></textarea>,
+      followup: [
+        {
+          name: <input id={`followup-${rows.length + 1}`} type="datetime-local" className="custominput" placeholder="Date" />,
+          statuses: [{ name: <textarea id={`status-${rows.length + 1}`} className="custominput" rows="1" cols="5" placeholder="Status"></textarea> }],
+        },
+      ],
+    };
+    setRows([...rows, newRow]);
+  };
+
+  return (
+    <div className="table-container">
+      <table className="safety-table">
+        <caption>Analysis Table</caption>
+        <thead>
+          <tr>
+            <th rowSpan="2">
+              Problem
+              <div className="add">
+                <button className="add-result-button" onClick={handleAddRowClick}>+</button>
+              </div>
+            </th>
+            <th colSpan="5">Causes Analysis</th>
+            <th rowSpan="2">Corrective Action</th>
+            <th rowSpan="2">PIC</th>
+            <th rowSpan="2">Target</th>
+            <th colSpan="2">Follow Up</th>
+          </tr>
+          <tr>
+            <th>Why 1</th>
+            <th>Why 2</th>
+            <th>Why 3</th>
+            <th>Why 4</th>
+            <th>Why 5</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, rowIndex) => (
+            <React.Fragment key={rowIndex}>
+              {row.followup.map((followup, followupIndex) => (
+                <React.Fragment key={`${rowIndex}-${followupIndex}`}>
+                  {followup.statuses.map((status, statusIndex) => (
+                    <tr key={`${rowIndex}-${followupIndex}-${statusIndex}`}>
+                      {followupIndex === 0 && statusIndex === 0 && (
+                        <td rowSpan={row.followup.reduce((total, current) => total + current.statuses.length, 0)}>
+                          {row.problem}
+                          <div className="add">
+                          <button className="add-factor-button" onClick={() => handleDeleteClick(rowIndex)}>- Problem</button>
+                          </div>
+                        </td>
+                      )}
+                      <td>{row.why1}</td>
+                      <td>{row.why2}</td>
+                      <td>{row.why3}</td>
+                      <td>{row.why4}</td>
+                      <td>{row.why5}</td>
+                      <td>{row.correction}</td>
+                      <td>{row.pic}</td>
+                      <td>{row.target}</td>
+                      {statusIndex === 0 && (
+                        <td rowSpan={followup.statuses.length}>
+                          {followup.name}
+                        </td>
+                      )}
+                      <td>{status.name}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+      <div className="save">
+        <button onClick={handleSaveData}>Save Table Data</button>
+      </div>
+    </div>
+  );
+};
+
+export default AnalysisTable;
+
+
+===== 
+editsummaryfinal
+
+import React, { useState, useEffect, useRef } from "react";
+import "../Styles/savedsummary.css";
+import Chart from "chart.js/auto";
+
+const SavedSummaryTable = () => {
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [tablesData, setTablesData] = useState({});
+  const [comparisonData, setComparisonData] = useState({});
+  const [warningMessage, setWarningMessage] = useState("");
+  const [years, setYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editTableData, setEditTableData] = useState({});
+  const [showItemChart, setShowItemChart] = useState(false);
+  const [showQuantityChart, setShowQuantityChart] = useState(false);
+  const chartRef = useRef(null);
+
+  const handleShowItemChart = () => {
+    setShowItemChart(true);
+    setShowQuantityChart(false);
+  };
+
+  const handleShowQuantityChart = () => {
+    setShowItemChart(false);
+    setShowQuantityChart(true);
+  };
+
+  const ComparisonChart = ({ data, type }) => {
+    useEffect(() => {
+      if (data && data.length > 0) {
+        const labels = data.map((item) => item.name);
+        const chartData = data.map((item) => item[type]);
+
+        const ctx = document.getElementById("comparisonChart").getContext("2d");
+
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+
+        chartRef.current = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: `Comparison by ${type}`,
+                data: chartData,
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
+
+      return () => {
+        if (chartRef.current) {
+          chartRef.current.destroy();
+        }
+      };
+    }, [data, type]);
+
+    return <canvas id="comparisonChart" width="400" height="400"></canvas>;
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleCompareData = (issuedDate) => {
+    const currentTable = tablesData[issuedDate];
+
+    if (!currentTable || currentTable.columns.length < 2) {
+      alert("Untuk melakukan perbandingan minimal harus memiliki 2 nama project!");
+      return;
+    }
+
+    const comparisonResult = {
+      columns: currentTable.columns
+        .map((col1, index1) =>
+          currentTable.columns.slice(index1 + 1).map((col2, index2) => ({
+            id: `${col1.id}-${col2.id}`,
+            name: `${col1.name} vs ${col2.name}`,
+            item: `Diff Item ${col1.id} vs ${col2.id}`,
+            quantity: `Diff Quantity ${col1.id} vs ${col2.id}`,
+          }))
+        )
+        .flat(),
+      rows: currentTable.rows.map((row) => ({
+        projectName: row.projectName,
+        status: row.status
+          .map((stat1, index1) =>
+            row.status.slice(index1 + 1).map((stat2, index2) => ({
+              id: `${stat1.id}-${stat2.id}`,
+              name: Math.abs(stat1.name - stat2.name),
+              quantity: Math.abs(stat1.quantity - stat2.quantity),
+            }))
+          )
+          .flat(),
+        remarks: row.remarks,
+      })),
+    };
+
+    setComparisonData((prevComparisonData) => ({
+      ...prevComparisonData,
+      [issuedDate]: comparisonResult,
+      itemComparison: comparisonResult.columns,
+      quantityComparison: comparisonResult.rows.map((row) => row.status),
+    }));
+  };
+
+  const handleDeleteRow = (issuedDate, projectName) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows = updatedTableData[issuedDate].rows.filter(
+      (row) => row.projectName !== projectName
+    );
+    setEditTableData(updatedTableData);
+  };
+
+  const fetchData = async () => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      const summaryResponse = await fetch("http://localhost:8080/kpi/summary", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (!summaryResponse.ok) {
+        throw new Error("Failed to fetch summary data");
+      }
+
+      const summaryData = await summaryResponse.json();
+      console.log("Fetched summary data:", summaryData);
+
+      if (summaryData && summaryData.data && Array.isArray(summaryData.data)) {
+        const tablesDataByIssuedDate = {};
+        const yearsSet = new Set();
+        summaryData.data.forEach((entry) => {
+          if (!entry || !entry.IssuedDate || !entry.Projects || !entry.Status) {
+            console.error("Invalid data entry found:", entry);
+            return;
+          }
+
+          const issuedDate = new Date(entry.IssuedDate).toLocaleDateString();
+          const year = new Date(entry.IssuedDate).getFullYear();
+          yearsSet.add(year);
+          if (!tablesDataByIssuedDate[issuedDate]) {
+            tablesDataByIssuedDate[issuedDate] = {
+              summary_id: entry.Summary_ID,
+              columns: [],
+              rows: [],
+            };
+          }
+
+          if (tablesDataByIssuedDate[issuedDate].columns.length === 0) {
+            tablesDataByIssuedDate[issuedDate].columns = entry.Projects.map((project, index) => ({
+              id: index + 1,
+              name: project.Name,
+              item: `Item ${index + 1}`,
+              quantity: `Quantity ${index + 1}`,
+            }));
+          }
+
+          const processedRows = entry.Status.map((status, statusIndex) => ({
+            projectName: status,
+            status: entry.Projects.map((project, colIndex) => ({
+              name: parseInt(project.Item[statusIndex], 10),
+              quantity: parseInt(project.Quantity[statusIndex], 10),
+              id: colIndex + 1,
+              statuses: [{ name: parseInt(project.Quantity[statusIndex], 10), id: colIndex + 1 }],
+            })),
+            remarks: entry.Remarks && entry.Remarks[statusIndex] ? entry.Remarks[statusIndex] : "No remarks available",
+          }));
+
+          tablesDataByIssuedDate[issuedDate].rows.push(...processedRows);
+        });
+
+        setYears(Array.from(yearsSet));
+        setSelectedYears(Array.from(yearsSet));
+        setTablesData(tablesDataByIssuedDate);
+        setEditTableData(tablesDataByIssuedDate);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleYearChange = (year) => {
+    setSelectedYears((prevSelectedYears) =>
+      prevSelectedYears.includes(year)
+        ? prevSelectedYears.filter((y) => y !== year)
+        : [...prevSelectedYears, year]
+    );
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleSaveClick = async () => {
+    setEditMode(false);
+    try {
+      const authToken = localStorage.getItem("authToken");
+
+      for (const [issuedDate, tableData] of Object.entries(editTableData)) {
+        const response = await fetch(
+          `http://localhost:8080/kpi/update?issuedDate=${issuedDate}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(tableData),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to save data for issuedDate: ${issuedDate}`);
+        }
+      }
+      setTablesData(editTableData);
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
+  };
+
+  const handleAddRowClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    updatedTableData[issuedDate].rows.push({
+      projectName: "",
+      status: Array(updatedTableData[issuedDate].columns.length).fill({
+        name: "",
+        quantity: "",
+      }),
+      remarks: "",
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  const handleAddColumnClick = (issuedDate) => {
+    const updatedTableData = { ...editTableData };
+    const newColumn = {
+      id: updatedTableData[issuedDate].columns.length + 1,
+      name: `Column ${updatedTableData[issuedDate].columns.length + 1}`,
+      item: `Item ${updatedTableData[issuedDate].columns.length + 1}`,
+      quantity: `Quantity ${updatedTableData[issuedDate].columns.length + 1}`,
+    };
+    updatedTableData[issuedDate].columns.push(newColumn);
+
+    updatedTableData[issuedDate].rows.forEach((row) => {
+      row.status.push({ name: "", quantity: "" });
+    });
+    setEditTableData(updatedTableData);
+  };
+
+  return (
+    <div className="summary-table">
+      <div className="year-dropdown">
+        <button onClick={toggleDropdown} className="dropdown-button">
+          {dropdownOpen ? "Close" : "Select Year"}
+        </button>
+        {dropdownOpen && (
+          <ul className="dropdown-menu">
+            {years.map((year) => (
+              <li key={year}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedYears.includes(year)}
+                    onChange={() => handleYearChange(year)}
+                  />
+                  {year}
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedYears.map((year) => (
+        <div key={year} className="year-section">
+          <h2>{year}</h2>
+          {Object.keys(tablesData)
+            .filter((issuedDate) => new Date(issuedDate).getFullYear() === year)
+            .map((issuedDate) => (
+              <div key={issuedDate} className="issued-date-section">
+                <h3>Issued Date: {issuedDate}</h3>
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Project Name</th>
+                        {tablesData[issuedDate].columns.map((column) => (
+                          <th key={column.id}>
+                            {column.name} ({column.item}, {column.quantity})
+                          </th>
+                        ))}
+                        <th>Remarks</th>
+                        {editMode && <th>Actions</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tablesData[issuedDate].rows.map((row, rowIndex) => (
+                        <tr key={rowIndex}>
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.projectName}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].projectName = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.projectName
+                            )}
+                          </td>
+                          {row.status.map((status, colIndex) => (
+                            <td key={colIndex}>
+                              {editMode ? (
+                                <div>
+                                  <input
+                                    type="text"
+                                    value={status.name}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].name = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={status.quantity}
+                                    onChange={(e) => {
+                                      const updatedTableData = { ...editTableData };
+                                      updatedTableData[issuedDate].rows[rowIndex].status[colIndex].quantity = e.target.value;
+                                      setEditTableData(updatedTableData);
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  {status.name} / {status.quantity}
+                                </div>
+                              )}
+                            </td>
+                          ))}
+                          <td>
+                            {editMode ? (
+                              <input
+                                type="text"
+                                value={row.remarks}
+                                onChange={(e) => {
+                                  const updatedTableData = { ...editTableData };
+                                  updatedTableData[issuedDate].rows[rowIndex].remarks = e.target.value;
+                                  setEditTableData(updatedTableData);
+                                }}
+                              />
+                            ) : (
+                              row.remarks
+                            )}
+                          </td>
+                          {editMode && (
+                            <td>
+                              <button onClick={() => handleDeleteRow(issuedDate, row.projectName)}>Delete</button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {editMode && (
+                    <div className="table-actions">
+                      <button onClick={() => handleAddRowClick(issuedDate)}>Add Row</button>
+                      <button onClick={() => handleAddColumnClick(issuedDate)}>Add Column</button>
+                    </div>
+                  )}
+                </div>
+                <div className="comparison-container">
+                  <button onClick={() => handleCompareData(issuedDate)}>Compare Data</button>
+                  {comparisonData[issuedDate] && (
+                    <div>
+                      <button onClick={handleShowItemChart}>Show Item Comparison Chart</button>
+                      <button onClick={handleShowQuantityChart}>Show Quantity Comparison Chart</button>
+                      {showItemChart && (
+                        <ComparisonChart data={comparisonData.itemComparison} type="item" />
+                      )}
+                      {showQuantityChart && (
+                        <ComparisonChart data={comparisonData.quantityComparison} type="quantity" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+      ))}
+
+      <div className="edit-save-container">
+        {editMode ? (
+          <button onClick={handleSaveClick}>Save</button>
+        ) : (
+          <button onClick={handleEditClick}>Edit</button>
+        )}
+      </div>
+      <p className="warning-message">{warningMessage}</p>
+    </div>
+  );
+};
+
+export default SavedSummaryTable;
+
+===
+edit upload analusus
+
+
+import React, { useState, useEffect } from "react";
+import "../Styles/dropdowns.css";
+
+const EditUploadTableAnalysis = () => {
+  const [problemsByYear, setProblemsByYear] = useState({});
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [originalValues, setOriginalValues] = useState({});
+  const [newRows, setNewRows] = useState([]); // State untuk menyimpan baris-baris data baru
+
+  useEffect(() => {
+    fetchMasalahData();
+  }, []);
+
+  const fetchMasalahData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/kpi/masalah");
+      if (response.ok) {
+        const responseData = await response.json();
+        const data = responseData.data;
+        console.log("Received data:", data);
+
+        // Group problems by year
+        const groupedProblems = {};
+        data.forEach(problem => {
+          if (!groupedProblems[problem.Year]) {
+            groupedProblems[problem.Year] = [];
+          }
+          groupedProblems[problem.Year].push(problem);
+        });
+
+        setProblemsByYear(groupedProblems);
+
+        // Extract available years
+        const years = Object.keys(groupedProblems);
+        setAvailableYears(years);
+        setSelectedYears(years); // Initially select all years
+      } else {
+        console.error("Failed to fetch masalah data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error fetching masalah data:", error);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleYearChange = (year) => {
+    const updatedSelectedYears = selectedYears.includes(year)
+      ? selectedYears.filter(selectedYear => selectedYear !== year)
+      : [...selectedYears, year];
+    setSelectedYears(updatedSelectedYears);
+  };
+
+  const handleDeleteRowClick = async (year, index, masalahID) => {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await fetch(`http://localhost:8080/kpi/masalah/${masalahID}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${authToken}`
+        }
+      });
+      if (response.ok) {
+        const updatedProblems = [...problemsByYear[year]];
+        updatedProblems.splice(index, 1);
+        setProblemsByYear({
+          ...problemsByYear,
+          [year]: updatedProblems
+        });
+        console.log("Row deleted successfully");
+      } else {
+        console.error("Failed to delete row:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error deleting row:", error);
+    }
+  };
+
+  
+
+  const handleDeleteNewRowClick = (year, index) => {
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: prevState[year].filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+    const originalValuesCopy = {};
+    selectedYears.forEach(year => {
+      originalValuesCopy[year] = [...problemsByYear[year]];
+    });
+    setOriginalValues(originalValuesCopy);
+
+    // Inisialisasi objek baris baru untuk setiap tahun yang dipilih
+    const newRowsCopy = {};
+    selectedYears.forEach(year => {
+      newRowsCopy[year] = [];
+    });
+    setNewRows(newRowsCopy);
+  };
+
+  const handleAddRowClick = (year) => {
+    const newRow = {
+      Masalah: "",
+      Why: ["", "", "", "", ""],
+      Tindakan: "",
+      Pic: "",
+      Target: "",
+      FolDate: "",
+      Status: "",
+      Year: year
+    };
+
+    setNewRows(prevState => ({
+      ...prevState,
+      [year]: [...(prevState[year] || []), newRow]
+    }));
+  };
+
+  const handleSaveClick = async () => {
+    const authToken = localStorage.getItem('authToken');
+  
+    try {
+      const promises = [];
+  
+      selectedYears.forEach(year => {
+        const updatedProblems = problemsByYear[year];
+        updatedProblems.forEach(problem => {
+          const formData = {
+            Masalah_ID: problem.Masalah_ID,
+            Masalah: problem.Masalah,
+            Why: problem.Why,
+            tindakan: problem.Tindakan,
+            pic: problem.Pic,
+            target: problem.Target,
+            folDate: new Date(problem.FolDate).toISOString(),
+            status: problem.Status,
+            Year: problem.Year
+          };
+          
+          console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+  
+          promises.push(fetch(`http://localhost:8080/kpi/masalah/${problem.Masalah_ID}`, {
+            method: "PUT",
+            headers: {
+              'Content-Type': 'application/json',
+              "Authorization": `Bearer ${authToken}`
+            },
+            body: JSON.stringify(formData)
+          }));
+        });
+  
+        // Tambahkan data baru ke promises untuk dikirim ke server
+      // Tambahkan data baru ke promises untuk dikirim ke server
+const newRowsForYear = newRows[year] || [];
+newRowsForYear.forEach(newRow => {
+  const { Masalah_ID, ...formDataWithoutID } = newRow; // Destructure and remove Masalah_ID
+  const formData = {
+    ...formDataWithoutID,
+    Why: [
+      newRow.Why[0],
+      newRow.Why[1],
+      newRow.Why[2],
+      newRow.Why[3],
+      newRow.Why[4],
+    ],
+    Year: parseInt(newRow.Year) // Ensure Year is sent as an integer
+  };
+
+  console.log("Data yang dikirim ke server:", formData); // Tambahkan console log untuk body JSON
+
+  promises.push(fetch(`http://localhost:8080/kpi/masalah`, {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+      "Authorization": `Bearer ${authToken}`
+    },
+    body: JSON.stringify(formData)
+  }));
+});
+
+      });
+  
+      await Promise.all(promises);
+      setEditMode(false);
+      console.log("Data saved successfully.");
+      fetchMasalahData(); // Refresh data setelah penyimpanan
+     setProblemsByYear({});
+    setNewRows({});
+    } catch (error) {
+      console.error("Failed to save data:", error);
+    }
+  };
+
+  
+  
+
+  return (
+    <div>
+      <div className="container">
+        <div className="filter-containers">
+          <div className="dropdown">
+            <button onClick={toggleDropdown} className="dropdown-button">
+              Filter Tahun
+            </button>
+            {dropdownOpen && (
+              <div className="dropdown-content">
+                {availableYears.map((year, index) => (
+                  <label key={index} className="dropdown-item">
+                    <input
+                      type="checkbox"
+                      value={year}
+                      checked={selectedYears.includes(year)}
+                      onChange={() => handleYearChange(year)}
+                    />
+                    {year}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="buttons-container">
+            {!editMode && (
+              <button onClick={handleEditClick}>Update Data Table</button>
+            )}
+            {editMode && (
+              <button onClick={handleSaveClick}>Save Changes</button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {selectedYears.map(year => (
+        <div key={year} className="table-containers">
+          <table className="dropdowns-safety">
+            <caption>Saved Analysis Table for {year}</caption>
+            <thead>
+              <tr>
+                <th rowSpan="2">Problem
+                <div>
+                  {editMode && (
+                    <button onClick={() => handleAddRowClick(year)}>Add</button>
+                  )}
+                  </div>
+                </th>
+                <th colSpan="5">Causes Analysis</th>
+                <th rowSpan="2">Corrective Action</th>
+                <th rowSpan="2">PIC</th>
+                <th rowSpan="2">Target</th>
+                <th colSpan="2">Follow Up</th>
+              </tr>
+              <tr>
+                <th>Why 1</th>
+                <th>Why 2</th>
+                <th>Why 3</th>
+                <th>Why 4</th>
+                <th>Why 5</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(problemsByYear[year] || []).map((problem, index) => (
+                <tr key={`${year}_${index}_${problem.Masalah_ID || ''}`}>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Masalah || ""}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          const updatedProblem = { ...problem };
+                          updatedProblem.Masalah = e.target.value;
+                          updatedProblems[index] = updatedProblem;
+
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Masalah}
+                      />
+                    ) : (
+                      problem.Masalah
+                    )}
+                    <div>
+                 {editMode && (
+                    <button onClick={() => handleDeleteRowClick(year, index, problem.Masalah_ID)}>Delete</button>
+                  )}
+                  </div>
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[0]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[0] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[0]}
+                      />
+                    ) : (
+                      problem.Why[0]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[1]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[1] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[1]}
+                      />
+                    ) : (
+                      problem.Why[1]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[2]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[2] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[2]}
+                      />
+                    ) : (
+                      problem.Why[2]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[3]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[3] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[3]}
+                      />
+                    ) : (
+                      problem.Why[3]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Why[4]}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Why[4] = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Why[4]}
+                      />
+                    ) : (
+                      problem.Why[4]
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Tindakan}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Tindakan = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Tindakan}
+                      />
+                    ) : (
+                      problem.Tindakan
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Pic}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Pic = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Pic}
+                      />
+                    ) : (
+                      problem.Pic
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Target}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Target = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Target}
+                      />
+                    ) : (
+                      problem.Target
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.FolDate}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].FolDate = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.FolDate}
+                      />
+                    ) : (
+                      problem.FolDate
+                    )}
+                  </td>
+                  <td>
+                    {editMode ? (
+                      <textarea
+                        value={problem.Status}
+                        onChange={e => {
+                          const updatedProblems = [...problemsByYear[year]];
+                          updatedProblems[index].Status = e.target.value;
+                          setProblemsByYear({
+                            ...problemsByYear,
+                            [year]: updatedProblems
+                          });
+                        }}
+                        placeholder={problem.Status}
+                      />
+                    ) : (
+                      problem.Status
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {(newRows[year] || []).map((newRow, index) => (
+                <tr key={`${year}_new_${index}`}>
+                  <td>
+                    <textarea
+                      value={newRow.Masalah || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Masalah = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Masalah"
+                    />
+                <button onClick={() => handleDeleteNewRowClick(year, index)}>Delete</button>
+
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[0] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[0] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 1"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[1] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[1] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 2"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[2] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[2] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 3"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[3] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[3] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 4"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Why[4] || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Why[4] = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Why 5"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Tindakan || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Tindakan = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Tindakan"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Pic || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Pic = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="PIC"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Target || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Target = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Target"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.FolDate || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].FolDate = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Date"
+                    />
+                  </td>
+                  <td>
+                    <textarea
+                      value={newRow.Status || ""}
+                      onChange={e => {
+                        const updatedNewRows = { ...newRows };
+                        updatedNewRows[year][index].Status = e.target.value;
+                        setNewRows(updatedNewRows);
+                      }}
+                      placeholder="Status"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default EditUploadTableAnalysis;
+
+
+

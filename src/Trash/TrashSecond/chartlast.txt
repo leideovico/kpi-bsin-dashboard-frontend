@@ -1,0 +1,188 @@
+import React, { useState, useEffect } from 'react';
+import { Bar } from 'react-chartjs-2';
+import { Chart } from 'chart.js/auto';
+import '../Styles/chart.css';
+import { registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+function ChartComponent({ chartSize }) {
+  const [chartData, setChartData] = useState([]);
+  const [filteredChartData, setFilteredChartData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
+
+  Chart.register(...registerables, ChartDataLabels);
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearch = () => {
+    setActiveSearchTerm(searchTerm);
+  };
+
+  const handleRemoveFilter = () => {
+    setSearchTerm('');
+    setActiveSearchTerm('');
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/kpi/item');
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Response JSON (item):', data);
+
+        const formattedChartData = [];
+
+        data.data.forEach(item => {
+          item.Results.forEach(result => {
+            result.Factors.forEach(factor => {
+              const plannedMonthly = factor.Planned?.Monthly[0] || {};
+              const actualMonthly = factor.Actual?.Monthly[0] || {};
+
+              formattedChartData.push({
+                kpiResult: result.Name,
+                kpiFactorName: factor.Title,
+                unit: factor.Unit,
+                target: factor.Target,
+                planned: plannedMonthly,
+                actual: actualMonthly
+              });
+            });
+          });
+        });
+
+        setChartData(formattedChartData);
+        setFilteredChartData(formattedChartData);
+      } catch (error) {
+        console.error('Error fetching data', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (activeSearchTerm === '') {
+      setFilteredChartData(chartData);
+    } else {
+      const filteredData = chartData.filter(data =>
+        data.kpiResult.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+        data.kpiFactorName.toLowerCase().includes(activeSearchTerm.toLowerCase())
+      );
+      setFilteredChartData(filteredData);
+    }
+  }, [activeSearchTerm, chartData]);
+
+  const chartOptions = {
+    plugins: {
+      title: {
+        display: true,
+        text: `Tahun ${""}`,
+        padding: {
+          top: 0,
+          bottom: 5
+        },
+        font: {
+          size: 18,
+          weight: 'bold'
+        }
+      },
+      datalabels: {
+        display: true,
+        formatter: function (value) {
+          return value;
+        }
+      }
+    },
+    scales: {
+      x: {
+        type: 'category',
+      },
+      y: {
+        beginAtZero: true,
+        min: 0,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9,
+      },
+    },
+  };
+
+  return (
+    <div className='chart'>
+      <div style={{ textAlign: 'left', marginBottom: '0px', marginTop: '60px', marginLeft: '140px' }}>
+        <h2>Safety Chart</h2>
+        <input type="text" placeholder="Search KPI Result or Factor..." onChange={handleSearchChange} />
+        <div className='search'>
+          <button onClick={handleSearch}>Search</button>
+          <button onClick={handleRemoveFilter} style={{ marginLeft: '7px' }}>Remove Filter</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {filteredChartData.map((data, index) => (
+            <ChartContainer
+              key={index}
+              data={data}
+              options={chartOptions}
+              size={chartSize}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ChartContainer = ({ data, options, size }) => {
+  const { kpiResult, kpiFactorName, unit, target, planned, actual } = data;
+
+  // Prepare chart data
+  const chartData = {
+    labels: Object.keys(planned),
+    datasets: [
+      {
+        label: 'Planned',
+        data: Object.values(planned),
+        backgroundColor: '#4CAF50',
+        borderWidth: 1,
+      },
+      {
+        label: 'Actual',
+        data: Object.values(actual),
+        backgroundColor: '#F44336',
+        borderWidth: 1,
+      }
+    ]
+  };
+
+  return (
+    <div style={{
+      width: size.width,
+      height: size.height,
+      paddingLeft: size.paddingLeft,
+      paddingTop: size.paddingTop,
+      marginTop: size.marginTop,
+      paddingBottom: size.paddingBottom,
+      marginLeft: '5px',
+      marginRight: '5px',
+      border: '2px solid #8b0000',
+      boxShadow: '5px 5px 10px rgba(139, 0, 0, 0.5)',
+      borderRadius: '10px',
+    }}>
+      <Bar data={chartData} options={options} />
+      <div className="chart-description">
+        <ul>
+          <li>KPI Result: {kpiResult}</li>
+          <li>KPI Factor Name: {kpiFactorName}</li>
+          <li>Unit: {unit}</li>
+          <li>Target: {target}</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default ChartComponent;

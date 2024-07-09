@@ -1,0 +1,42 @@
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(to bottom, #8B0000, #FF6347, #ffb9ac, #FFFFFF);  
+   background-size: cover;
+    background-position: center; /* Posisi gambar latar belakang di tengah */
+  color: #fff; /* Warna teks putih */
+}
+
+
+.banner {
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+p {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.dashboard-button {
+  padding: 10px 20px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  background-color: #333; /* Dark gray background */
+  color: #fff; /* White text color */
+  cursor: pointer;
+  transition: background-color 0.3s; /* Smooth transition for button color */
+}
+
+.dashboard-button:hover {
+  background-color: #555; /* Darker gray background on hover */
+}

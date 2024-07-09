@@ -1,34 +1,45 @@
 .upload-container {
     width: 100%;
     max-width: 600px;
-    margin: 20px auto;
+    margin: 0 auto; /* Center horizontally */
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.4); /* More defined shadow for depth */
+    border: 2px solid rgba(255, 255, 255, 0.2); /* Soft white border for subtle contrast */
     border-radius: 8px;
-    background-color: #fff;
+    background: linear-gradient(to bottom, #8b0000, #ff2e2e); /* Gradien dari merah gelap ke merah terang */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px; /* Minimum height */
+    position: relative; /* For absolute positioning of children */
+    left: 45px;
+    margin-bottom: 30px;
 }
 
 .upload-header {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
-    color: #333;
+    color: white; /* White text to stand out on darker backgrounds */
     margin-bottom: 10px;
-    margin-top: 20px;
 }
-
 .drop-area {
     padding: 30px;
-    border: 2px dashed black; /* Darker red border */
+    border: 2px dashed white; /* White dashed border for better visibility */
     border-radius: 5px;
     text-align: center;
     position: relative;
     cursor: pointer;
-    color: #333;
     font-size: 16px;
-    background: linear-gradient(to right, #8B0000, #FF6347); /* Gradient from dark red to tomato red */
+    background: linear-gradient(to right, rgba(139, 0, 0, 0.7), rgba(255, 99, 71, 0.7)); /* Dark red to tomato red with stronger opacity */
     color: white;
+    width: 90%; /* Reduced width for responsiveness */
+    transition: box-shadow 0.3s; /* Smooth transition for hover effect */
+}
 
+.drop-area:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Slight shadow on hover for prominence */
 }
 
 .file-input {
@@ -43,12 +54,21 @@
 
 .file-display-area {
     margin-top: 20px;
+    position: relative; /* Make sure the parent has a position */
 }
 
 .file-item {
-    background-color: #f3f3f3;
+    background-color: #fff;
     padding: 10px;
     margin-top: 5px;
     border-radius: 5px;
     border: 1px solid #ddd;
+    width: 350px; /* Match width to the container */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s; /* Transition for scale effect */
+ }
+
+.file-item:hover {
+    transform: scale(1.1); /* Scale up by 10% on hover */
 }
+
